@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Recomp Tracker">
-  <title>2-Month Body Recomp Tracker</title>
+  <meta name="apple-mobile-web-app-title" content="Recomp Engine">
+  <title>2-Month Recomp Execution Engine</title>
   <style>
     :root {
       --bg: #000000;
@@ -18,6 +18,7 @@
       --subtext: #8E8E93;
       --border: #38383A;
       --danger: #FF453A;
+      --orange: #FF9F0A;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,23 +27,40 @@
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: env(safe-area-inset-top) 16px calc(80px + env(safe-area-inset-bottom)) 16px;
+      padding: env(safe-area-inset-top) 16px calc(90px + env(safe-area-inset-bottom)) 16px;
       touch-action: manipulation;
     }
 
     header {
       text-align: center;
-      padding: 16px 0 12px 0;
+      padding: 12px 0 8px 0;
     }
-    h1 { font-size: 1.4rem; font-weight: 700; margin: 0; color: var(--accent); }
-    .subtitle { font-size: 0.8rem; color: var(--subtext); margin-top: 4px; }
+    h1 { font-size: 1.3rem; font-weight: 700; margin: 0; color: var(--accent); }
+    .subtitle { font-size: 0.78rem; color: var(--subtext); margin-top: 2px; }
+
+    /* Top Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+    }
+    .stat-val { font-size: 1.1rem; font-weight: 700; color: #FFF; }
+    .stat-lbl { font-size: 0.65rem; color: var(--subtext); text-transform: uppercase; margin-top: 2px; }
 
     /* Day Navigation Tabs */
     .nav-tabs {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding-bottom: 12px;
+      padding-bottom: 10px;
       margin-bottom: 12px;
       scrollbar-width: none;
     }
@@ -51,118 +69,222 @@
       background: var(--card);
       border: 1px solid var(--border);
       color: var(--subtext);
-      padding: 10px 16px;
-      border-radius: 20px;
+      padding: 8px 14px;
+      border-radius: 18px;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       white-space: nowrap;
-      transition: all 0.2s ease;
     }
     .tab-btn.active {
       background: var(--accent);
-      color: #000000;
+      color: #000;
       border-color: var(--accent);
     }
 
-    /* Card Styling */
-    .day-header { margin-bottom: 16px; }
-    .day-title { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+    /* Cards */
+    .day-header { margin-bottom: 12px; }
+    .day-title { font-size: 1.15rem; font-weight: 700; color: var(--text); }
     
     .card {
       background: var(--card);
       border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
       border: 1px solid var(--border);
     }
     .ex-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
-    .ex-name { font-size: 1.05rem; font-weight: 600; color: #FFF; }
+    .ex-name { font-size: 1rem; font-weight: 600; color: #FFF; }
     .alt-btn {
       background: var(--card-alt);
       border: 1px solid var(--border);
       color: var(--blue);
-      font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 8px;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
       font-weight: 600;
     }
-    .ex-meta {
-      font-size: 0.8rem;
-      color: var(--subtext);
-      margin-bottom: 12px;
-      line-height: 1.3;
-    }
+    .ex-meta { font-size: 0.78rem; color: var(--subtext); margin-bottom: 10px; }
     .alt-text {
-      font-size: 0.78rem;
-      color: #FF9F0A;
-      margin-bottom: 12px;
+      font-size: 0.75rem;
+      color: var(--orange);
+      margin-bottom: 10px;
       display: none;
-      padding: 6px 10px;
+      padding: 6px 8px;
       background: rgba(255, 159, 10, 0.1);
       border-radius: 6px;
     }
 
-    /* Set Rows */
+    /* Set Inputs */
     .set-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 8px;
     }
-    .set-num {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--subtext);
-      width: 42px;
-    }
-    .input-group {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .set-num { font-size: 0.8rem; font-weight: 600; color: var(--subtext); width: 38px; }
+    .input-group { display: flex; align-items: center; gap: 4px; }
     input[type="number"] {
-      width: 68px;
-      height: 38px;
+      width: 64px;
+      height: 36px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card-alt);
       color: #FFF;
       text-align: center;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
     }
-    .unit-label { font-size: 0.75rem; color: var(--subtext); }
+    .unit-label { font-size: 0.72rem; color: var(--subtext); }
 
     .timer-trigger-btn {
       background: var(--blue);
       color: #FFF;
       border: none;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
       margin-left: auto;
     }
 
-    /* Sticky Rest Timer Banner */
+    .finish-workout-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* Calendar & History Styles */
+    .calendar-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .cal-day-head { font-size: 0.7rem; color: var(--subtext); font-weight: 600; }
+    .cal-date {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 8px;
+      background: var(--card-alt);
+      color: #8E8E93;
+    }
+    .cal-date.active-logged {
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+    }
+    .history-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-info-title { font-size: 0.95rem; font-weight: 600; color: #FFF; }
+    .history-info-date { font-size: 0.75rem; color: var(--subtext); margin-top: 2px; }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+    .modal-date { font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px; }
+    .modal-close-btn {
+      width: 100%;
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      color: #FFF;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 14px;
+    }
+
+    /* Fixed Bottom iOS Tab Bar */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(60px + env(safe-area-inset-bottom));
+      background: rgba(28, 28, 30, 0.92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 8px;
+      z-index: 900;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: var(--subtext);
+      font-size: 0.68rem;
+      font-weight: 600;
+      border: none;
+      background: none;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item-icon { font-size: 1.2rem; }
+
+    /* Rest Timer Banner */
     #timer-banner {
       position: fixed;
-      bottom: env(safe-area-inset-bottom);
+      bottom: calc(60px + env(safe-area-inset-bottom));
       left: 0; right: 0;
       background: var(--accent);
       color: #000;
-      padding: 14px;
+      padding: 12px;
       text-align: center;
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1rem;
       display: none;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-      z-index: 999;
+      z-index: 850;
     }
   </style>
 </head>
@@ -170,14 +292,78 @@
 
   <header>
     <h1>RECOMP EXECUTION ENGINE</h1>
-    <div class="subtitle">70kg Bodyweight Target | High-Protein Deficit</div>
+    <div class="subtitle">70kg Frame Target | Recomposition Split</div>
   </header>
 
-  <div class="nav-tabs" id="nav-tabs"></div>
-  <div id="workout-content"></div>
+  <!-- Top Metric Bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-total-workouts">0</div>
+      <div class="stat-lbl">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="stat-streak">0 Days</div>
+      <div class="stat-lbl">Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color: var(--accent);">70 kg</div>
+      <div class="stat-lbl">Target Frame</div>
+    </div>
+  </div>
 
+  <!-- Main View Container -->
+  <div id="view-workout">
+    <div class="nav-tabs" id="day-nav-tabs"></div>
+    <div id="workout-content"></div>
+  </div>
+
+  <div id="view-history" style="display: none;">
+    <div class="calendar-card">
+      <div style="font-weight: 700; font-size: 1rem; margin-bottom: 8px;" id="calendar-month-title">Calendar</div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <div style="font-weight: 700; font-size: 1rem; margin-bottom: 10px;">Logged Workout Sessions</div>
+    <div id="history-list-container"></div>
+  </div>
+
+  <div id="view-settings" style="display: none;">
+    <div class="card">
+      <div style="font-weight: 700; margin-bottom: 8px;">Backup & Data Storage</div>
+      <div style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px;">All workout data is saved locally on your iPhone browser.</div>
+      <button class="modal-close-btn" onclick="exportData()" style="background: var(--blue); color:#FFF; margin-top:0; margin-bottom:8px;">Export Backup (JSON)</button>
+      <button class="modal-close-btn" onclick="clearAllData()" style="background: rgba(255,69,58,0.15); color: var(--danger); border-color: var(--danger);">Reset All Local Logs</button>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-title" id="modal-title">Session Details</div>
+      <div class="modal-date" id="modal-date">Date</div>
+      <div id="modal-body"></div>
+      <button class="modal-close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- Timer Banner -->
   <div id="timer-banner">
     REST REMAINING: <span id="timer-seconds">0</span>s
+  </div>
+
+  <!-- Fixed iOS Bottom Navigation Bar -->
+  <div class="bottom-tab-bar">
+    <button class="nav-item active" id="tab-nav-workout" onclick="switchView('workout')">
+      <span class="nav-item-icon">🏋️</span>
+      Workout
+    </button>
+    <button class="nav-item" id="tab-nav-history" onclick="switchView('history')">
+      <span class="nav-item-icon">📅</span>
+      Calendar
+    </button>
+    <button class="nav-item" id="tab-nav-settings" onclick="switchView('settings')">
+      <span class="nav-item-icon">⚙️</span>
+      Data
+    </button>
   </div>
 
   <script>
@@ -186,191 +372,53 @@
         day: "Day 1",
         title: "Upper Chest & Heavy Biceps Focus",
         exercises: [
-          {
-            name: "Barbell Bench Press",
-            alt: "Incline Dumbbell Press (12.5 kg DBs, 3s eccentric)",
-            target: "3 sets × 8–10 reps | Target: 40–55 kg",
-            rest: 180,
-            sets: 3
-          },
-          {
-            name: "Pec Deck Machine Flyes",
-            alt: "Incline Dumbbell Flyes (10–12.5 kg DBs)",
-            target: "3 sets × 10–12 reps | Target: Moderate",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Barbell Bicep Curls",
-            alt: "Standing Alt DB Curls (12.5 kg DBs)",
-            target: "3 sets × 8–10 reps | Target: 20–27.5 kg",
-            rest: 120,
-            sets: 3
-          },
-          {
-            name: "Incline Dumbbell Curls (45°)",
-            alt: "Seated DB Curls (3-second lowering phase)",
-            target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs",
-            rest: 120,
-            sets: 3
-          },
-          {
-            name: "Barbell Reverse Curls",
-            alt: "Cross-Body DB Hammer Curls (10–12.5 kg DBs)",
-            target: "3 sets × 8–10 reps | Target: 15–22.5 kg",
-            rest: 90,
-            sets: 3
-          }
+          { name: "Barbell Bench Press", alt: "Incline DB Press (12.5 kg DBs, 3s eccentric)", target: "3 sets × 8–10 reps | Target: 40–55 kg", rest: 180, sets: 3 },
+          { name: "Pec Deck Machine Flyes", alt: "Incline DB Flyes (10–12.5 kg DBs)", target: "3 sets × 10–12 reps | Target: Moderate", rest: 90, sets: 3 },
+          { name: "Barbell Bicep Curls", alt: "Standing Alt DB Curls (12.5 kg DBs)", target: "3 sets × 8–10 reps | Target: 20–27.5 kg", rest: 120, sets: 3 },
+          { name: "Incline DB Curls (45°)", alt: "Seated DB Curls (3-second lowering)", target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs", rest: 120, sets: 3 },
+          { name: "Barbell Reverse Curls", alt: "Cross-Body DB Hammer Curls (10–12.5 kg)", target: "3 sets × 8–10 reps | Target: 15–22.5 kg", rest: 90, sets: 3 }
         ]
       },
       {
         day: "Day 2",
         title: "Lower Body & Core Focus",
         exercises: [
-          {
-            name: "Leg Press Machine",
-            alt: "Barbell Squats (35–50 kg total bar)",
-            target: "3 sets × 10–12 reps | Target: Moderate-Heavy",
-            rest: 150,
-            sets: 3
-          },
-          {
-            name: "Barbell Romanian Deadlifts",
-            alt: "Single-Leg DB RDLs (12.5 kg DB in hand)",
-            target: "3 sets × 8–10 reps | Target: 45–60 kg",
-            rest: 180,
-            sets: 3
-          },
-          {
-            name: "Single-Leg DB Calf Raise",
-            alt: "Standing Barbell Calf Raise (Balls of feet on plate)",
-            target: "3 sets × 12–15 reps | Target: 10–12.5 kg DB",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Hanging Leg Raises / Knee Raises",
-            alt: "Incline Bench Crunches or 60s Planks",
-            target: "3 sets × 12–15 reps | Target: Bodyweight",
-            rest: 60,
-            sets: 3
-          }
+          { name: "Leg Press Machine", alt: "Barbell Squats (35–50 kg total bar)", target: "3 sets × 10–12 reps | Target: Moderate-Heavy", rest: 150, sets: 3 },
+          { name: "Barbell Romanian Deadlifts", alt: "Single-Leg DB RDLs (12.5 kg DB)", target: "3 sets × 8–10 reps | Target: 45–60 kg", rest: 180, sets: 3 },
+          { name: "Single-Leg DB Calf Raise", alt: "Standing Barbell Calf Raise", target: "3 sets × 12–15 reps | Target: 10–12.5 kg DB", rest: 90, sets: 3 },
+          { name: "Hanging Leg Raises / Knee Raises", alt: "Incline Crunches or 60s Planks", target: "3 sets × 12–15 reps | Target: Bodyweight", rest: 60, sets: 3 }
         ]
       },
       {
         day: "Day 3",
         title: "Shoulders & Heavy Triceps Focus",
         exercises: [
-          {
-            name: "Barbell Overhead Shoulder Press",
-            alt: "Seated DB Overhead Press (12.5 kg DBs)",
-            target: "3 sets × 8–10 reps | Target: 30–40 kg",
-            rest: 180,
-            sets: 3
-          },
-          {
-            name: "Standing Dumbbell Lateral Raises",
-            alt: "Single-Arm DB Lateral Raises (Leaning off rack)",
-            target: "4 sets × 12–15 reps | Target: 7.5–10 kg DBs",
-            rest: 90,
-            sets: 4
-          },
-          {
-            name: "Close-Grip Barbell Bench Press",
-            alt: "Weighted Bench Dips (10–15 kg plate on lap)",
-            target: "3 sets × 6–8 reps | Target: 35–45 kg",
-            rest: 180,
-            sets: 3
-          },
-          {
-            name: "Seated 60° Incline DB Overhead Ext",
-            alt: "Seated Barbell French Press (20–25 kg bar)",
-            target: "3 sets × 8–12 reps | Target: Single 12.5–15 kg DB",
-            rest: 120,
-            sets: 3
-          },
-          {
-            name: "Incline DB Skullcrushers (30°)",
-            alt: "Lying Barbell Skullcrushers (17.5–22.5 kg bar)",
-            target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs",
-            rest: 120,
-            sets: 3
-          }
+          { name: "Barbell Overhead Shoulder Press", alt: "Seated DB Overhead Press (12.5 kg)", target: "3 sets × 8–10 reps | Target: 30–40 kg", rest: 180, sets: 3 },
+          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", target: "4 sets × 12–15 reps | Target: 7.5–10 kg DBs", rest: 90, sets: 4 },
+          { name: "Close-Grip Barbell Bench Press", alt: "Weighted Bench Dips (10–15 kg plate)", target: "3 sets × 6–8 reps | Target: 35–45 kg", rest: 180, sets: 3 },
+          { name: "Seated 60° Incline DB Overhead Ext", alt: "Seated Barbell French Press", target: "3 sets × 8–12 reps | Target: Single 12.5–15 kg", rest: 120, sets: 3 },
+          { name: "Incline DB Skullcrushers (30°)", alt: "Lying Barbell Skullcrushers", target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs", rest: 120, sets: 3 }
         ]
       },
       {
         day: "Day 4",
-        title: "Back & Lower Arm Width (Brachialis)",
+        title: "Back & Lower Arm Width",
         exercises: [
-          {
-            name: "Lat Pulldown Machine",
-            alt: "Bodyweight Pull-ups / Negative Pull-ups",
-            target: "3 sets × 8–10 reps | Target: Moderate-Heavy",
-            rest: 120,
-            sets: 3
-          },
-          {
-            name: "Barbell Bent-Over Rows",
-            alt: "Single-Arm DB Rows (12.5 kg DB, 3s eccentric)",
-            target: "3 sets × 8–10 reps | Target: 40–55 kg",
-            rest: 180,
-            sets: 3
-          },
-          {
-            name: "Cross-Body DB Hammer Curls",
-            alt: "Incline Neutral-Grip DB Curls (10–12.5 kg DBs)",
-            target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Heavy DB Farmer’s Carries",
-            alt: "Barbell Static Grip Hold (50 kg bar for 45s)",
-            target: "3 sets × 45-second walks | Target: 12.5 kg DBs",
-            rest: 90,
-            sets: 3
-          }
+          { name: "Lat Pulldown Machine", alt: "Bodyweight Pull-ups / Negative Pull-ups", target: "3 sets × 8–10 reps | Target: Moderate-Heavy", rest: 120, sets: 3 },
+          { name: "Barbell Bent-Over Rows", alt: "Single-Arm DB Rows (12.5 kg DB)", target: "3 sets × 8–10 reps | Target: 40–55 kg", rest: 180, sets: 3 },
+          { name: "Cross-Body DB Hammer Curls", alt: "Incline Neutral-Grip DB Curls", target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs", rest: 90, sets: 3 },
+          { name: "Heavy DB Farmer’s Carries", alt: "Barbell Static Grip Hold (50 kg bar)", target: "3 sets × 45s walks | Target: 12.5 kg DBs", rest: 90, sets: 3 }
         ]
       },
       {
         day: "Day 5",
-        title: "Chest Definition & Arm Hypertrophy",
+        title: "Chest Definition & Arm Pump",
         exercises: [
-          {
-            name: "Pec Deck Machine Flyes",
-            alt: "Flat Dumbbell Flyes (10–12.5 kg DBs)",
-            target: "3 sets × 12–15 reps | Target: Moderate",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Barbell Pullovers",
-            alt: "Single DB Pullover (12.5 kg DB cupped)",
-            target: "3 sets × 10–12 reps | Target: 15–22.5 kg",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Standing DB Bicep Curls (Supinating)",
-            alt: "Barbell 21s (7 lower, 7 upper, 7 full reps)",
-            target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Bench Dips (Lower Chest & Tricep)",
-            alt: "Overhand DB Tricep Kickbacks (7.5–10 kg DBs)",
-            target: "3 sets × 10–12 reps | Target: BW + 10 kg plate",
-            rest: 90,
-            sets: 3
-          },
-          {
-            name: "Bodyweight Push-ups",
-            alt: "Decline Push-ups (Feet elevated on bench)",
-            target: "2 sets × Technical Failure | Target: Bodyweight",
-            rest: 75,
-            sets: 2
-          }
+          { name: "Pec Deck Machine Flyes", alt: "Flat DB Flyes (10–12.5 kg DBs)", target: "3 sets × 12–15 reps | Target: Moderate", rest: 90, sets: 3 },
+          { name: "Barbell Pullovers", alt: "Single DB Pullover (12.5 kg DB)", target: "3 sets × 10–12 reps | Target: 15–22.5 kg", rest: 90, sets: 3 },
+          { name: "Standing DB Bicep Curls", alt: "Barbell 21s", target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs", rest: 90, sets: 3 },
+          { name: "Bench Dips", alt: "Overhand DB Tricep Kickbacks", target: "3 sets × 10–12 reps | Target: BW + 10 kg plate", rest: 90, sets: 3 },
+          { name: "Bodyweight Push-ups", alt: "Decline Push-ups (Feet elevated)", target: "2 sets × Technical Failure | Target: BW", rest: 75, sets: 2 }
         ]
       }
     ];
@@ -378,8 +426,23 @@
     let currentDayIdx = 0;
     let timerCountdown = null;
 
+    function getHistory() {
+      return JSON.parse(localStorage.getItem('recomp_history') || '[]');
+    }
+
+    function saveHistory(historyArr) {
+      localStorage.setItem('recomp_history', JSON.stringify(historyArr));
+      updateStats();
+    }
+
+    function updateStats() {
+      const history = getHistory();
+      document.getElementById('stat-total-workouts').innerText = history.length;
+      document.getElementById('stat-streak').innerText = `${history.length > 0 ? Math.min(history.length, 5) : 0} Sessions`;
+    }
+
     function initNav() {
-      const navContainer = document.getElementById('nav-tabs');
+      const navContainer = document.getElementById('day-nav-tabs');
       navContainer.innerHTML = programData.map((d, i) => `
         <button class="tab-btn ${i === currentDayIdx ? 'active' : ''}" onclick="selectDay(${i})">
           ${d.day}
@@ -415,8 +478,8 @@
         `;
 
         for (let s = 1; s <= ex.sets; s++) {
-          const wKey = `d${currentDayIdx}_e${exIdx}_s${s}_w`;
-          const rKey = `d${currentDayIdx}_e${exIdx}_s${s}_r`;
+          const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
+          const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
           const valW = localStorage.getItem(wKey) || '';
           const valR = localStorage.getItem(rKey) || '';
 
@@ -424,21 +487,21 @@
             <div class="set-row">
               <span class="set-num">Set ${s}</span>
               <div class="input-group">
-                <input type="number" step="0.5" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
+                <input type="number" id="${wKey}" step="0.5" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
                 <span class="unit-label">kg</span>
               </div>
               <div class="input-group">
-                <input type="number" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
+                <input type="number" id="${rKey}" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
                 <span class="unit-label">reps</span>
               </div>
               <button class="timer-trigger-btn" onclick="triggerRestTimer(${ex.rest})">Rest ${ex.rest}s</button>
             </div>
           `;
         }
-
         html += `</div>`;
       });
 
+      html += `<button class="finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>`;
       main.innerHTML = html;
     }
 
@@ -466,28 +529,171 @@
         if (remaining <= 0) {
           clearInterval(timerCountdown);
           banner.style.display = 'none';
-          
-          // Audio Beep Cue using Web Audio API (iOS Compatible)
           try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
-            osc.type = 'sine';
             osc.frequency.setValueAtTime(880, ctx.currentTime);
             osc.connect(ctx.destination);
             osc.start();
             osc.stop(ctx.currentTime + 0.4);
           } catch(e){}
-
-          if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
-          }
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
       }, 1000);
     }
 
-    // Initialize App
+    function finishAndSaveWorkout() {
+      const dayData = programData[currentDayIdx];
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const displayDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const loggedExercises = dayData.exercises.map((ex, exIdx) => {
+        const setsLogged = [];
+        for (let s = 1; s <= ex.sets; s++) {
+          const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
+          const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
+          setsLogged.push({
+            set: s,
+            weight: localStorage.getItem(wKey) || '0',
+            reps: localStorage.getItem(rKey) || '0'
+          });
+        }
+        return { name: ex.name, sets: setsLogged };
+      });
+
+      const sessionObj = {
+        id: Date.now(),
+        dateStr: dateStr,
+        displayDate: displayDate,
+        day: dayData.day,
+        title: dayData.title,
+        exercises: loggedExercises
+      };
+
+      const history = getHistory();
+      history.unshift(sessionObj);
+      saveHistory(history);
+
+      alert(`${dayData.day} Workout Logged Successfully! 🎉`);
+      switchView('history');
+    }
+
+    function switchView(viewName) {
+      document.getElementById('view-workout').style.display = viewName === 'workout' ? 'block' : 'none';
+      document.getElementById('view-history').style.display = viewName === 'history' ? 'block' : 'none';
+      document.getElementById('view-settings').style.display = viewName === 'settings' ? 'block' : 'none';
+
+      document.getElementById('tab-nav-workout').classList.toggle('active', viewName === 'workout');
+      document.getElementById('tab-nav-history').classList.toggle('active', viewName === 'history');
+      document.getElementById('tab-nav-settings').classList.toggle('active', viewName === 'settings');
+
+      if (viewName === 'history') {
+        renderCalendarAndHistory();
+      }
+    }
+
+    function renderCalendarAndHistory() {
+      const history = getHistory();
+      const historyContainer = document.getElementById('history-list-container');
+      
+      if (history.length === 0) {
+        historyContainer.innerHTML = `<div style="font-size:0.85rem; color: var(--subtext); text-align:center; padding: 20px;">No workout sessions logged yet. Complete a workout to see your history!</div>`;
+      } else {
+        historyContainer.innerHTML = history.map(item => `
+          <div class="history-card" onclick="openSessionModal(${item.id})">
+            <div>
+              <div class="history-info-title">${item.day}: ${item.title}</div>
+              <div class="history-info-date">${item.displayDate}</div>
+            </div>
+            <div style="color: var(--blue); font-weight: 600; font-size: 0.8rem;">View Details ›</div>
+          </div>
+        `).join('');
+      }
+
+      // Render Calendar Grid
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const monthName = now.toLocaleString('default', { month: 'long' });
+      document.getElementById('calendar-month-title').innerText = `${monthName} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const loggedDates = new Set(history.map(h => h.dateStr));
+
+      let calHtml = `
+        <div class="cal-day-head">S</div><div class="cal-day-head">M</div><div class="cal-day-head">T</div>
+        <div class="cal-day-head">W</div><div class="cal-day-head">T</div><div class="cal-day-head">F</div><div class="cal-day-head">S</div>
+      `;
+
+      for (let i = 0; i < firstDay; i++) {
+        calHtml += `<div></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isLogged = loggedDates.has(dStr);
+        calHtml += `<div class="cal-date ${isLogged ? 'active-logged' : ''}">${d}</div>`;
+      }
+
+      document.getElementById('calendar-grid').innerHTML = calHtml;
+    }
+
+    function openSessionModal(sessionId) {
+      const history = getHistory();
+      const session = history.find(s => s.id === sessionId);
+      if (!session) return;
+
+      document.getElementById('modal-title').innerText = `${session.day}: ${session.title}`;
+      document.getElementById('modal-date').innerText = session.displayDate;
+
+      let bodyHtml = '';
+      session.exercises.forEach(ex => {
+        bodyHtml += `
+          <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <div style="font-weight: 600; font-size: 0.9rem; color: #FFF; margin-bottom: 4px;">${ex.name}</div>
+            <div style="font-size: 0.8rem; color: var(--subtext);">
+              ${ex.sets.map(s => `Set ${s.set}: <strong style="color:#FFF;">${s.weight} kg</strong> × <strong style="color:#FFF;">${s.reps} reps</strong>`).join(' | ')}
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('modal-body').innerHTML = bodyHtml;
+      document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').style.display = 'none';
+    }
+
+    function exportData() {
+      const history = getHistory();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "recomp_workout_history.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function clearAllData() {
+      if (confirm("Are you sure you want to delete all saved local workout logs?")) {
+        localStorage.clear();
+        updateStats();
+        renderCalendarAndHistory();
+        renderWorkout();
+        alert("All local data has been reset.");
+      }
+    }
+
+    // Init App
     initNav();
     renderWorkout();
+    updateStats();
   </script>
 </body>
 </html>
