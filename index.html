@@ -211,7 +211,7 @@
     }
     .set-hint strong { color: #E5E5EA; }
 
-    /* Add Set Button */
+    /* Action Buttons */
     .add-set-btn {
       width: 100%;
       background: var(--card-alt);
@@ -225,6 +225,21 @@
       cursor: pointer;
     }
 
+    .add-custom-ex-btn {
+      width: 100%;
+      background: var(--card);
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      text-align: center;
+    }
+
     .finish-workout-btn {
       width: 100%;
       background: var(--accent);
@@ -234,7 +249,7 @@
       border-radius: 12px;
       font-size: 1rem;
       font-weight: 700;
-      margin-top: 10px;
+      margin-top: 4px;
       margin-bottom: 20px;
     }
 
@@ -257,6 +272,7 @@
     .cal-date {
       aspect-ratio: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       font-size: 0.8rem;
@@ -264,11 +280,19 @@
       border-radius: 8px;
       background: var(--card-alt);
       color: #8E8E93;
+      padding: 2px;
     }
     .cal-date.active-logged {
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
+      background: rgba(48, 209, 88, 0.2);
+      border: 1px solid var(--accent);
+      color: #FFF;
+    }
+    .cal-subtext {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-top: 1px;
+      line-height: 1;
     }
     .history-card {
       background: var(--card);
@@ -279,6 +303,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
     }
     .history-info-title { font-size: 0.95rem; font-weight: 600; color: #FFF; }
     .history-info-date { font-size: 0.75rem; color: var(--subtext); margin-top: 2px; }
@@ -314,7 +339,17 @@
       padding: 10px;
       border-radius: 10px;
       font-weight: 600;
-      margin-top: 14px;
+      margin-top: 10px;
+    }
+    .modal-delete-btn {
+      width: 100%;
+      background: rgba(255, 69, 58, 0.15);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 10px;
     }
 
     /* Fixed Bottom iOS Tab Bar */
@@ -345,7 +380,7 @@
     .nav-item.active { color: var(--accent); }
     .nav-item-icon { font-size: 1.2rem; }
 
-    /* Rest Timer Banner & Dynamic Controls */
+    /* Rest Timer Banner & Controls */
     #timer-banner {
       position: fixed;
       bottom: calc(60px + env(safe-area-inset-bottom));
@@ -432,11 +467,12 @@
       <div class="modal-title" id="modal-title">Session Details</div>
       <div class="modal-date" id="modal-date">Date</div>
       <div id="modal-body"></div>
+      <button class="modal-delete-btn" id="modal-delete-action-btn">Delete Workout Session</button>
       <button class="modal-close-btn" onclick="closeModal()">Close</button>
     </div>
   </div>
 
-  <!-- Rest Timer Banner with Live Adjust Controls -->
+  <!-- Rest Timer Banner -->
   <div id="timer-banner">
     <div class="timer-flex">
       <div class="timer-text">REST: <span id="timer-seconds">0</span>s</div>
@@ -492,7 +528,7 @@
         title: "Shoulders & Heavy Triceps Focus",
         exercises: [
           { name: "Barbell Overhead Shoulder Press", alt: "Seated DB Overhead Press (12.5 kg)", repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3 },
-          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", repTarget: "12-15 reps", rest: 90, sets: 4 },
+          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4 },
           { name: "Close-Grip Barbell Bench Press", alt: "Weighted Bench Dips (10–15 kg plate)", repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3 },
           { name: "Seated 60° Incline DB Overhead Ext", alt: "Seated Barbell French Press", repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3 },
           { name: "Incline DB Skullcrushers (30°)", alt: "Lying Barbell Skullcrushers", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3 }
@@ -549,6 +585,35 @@
       localStorage.setItem(`d${dayIdx}_e${exIdx}_setcount`, count);
     }
 
+    /* Custom Exercises Logic */
+    function getCustomExercises(dayIdx) {
+      return JSON.parse(localStorage.getItem(`custom_ex_d${dayIdx}`) || '[]');
+    }
+
+    function addCustomExercise() {
+      const exName = prompt("Enter Extra Exercise Name:");
+      if (!exName || !exName.trim()) return;
+
+      const customs = getCustomExercises(currentDayIdx);
+      customs.push({
+        name: exName.trim(),
+        alt: "Custom Exercise",
+        repTarget: "8–12 reps",
+        weightTarget: "Custom",
+        rest: 90,
+        sets: 3,
+        isCustom: true
+      });
+      localStorage.setItem(`custom_ex_d${currentDayIdx}`, JSON.stringify(customs));
+      renderWorkout();
+    }
+
+    function getAllExercisesForDay(dayIdx) {
+      const base = programData[dayIdx].exercises;
+      const customs = getCustomExercises(dayIdx);
+      return [...base, ...customs];
+    }
+
     function initNav() {
       const navContainer = document.getElementById('day-nav-tabs');
       navContainer.innerHTML = programData.map((d, i) => `
@@ -567,6 +632,7 @@
     function renderWorkout() {
       const main = document.getElementById('workout-content');
       const data = programData[currentDayIdx];
+      const allExercises = getAllExercisesForDay(currentDayIdx);
 
       let html = `
         <div class="day-header">
@@ -574,13 +640,13 @@
         </div>
       `;
 
-      data.exercises.forEach((ex, exIdx) => {
+      allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
 
         html += `
           <div class="card">
             <div class="ex-header">
-              <span class="ex-name">${ex.name}</span>
+              <span class="ex-name">${ex.name} ${ex.isCustom ? '<span style="font-size:0.7rem; color:var(--accent);">(Extra)</span>' : ''}</span>
               <button class="alt-btn" onclick="toggleAlt(${exIdx})">Swap Alt</button>
             </div>
             <div class="alt-text" id="alt-${exIdx}">Smart Alt: ${ex.alt}</div>
@@ -640,7 +706,10 @@
         `;
       });
 
-      html += `<button class="finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>`;
+      html += `
+        <button class="add-custom-ex-btn" onclick="addCustomExercise()">+ Add Custom Extra Exercise</button>
+        <button class="finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>
+      `;
       main.innerHTML = html;
     }
 
@@ -661,13 +730,15 @@
     }
 
     function addSet(exIdx) {
-      const currentCount = getSetCount(currentDayIdx, exIdx, programData[currentDayIdx].exercises[exIdx].sets);
+      const allExercises = getAllExercisesForDay(currentDayIdx);
+      const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
       saveSetCount(currentDayIdx, exIdx, currentCount + 1);
       renderWorkout();
     }
 
     function removeSet(exIdx, setNum) {
-      const currentCount = getSetCount(currentDayIdx, exIdx, programData[currentDayIdx].exercises[exIdx].sets);
+      const allExercises = getAllExercisesForDay(currentDayIdx);
+      const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
       if (currentCount <= 1) return;
 
       for (let s = setNum; s < currentCount; s++) {
@@ -692,7 +763,6 @@
     }
 
     function triggerRestTimerFromInput(restKey, exIdx, setNum) {
-      // Mark set as completed automatically when rest is triggered
       localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'true');
       renderWorkout();
 
@@ -746,14 +816,15 @@
 
     function finishAndSaveWorkout() {
       const dayData = programData[currentDayIdx];
+      const allExercises = getAllExercisesForDay(currentDayIdx);
+
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
       const displayDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-      // Build Clean Filtered Log (Exclude Unperformed Exercises & Empty Sets)
       const loggedExercises = [];
 
-      dayData.exercises.forEach((ex, exIdx) => {
+      allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
         const performedSets = [];
 
@@ -766,7 +837,6 @@
           const repsVal = parseInt(localStorage.getItem(rKey) || '0', 10);
           const restVal = parseInt(localStorage.getItem(restKey) || ex.rest.toString(), 10);
 
-          // Only keep sets where reps > 0 or weight > 0
           if (repsVal > 0 || weightVal > 0) {
             performedSets.push({
               set: s,
@@ -791,7 +861,7 @@
       }
 
       const sessionObj = {
-        id: Date.now(), // Unique ID per workout session
+        id: Date.now(),
         dateStr: dateStr,
         displayDate: displayDate,
         day: dayData.day,
@@ -803,8 +873,8 @@
       history.unshift(sessionObj);
       saveHistory(history);
 
-      // RESET Active Session Inputs for this day to fix multi-workout same-day bug
-      dayData.exercises.forEach((ex, exIdx) => {
+      // Reset active session inputs and custom exercises for this day
+      allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
         for (let s = 1; s <= totalSets; s++) {
           localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_w`);
@@ -813,6 +883,7 @@
           localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_done`);
         }
       });
+      localStorage.removeItem(`custom_ex_d${currentDayIdx}`);
 
       renderWorkout();
       alert(`${dayData.day} Workout Logged Successfully! 🎉`);
@@ -851,7 +922,7 @@
         `).join('');
       }
 
-      // Render Calendar Grid
+      // Render Calendar Grid with Subtext Badges
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth();
@@ -861,7 +932,16 @@
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      const loggedDates = new Set(history.map(h => h.dateStr));
+      // Map sessions to dates
+      const dateMap = {};
+      history.forEach(h => {
+        if (!dateMap[h.dateStr]) dateMap[h.dateStr] = [];
+        // Extract Day short code like "D1", "D5"
+        const shortDay = h.day.replace('Day ', 'D');
+        if (!dateMap[h.dateStr].includes(shortDay)) {
+          dateMap[h.dateStr].push(shortDay);
+        }
+      });
 
       let calHtml = `
         <div class="cal-day-head">S</div><div class="cal-day-head">M</div><div class="cal-day-head">T</div>
@@ -874,8 +954,16 @@
 
       for (let d = 1; d <= daysInMonth; d++) {
         const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isLogged = loggedDates.has(dStr);
-        calHtml += `<div class="cal-date ${isLogged ? 'active-logged' : ''}">${d}</div>`;
+        const loggedDays = dateMap[dStr];
+        const isLogged = !!loggedDays;
+        const subtext = isLogged ? loggedDays.join(',') : '';
+
+        calHtml += `
+          <div class="cal-date ${isLogged ? 'active-logged' : ''}">
+            <span>${d}</span>
+            ${isLogged ? `<span class="cal-subtext">${subtext}</span>` : ''}
+          </div>
+        `;
       }
 
       document.getElementById('calendar-grid').innerHTML = calHtml;
@@ -902,7 +990,23 @@
       });
 
       document.getElementById('modal-body').innerHTML = bodyHtml;
+
+      // Bind Delete Button Action
+      const deleteBtn = document.getElementById('modal-delete-action-btn');
+      deleteBtn.onclick = () => deleteSession(sessionId);
+
       document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    function deleteSession(sessionId) {
+      if (confirm("Are you sure you want to delete this workout session from your logs?")) {
+        let history = getHistory();
+        history = history.filter(s => s.id !== sessionId);
+        saveHistory(history);
+        closeModal();
+        renderCalendarAndHistory();
+        alert("Workout session deleted.");
+      }
     }
 
     function closeModal() {
