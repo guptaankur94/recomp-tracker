@@ -81,7 +81,7 @@
       border-color: var(--accent);
     }
 
-    /* Cards */
+    /* Exercise Cards */
     .day-header { margin-bottom: 12px; }
     .day-title { font-size: 1.15rem; font-weight: 700; color: var(--text); }
     
@@ -108,7 +108,6 @@
       border-radius: 6px;
       font-weight: 600;
     }
-    .ex-meta { font-size: 0.78rem; color: var(--subtext); margin-bottom: 10px; }
     .alt-text {
       font-size: 0.75rem;
       color: var(--orange);
@@ -119,27 +118,44 @@
       border-radius: 6px;
     }
 
-    /* Set Inputs */
+    /* Set Container & Rows */
+    .set-container {
+      margin-top: 10px;
+    }
+    .set-block {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
     .set-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
-    .set-num { font-size: 0.8rem; font-weight: 600; color: var(--subtext); width: 38px; }
-    .input-group { display: flex; align-items: center; gap: 4px; }
+    .set-num { font-size: 0.8rem; font-weight: 700; color: var(--accent); width: 38px; }
+    .input-group { display: flex; align-items: center; gap: 3px; }
+    
     input[type="number"] {
-      width: 64px;
-      height: 36px;
+      width: 58px;
+      height: 34px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card-alt);
       color: #FFF;
       text-align: center;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
     }
-    .unit-label { font-size: 0.72rem; color: var(--subtext); }
+    input[type="number"].rest-input {
+      width: 50px;
+      border-color: var(--blue);
+      color: #30D158;
+    }
+
+    .unit-label { font-size: 0.7rem; color: var(--subtext); }
 
     .timer-trigger-btn {
       background: var(--blue);
@@ -147,9 +163,45 @@
       border: none;
       padding: 6px 10px;
       border-radius: 8px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
       margin-left: auto;
+    }
+
+    .delete-set-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+
+    /* Reference Hint Text Below Inputs */
+    .set-hint {
+      font-size: 0.72rem;
+      color: var(--subtext);
+      margin-top: 5px;
+      padding-top: 4px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+    }
+    .set-hint strong { color: #E5E5EA; }
+
+    /* Add Set Button */
+    .add-set-btn {
+      width: 100%;
+      background: var(--card-alt);
+      border: 1px dashed var(--blue);
+      color: var(--blue);
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 4px;
+      cursor: pointer;
     }
 
     .finish-workout-btn {
@@ -292,7 +344,7 @@
 
   <header>
     <h1>RECOMP EXECUTION ENGINE</h1>
-    <div class="subtitle">70kg Frame Target | Recomposition Split</div>
+    <div class="subtitle">70kg Bodyweight Target | Recomposition Split</div>
   </header>
 
   <!-- Top Metric Bar -->
@@ -372,53 +424,53 @@
         day: "Day 1",
         title: "Upper Chest & Heavy Biceps Focus",
         exercises: [
-          { name: "Barbell Bench Press", alt: "Incline DB Press (12.5 kg DBs, 3s eccentric)", target: "3 sets × 8–10 reps | Target: 40–55 kg", rest: 180, sets: 3 },
-          { name: "Pec Deck Machine Flyes", alt: "Incline DB Flyes (10–12.5 kg DBs)", target: "3 sets × 10–12 reps | Target: Moderate", rest: 90, sets: 3 },
-          { name: "Barbell Bicep Curls", alt: "Standing Alt DB Curls (12.5 kg DBs)", target: "3 sets × 8–10 reps | Target: 20–27.5 kg", rest: 120, sets: 3 },
-          { name: "Incline DB Curls (45°)", alt: "Seated DB Curls (3-second lowering)", target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs", rest: 120, sets: 3 },
-          { name: "Barbell Reverse Curls", alt: "Cross-Body DB Hammer Curls (10–12.5 kg)", target: "3 sets × 8–10 reps | Target: 15–22.5 kg", rest: 90, sets: 3 }
+          { name: "Barbell Bench Press", alt: "Incline DB Press (12.5 kg DBs, 3s eccentric)", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3 },
+          { name: "Pec Deck Machine Flyes", alt: "Incline DB Flyes (10–12.5 kg DBs)", repTarget: "10–12 reps", weightTarget: "Moderate", rest: 90, sets: 3 },
+          { name: "Barbell Bicep Curls", alt: "Standing Alt DB Curls (12.5 kg DBs)", repTarget: "8–10 reps", weightTarget: "20–27.5 kg", rest: 120, sets: 3 },
+          { name: "Incline DB Curls (45°)", alt: "Seated DB Curls (3-second lowering)", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3 },
+          { name: "Barbell Reverse Curls", alt: "Cross-Body DB Hammer Curls (10–12.5 kg)", repTarget: "8–10 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3 }
         ]
       },
       {
         day: "Day 2",
         title: "Lower Body & Core Focus",
         exercises: [
-          { name: "Leg Press Machine", alt: "Barbell Squats (35–50 kg total bar)", target: "3 sets × 10–12 reps | Target: Moderate-Heavy", rest: 150, sets: 3 },
-          { name: "Barbell Romanian Deadlifts", alt: "Single-Leg DB RDLs (12.5 kg DB)", target: "3 sets × 8–10 reps | Target: 45–60 kg", rest: 180, sets: 3 },
-          { name: "Single-Leg DB Calf Raise", alt: "Standing Barbell Calf Raise", target: "3 sets × 12–15 reps | Target: 10–12.5 kg DB", rest: 90, sets: 3 },
-          { name: "Hanging Leg Raises / Knee Raises", alt: "Incline Crunches or 60s Planks", target: "3 sets × 12–15 reps | Target: Bodyweight", rest: 60, sets: 3 }
+          { name: "Leg Press Machine", alt: "Barbell Squats (35–50 kg total bar)", repTarget: "10–12 reps", weightTarget: "Moderate-Heavy", rest: 150, sets: 3 },
+          { name: "Barbell Romanian Deadlifts", alt: "Single-Leg DB RDLs (12.5 kg DB)", repTarget: "8–10 reps", weightTarget: "45–60 kg", rest: 180, sets: 3 },
+          { name: "Single-Leg DB Calf Raise", alt: "Standing Barbell Calf Raise", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DB", rest: 90, sets: 3 },
+          { name: "Hanging Leg Raises / Knee Raises", alt: "Incline Crunches or 60s Planks", repTarget: "12–15 reps", weightTarget: "Bodyweight", rest: 60, sets: 3 }
         ]
       },
       {
         day: "Day 3",
         title: "Shoulders & Heavy Triceps Focus",
         exercises: [
-          { name: "Barbell Overhead Shoulder Press", alt: "Seated DB Overhead Press (12.5 kg)", target: "3 sets × 8–10 reps | Target: 30–40 kg", rest: 180, sets: 3 },
-          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", target: "4 sets × 12–15 reps | Target: 7.5–10 kg DBs", rest: 90, sets: 4 },
-          { name: "Close-Grip Barbell Bench Press", alt: "Weighted Bench Dips (10–15 kg plate)", target: "3 sets × 6–8 reps | Target: 35–45 kg", rest: 180, sets: 3 },
-          { name: "Seated 60° Incline DB Overhead Ext", alt: "Seated Barbell French Press", target: "3 sets × 8–12 reps | Target: Single 12.5–15 kg", rest: 120, sets: 3 },
-          { name: "Incline DB Skullcrushers (30°)", alt: "Lying Barbell Skullcrushers", target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs", rest: 120, sets: 3 }
+          { name: "Barbell Overhead Shoulder Press", alt: "Seated DB Overhead Press (12.5 kg)", repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3 },
+          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4 },
+          { name: "Close-Grip Barbell Bench Press", alt: "Weighted Bench Dips (10–15 kg plate)", repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3 },
+          { name: "Seated 60° Incline DB Overhead Ext", alt: "Seated Barbell French Press", repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3 },
+          { name: "Incline DB Skullcrushers (30°)", alt: "Lying Barbell Skullcrushers", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3 }
         ]
       },
       {
         day: "Day 4",
         title: "Back & Lower Arm Width",
         exercises: [
-          { name: "Lat Pulldown Machine", alt: "Bodyweight Pull-ups / Negative Pull-ups", target: "3 sets × 8–10 reps | Target: Moderate-Heavy", rest: 120, sets: 3 },
-          { name: "Barbell Bent-Over Rows", alt: "Single-Arm DB Rows (12.5 kg DB)", target: "3 sets × 8–10 reps | Target: 40–55 kg", rest: 180, sets: 3 },
-          { name: "Cross-Body DB Hammer Curls", alt: "Incline Neutral-Grip DB Curls", target: "3 sets × 8–10 reps | Target: 10–12.5 kg DBs", rest: 90, sets: 3 },
-          { name: "Heavy DB Farmer’s Carries", alt: "Barbell Static Grip Hold (50 kg bar)", target: "3 sets × 45s walks | Target: 12.5 kg DBs", rest: 90, sets: 3 }
+          { name: "Lat Pulldown Machine", alt: "Bodyweight Pull-ups / Negative Pull-ups", repTarget: "8–10 reps", weightTarget: "Moderate-Heavy", rest: 120, sets: 3 },
+          { name: "Barbell Bent-Over Rows", alt: "Single-Arm DB Rows (12.5 kg DB)", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3 },
+          { name: "Cross-Body DB Hammer Curls", alt: "Incline Neutral-Grip DB Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3 },
+          { name: "Heavy DB Farmer’s Carries", alt: "Barbell Static Grip Hold (50 kg bar)", repTarget: "45s walks", weightTarget: "12.5 kg DBs", rest: 90, sets: 3 }
         ]
       },
       {
         day: "Day 5",
         title: "Chest Definition & Arm Pump",
         exercises: [
-          { name: "Pec Deck Machine Flyes", alt: "Flat DB Flyes (10–12.5 kg DBs)", target: "3 sets × 12–15 reps | Target: Moderate", rest: 90, sets: 3 },
-          { name: "Barbell Pullovers", alt: "Single DB Pullover (12.5 kg DB)", target: "3 sets × 10–12 reps | Target: 15–22.5 kg", rest: 90, sets: 3 },
-          { name: "Standing DB Bicep Curls", alt: "Barbell 21s", target: "3 sets × 10–12 reps | Target: 10–12.5 kg DBs", rest: 90, sets: 3 },
-          { name: "Bench Dips", alt: "Overhand DB Tricep Kickbacks", target: "3 sets × 10–12 reps | Target: BW + 10 kg plate", rest: 90, sets: 3 },
-          { name: "Bodyweight Push-ups", alt: "Decline Push-ups (Feet elevated)", target: "2 sets × Technical Failure | Target: BW", rest: 75, sets: 2 }
+          { name: "Pec Deck Machine Flyes", alt: "Flat DB Flyes (10–12.5 kg DBs)", repTarget: "12–15 reps", weightTarget: "Moderate", rest: 90, sets: 3 },
+          { name: "Barbell Pullovers", alt: "Single DB Pullover (12.5 kg DB)", repTarget: "10–12 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3 },
+          { name: "Standing DB Bicep Curls", alt: "Barbell 21s", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3 },
+          { name: "Bench Dips", alt: "Overhand DB Tricep Kickbacks", repTarget: "10–12 reps", weightTarget: "BW + 10 kg plate", rest: 90, sets: 3 },
+          { name: "Bodyweight Push-ups", alt: "Decline Push-ups (Feet elevated)", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2 }
         ]
       }
     ];
@@ -439,6 +491,15 @@
       const history = getHistory();
       document.getElementById('stat-total-workouts').innerText = history.length;
       document.getElementById('stat-streak').innerText = `${history.length > 0 ? Math.min(history.length, 5) : 0} Sessions`;
+    }
+
+    function getSetCount(dayIdx, exIdx, defaultSets) {
+      const stored = localStorage.getItem(`d${dayIdx}_e${exIdx}_setcount`);
+      return stored ? parseInt(stored, 10) : defaultSets;
+    }
+
+    function saveSetCount(dayIdx, exIdx, count) {
+      localStorage.setItem(`d${dayIdx}_e${exIdx}_setcount`, count);
     }
 
     function initNav() {
@@ -467,38 +528,65 @@
       `;
 
       data.exercises.forEach((ex, exIdx) => {
+        const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
+
         html += `
           <div class="card">
             <div class="ex-header">
               <span class="ex-name">${ex.name}</span>
               <button class="alt-btn" onclick="toggleAlt(${exIdx})">Swap Alt</button>
             </div>
-            <div class="ex-meta">${ex.target}</div>
             <div class="alt-text" id="alt-${exIdx}">Smart Alt: ${ex.alt}</div>
+            <div class="set-container">
         `;
 
-        for (let s = 1; s <= ex.sets; s++) {
+        for (let s = 1; s <= totalSets; s++) {
           const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
           const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
+          const restKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_rest`;
+
           const valW = localStorage.getItem(wKey) || '';
           const valR = localStorage.getItem(rKey) || '';
+          const valRest = localStorage.getItem(restKey) || ex.rest;
 
           html += `
-            <div class="set-row">
-              <span class="set-num">Set ${s}</span>
-              <div class="input-group">
-                <input type="number" id="${wKey}" step="0.5" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
-                <span class="unit-label">kg</span>
+            <div class="set-block">
+              <div class="set-row">
+                <span class="set-num">Set ${s}</span>
+                
+                <div class="input-group">
+                  <input type="number" id="${wKey}" step="0.5" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
+                  <span class="unit-label">kg</span>
+                </div>
+
+                <div class="input-group">
+                  <input type="number" id="${rKey}" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
+                  <span class="unit-label">reps</span>
+                </div>
+
+                <div class="input-group">
+                  <input type="number" id="${restKey}" class="rest-input" value="${valRest}" onchange="saveVal('${restKey}', this.value)">
+                  <span class="unit-label">s</span>
+                </div>
+
+                <button class="timer-trigger-btn" onclick="triggerRestTimerFromInput('${restKey}')">▶ Rest</button>
+
+                ${totalSets > 1 ? `<button class="delete-set-btn" onclick="removeSet(${exIdx},${s})">✕</button>` : ''}
               </div>
-              <div class="input-group">
-                <input type="number" id="${rKey}" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
-                <span class="unit-label">reps</span>
+
+              <div class="set-hint">
+                <span>💡 Target: <strong>${ex.repTarget} @ ${ex.weightTarget}</strong></span>
+                <span>Rec Rest: <strong>${ex.rest}s</strong></span>
               </div>
-              <button class="timer-trigger-btn" onclick="triggerRestTimer(${ex.rest})">Rest ${ex.rest}s</button>
             </div>
           `;
         }
-        html += `</div>`;
+
+        html += `
+            </div>
+            <button class="add-set-btn" onclick="addSet(${exIdx})">+ Add Set</button>
+          </div>
+        `;
       });
 
       html += `<button class="finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>`;
@@ -512,6 +600,43 @@
 
     function saveVal(key, value) {
       localStorage.setItem(key, value);
+    }
+
+    function addSet(exIdx) {
+      const currentCount = getSetCount(currentDayIdx, exIdx, programData[currentDayIdx].exercises[exIdx].sets);
+      const newCount = currentCount + 1;
+      saveSetCount(currentDayIdx, exIdx, newCount);
+      renderWorkout();
+    }
+
+    function removeSet(exIdx, setNum) {
+      const currentCount = getSetCount(currentDayIdx, exIdx, programData[currentDayIdx].exercises[exIdx].sets);
+      if (currentCount <= 1) return;
+
+      // Shift higher sets down
+      for (let s = setNum; s < currentCount; s++) {
+        const nextW = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_w`) || '';
+        const nextR = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_r`) || '';
+        const nextRest = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_rest`) || '';
+
+        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_w`, nextW);
+        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_r`, nextR);
+        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_rest`, nextRest);
+      }
+
+      // Remove last
+      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_w`);
+      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_r`);
+      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_rest`);
+
+      saveSetCount(currentDayIdx, exIdx, currentCount - 1);
+      renderWorkout();
+    }
+
+    function triggerRestTimerFromInput(restKey) {
+      const inputEl = document.getElementById(restKey);
+      const seconds = inputEl ? parseInt(inputEl.value, 10) : 90;
+      triggerRestTimer(isNaN(seconds) ? 90 : seconds);
     }
 
     function triggerRestTimer(seconds) {
@@ -549,8 +674,9 @@
       const displayDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       const loggedExercises = dayData.exercises.map((ex, exIdx) => {
+        const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
         const setsLogged = [];
-        for (let s = 1; s <= ex.sets; s++) {
+        for (let s = 1; s <= totalSets; s++) {
           const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
           const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
           setsLogged.push({
