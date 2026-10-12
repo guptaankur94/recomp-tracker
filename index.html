@@ -633,6 +633,88 @@
     .target-val { font-weight: 700; font-size: 0.95rem; }
     .target-lbl { font-size: 0.62rem; color: var(--subtext); text-transform: uppercase; margin-top: 2px; }
     #app-subtitle.clickable { color: var(--blue); cursor: pointer; }
+
+    /* Set commit feel */
+    .set-num {
+      min-width: 26px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--card-alt);
+      color: var(--subtext);
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+    .check-btn {
+      width: 40px;
+      height: 34px;
+      margin-left: auto;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--card-alt);
+      color: var(--subtext);
+      font-size: 1rem;
+      font-weight: 800;
+      transition: transform 0.1s ease;
+    }
+    .check-btn:active { transform: scale(0.9); background: var(--accent); color: #000; border-color: var(--accent); }
+    .set-block.completed {
+      background: rgba(48, 209, 88, 0.12);
+      border-color: rgba(48, 209, 88, 0.55);
+      cursor: pointer;
+      padding: 10px;
+    }
+    .locked-row { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+    .locked-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      font-weight: 900;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .locked-set { font-size: 0.72rem; font-weight: 700; color: var(--subtext); }
+    .locked-val { font-size: 1.1rem; font-weight: 800; color: #FFF; }
+    .locked-unit { font-size: 0.68rem; font-weight: 600; color: var(--subtext); margin-left: 2px; }
+    .locked-x { color: var(--subtext); font-weight: 700; }
+    .locked-rest { margin-left: auto; font-size: 0.7rem; color: var(--subtext); }
+    .edit-hint { font-size: 0.8rem; color: var(--subtext); }
+    .locked-drop { font-size: 0.78rem; color: var(--orange); margin: 6px 0 0 34px; }
+    .set-block.completed .add-drop-btn { margin-left: 34px; padding-top: 4px; }
+    .ex-progress {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--subtext);
+      background: var(--card-alt);
+      border-radius: 10px;
+      padding: 2px 7px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .ex-progress.all-done { background: var(--accent); color: #000; }
+    input::placeholder { color: #636366; }
+
+    .just-completed { animation: setPop 0.3s ease-out; }
+    .just-completed .locked-num { animation: checkIn 0.35s ease-out; }
+    .shake { animation: shake 0.35s ease-in-out; }
+    .saved-pulse { animation: savedPulse 0.5s ease-out; }
+    @keyframes setPop { 0% { transform: scale(0.97); } 55% { transform: scale(1.015); } 100% { transform: scale(1); } }
+    @keyframes checkIn { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+    @keyframes savedPulse {
+      0% { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.6); }
+      100% { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
+    }
   </style>
 </head>
 <body>
@@ -920,6 +1002,7 @@
     let timerCountdown = null;
     let timerSecondsRemaining = 0;
     let calendarMonthOffset = 0;
+    let justCompletedBlock = null;
     let progressExercise = null;
     let progressMetric = 'top';
 
@@ -1090,6 +1173,7 @@
       const drops = getDrops(currentDayIdx, exIdx, setNum);
       drops.push({ w: '', r: '' });
       saveDrops(exIdx, setNum, drops);
+      localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
       renderWorkout();
     }
 
@@ -1251,11 +1335,15 @@
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
         const last = getLastPerformance(ex.name, history);
+        let doneSets = 0;
+        for (let s = 1; s <= totalSets; s++) {
+          if (localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_done`) === 'true') doneSets++;
+        }
 
         html += `
           <div class="card">
             <div class="ex-header">
-              <span class="ex-name">${escapeHtml(ex.name)} ${ex.isCustom ? '<span style="font-size:0.7rem; color:var(--accent);">(Extra)</span>' : ''}</span>
+              <span class="ex-name">${escapeHtml(ex.name)} ${ex.isCustom ? '<span style="font-size:0.7rem; color:var(--accent);">(Extra)</span>' : ''}<span class="ex-progress ${doneSets === totalSets ? 'all-done' : ''}">${doneSets}/${totalSets}</span></span>
               <div class="ex-actions">
                 ${ex.isCustom
                   ? `<button class="remove-ex-btn" onclick="removeCustomExercise(${exIdx})">Remove</button>`
@@ -1273,6 +1361,7 @@
           const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
           const restKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_rest`;
           const doneKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_done`;
+          const blockId = `block_d${currentDayIdx}_e${exIdx}_s${s}`;
 
           const valW = localStorage.getItem(wKey) || '';
           const valR = localStorage.getItem(rKey) || '';
@@ -1283,29 +1372,50 @@
           const lastDrops = lastSet && lastSet.drops ? lastSet.drops.length : 0;
           const tip = progressionTip(ex, lastSet);
 
+          if (isDone) {
+            // Committed set: a solid, locked line. Tap to edit.
+            const shownW = parseFloat(valW) > 0 ? fmtNum(parseFloat(valW)) : null;
+            html += `
+              <div class="set-block completed ${blockId === justCompletedBlock ? 'just-completed' : ''}" id="${blockId}" onclick="editSet(${exIdx}, ${s})">
+                <div class="locked-row">
+                  <span class="locked-num">✓</span>
+                  <span class="locked-set">Set ${s}</span>
+                  <span class="locked-val">${shownW ? `${shownW}<span class="locked-unit">kg</span>` : 'BW'}</span>
+                  <span class="locked-x">×</span>
+                  <span class="locked-val">${escapeHtml(valR || '–')}<span class="locked-unit">reps</span></span>
+                  <span class="locked-rest">${escapeHtml(String(valRest))}s rest</span>
+                  <span class="edit-hint">✎</span>
+                </div>
+                ${drops.filter(d => d.r).map((drop, i) => `
+                  <div class="locked-drop">↳ Drop ${i + 1}: <strong>${parseFloat(drop.w) > 0 ? `${fmtNum(parseFloat(drop.w))} kg` : 'BW'} × ${escapeHtml(drop.r)}</strong></div>
+                `).join('')}
+                <button class="add-drop-btn" onclick="event.stopPropagation(); addDrop(${exIdx}, ${s})">+ Drop set</button>
+              </div>
+            `;
+            continue;
+          }
+
           html += `
-            <div class="set-block ${isDone ? 'completed' : ''}" id="block_d${currentDayIdx}_e${exIdx}_s${s}">
+            <div class="set-block" id="${blockId}">
               <div class="set-row">
-                <button class="set-label-btn" onclick="toggleSetDone(${exIdx}, ${s})">
-                  ${isDone ? '✓ Set' : 'Set'} ${s}
-                </button>
-                
+                <span class="set-num">${s}</span>
+
                 <div class="input-group">
-                  <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
+                  <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${lastSet ? fmtNum(lastSet.weight) : '0'}" value="${valW}" onfocus="this.select()" onchange="saveVal('${wKey}', this.value); pulse(this)">
                   <span class="unit-label">kg</span>
                 </div>
 
                 <div class="input-group">
-                  <input type="number" id="${rKey}" inputmode="numeric" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
+                  <input type="number" id="${rKey}" inputmode="numeric" placeholder="${lastSet ? lastSet.reps : '0'}" value="${valR}" onfocus="this.select()" onchange="saveVal('${rKey}', this.value); pulse(this)">
                   <span class="unit-label">reps</span>
                 </div>
 
                 <div class="input-group">
-                  <input type="number" id="${restKey}" class="rest-input" inputmode="numeric" value="${valRest}" onchange="saveVal('${restKey}', this.value)">
+                  <input type="number" id="${restKey}" class="rest-input" inputmode="numeric" value="${valRest}" onfocus="this.select()" onchange="saveVal('${restKey}', this.value); pulse(this)">
                   <span class="unit-label">s</span>
                 </div>
 
-                <button class="timer-trigger-btn" onclick="triggerRestTimerFromInput('${restKey}', ${exIdx}, ${s})">▶ Rest</button>
+                <button class="check-btn" onclick="completeSet(${exIdx}, ${s})" aria-label="Complete set ${s}">✓</button>
 
                 ${totalSets > 1 ? `<button class="delete-set-btn" onclick="removeSet(${exIdx},${s})" title="Delete Set">✕</button>` : ''}
               </div>
@@ -1314,11 +1424,11 @@
                 <div class="drop-row">
                   <span class="drop-label">↳ Drop ${i + 1}</span>
                   <div class="input-group">
-                    <input type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(drop.w)}" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'w', this.value)">
+                    <input type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(drop.w)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'w', this.value); pulse(this)">
                     <span class="unit-label">kg</span>
                   </div>
                   <div class="input-group">
-                    <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(drop.r)}" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'r', this.value)">
+                    <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(drop.r)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'r', this.value); pulse(this)">
                     <span class="unit-label">reps</span>
                   </div>
                   <button class="delete-set-btn" onclick="removeDrop(${exIdx}, ${s}, ${i})" title="Delete Drop">✕</button>
@@ -1365,12 +1475,86 @@
       if (clearBtn) clearBtn.style.display = dayHasDraft(currentDayIdx) ? 'block' : 'none';
     }
 
-    function toggleSetDone(exIdx, setNum) {
-      const doneKey = `active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`;
-      const currentState = localStorage.getItem(doneKey) === 'true';
-      localStorage.setItem(doneKey, (!currentState).toString());
+    // Commit a set: fill from last time if left empty, lock the row, and start the rest timer the first time.
+    function completeSet(exIdx, setNum) {
+      const key = f => `active_d${currentDayIdx}_e${exIdx}_s${setNum}_${f}`;
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+      const last = getLastPerformance(ex.name, getHistory());
+      const lastSet = last ? (last.sets.find(x => x.set === setNum) || last.sets[setNum - 1]) : null;
+
+      const wInput = document.getElementById(key('w'));
+      const rInput = document.getElementById(key('r'));
+      let w = wInput.value.trim();
+      let r = rInput.value.trim();
+      if (!r && lastSet && lastSet.reps) r = String(lastSet.reps);
+      if (!w && lastSet && lastSet.weight) w = String(lastSet.weight);
+
+      if (!(parseInt(r, 10) > 0)) {
+        haptic('error');
+        const block = document.getElementById(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`);
+        block.classList.remove('shake');
+        void block.offsetWidth;
+        block.classList.add('shake');
+        rInput.focus();
+        return;
+      }
+
+      localStorage.setItem(key('w'), w);
+      localStorage.setItem(key('r'), r);
+      localStorage.setItem(key('done'), 'true');
+      const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
+      localStorage.setItem(key('rested'), 'true');
       touchDraft();
+
+      haptic('success');
+      justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
+      initNav();
       renderWorkout();
+      justCompletedBlock = null;
+
+      if (firstCompletion) {
+        const rest = parseInt(localStorage.getItem(key('rest')) || ex.rest, 10);
+        startRestTimer(isNaN(rest) ? 90 : rest);
+      }
+    }
+
+    function editSet(exIdx, setNum) {
+      localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
+      haptic('light');
+      renderWorkout();
+      const input = document.getElementById(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_w`);
+      if (input) input.focus();
+    }
+
+    // Brief green flash so a typed value visibly "lands"
+    function pulse(el) {
+      el.classList.remove('saved-pulse');
+      void el.offsetWidth;
+      el.classList.add('saved-pulse');
+    }
+
+    // Haptics: Android uses vibrate(); iPhone (iOS 18+) ticks when a switch checkbox is toggled.
+    const hapticSwitch = (() => {
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      label.appendChild(input);
+      document.body.appendChild(label);
+      return label;
+    })();
+
+    function haptic(type) {
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate(type === 'error' ? [30, 60, 30] : type === 'success' ? 20 : 10);
+          return;
+        }
+        hapticSwitch.click();
+        if (type === 'error') setTimeout(() => hapticSwitch.click(), 120);
+      } catch (e) {}
     }
 
     function addSet(exIdx) {
@@ -1385,7 +1569,7 @@
       const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
       if (currentCount <= 1) return;
 
-      const fields = ['w', 'r', 'rest', 'done', 'drops'];
+      const fields = ['w', 'r', 'rest', 'done', 'drops', 'rested'];
       const key = (s, f) => `active_d${currentDayIdx}_e${exIdx}_s${s}_${f}`;
 
       // Shift later sets up one slot
@@ -1401,16 +1585,6 @@
       saveSetCount(currentDayIdx, exIdx, currentCount - 1);
       initNav();
       renderWorkout();
-    }
-
-    function triggerRestTimerFromInput(restKey, exIdx, setNum) {
-      localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'true');
-      touchDraft();
-      renderWorkout();
-
-      const inputEl = document.getElementById(restKey);
-      const seconds = inputEl ? parseInt(inputEl.value, 10) : 90;
-      startRestTimer(isNaN(seconds) ? 90 : seconds);
     }
 
     function startRestTimer(seconds) {
@@ -1536,6 +1710,7 @@
         });
       }
       saveHistory(history);
+      haptic('success');
 
       // Reset this day's set inputs, drop sets, added/removed set counts and custom exercises
       clearDayDraft(currentDayIdx);
