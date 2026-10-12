@@ -538,6 +538,68 @@
     .data-table td { padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
     .data-table .num { text-align: right; }
     .mini-del-btn { background: none; border: none; color: var(--danger); font-weight: 700; padding: 0 4px; }
+
+    /* Drop sets */
+    .drop-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding-left: 6px;
+      border-left: 2px solid var(--orange);
+    }
+    .drop-label { font-size: 0.72rem; font-weight: 700; color: var(--orange); min-width: 54px; }
+    .add-drop-btn {
+      background: none;
+      border: none;
+      color: var(--orange);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 0 0 0;
+    }
+
+    /* Unsaved workout banner & multi-session modal */
+    .draft-banner {
+      background: rgba(255, 159, 10, 0.12);
+      border: 1px solid var(--orange);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+    .draft-banner-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .draft-banner-actions button {
+      flex: 1;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--card-alt);
+      color: var(--text);
+    }
+    .draft-banner-actions .primary { background: var(--accent); border-color: var(--accent); color: #000; }
+    .tab-dot { color: var(--orange); }
+    .tab-btn.active .tab-dot { color: #000; }
+    .session-block-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 4px 0 8px;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+    .session-del-btn {
+      background: rgba(255, 69, 58, 0.15);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+    }
   </style>
 </head>
 <body>
@@ -742,6 +804,9 @@
     let progressExercise = null;
     let progressMetric = 'top';
 
+    // A draft untouched for this long is treated as a new workout when edited again.
+    const DRAFT_STALE_MS = 12 * 60 * 60 * 1000;
+
     /* Helpers */
     function readJSON(key, fallback) {
       try {
@@ -848,6 +913,89 @@
       return null;
     }
 
+    /* Unsaved workout ("draft") tracking: the workout is dated by when you started logging it */
+    function draftMetaKey(dayIdx) {
+      return `active_d${dayIdx}_meta`;
+    }
+
+    function touchDraft() {
+      const now = Date.now();
+      const meta = readJSON(draftMetaKey(currentDayIdx), null);
+      const isStale = !meta || now - meta.lastEditAt > DRAFT_STALE_MS;
+      localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({
+        startedAt: isStale ? now : meta.startedAt,
+        lastEditAt: now
+      }));
+    }
+
+    function dayHasDraft(dayIdx) {
+      const regex = new RegExp(`^active_d${dayIdx}_e\\d+_s\\d+_(w|r|drops)$`);
+      return Object.keys(localStorage).some(k => {
+        if (!regex.test(k)) return false;
+        const val = localStorage.getItem(k);
+        return k.endsWith('_drops') ? readJSON(k, []).some(d => d.w || d.r) : !!val;
+      });
+    }
+
+    function clearDayDraft(dayIdx) {
+      removeKeysMatching(new RegExp(`^(active_)?d${dayIdx}_e\\d+_`));
+      localStorage.removeItem(draftMetaKey(dayIdx));
+      localStorage.removeItem(`custom_ex_d${dayIdx}`);
+    }
+
+    function discardDraft() {
+      if (!confirm(`Discard all unsaved sets for ${programData[currentDayIdx].day}?`)) return;
+      clearDayDraft(currentDayIdx);
+      initNav();
+      renderWorkout();
+    }
+
+    /* Drop sets: extra lighter rows attached to a set, stored as [{ w, r }] */
+    function dropsKey(dayIdx, exIdx, setNum) {
+      return `active_d${dayIdx}_e${exIdx}_s${setNum}_drops`;
+    }
+
+    function getDrops(dayIdx, exIdx, setNum) {
+      const drops = readJSON(dropsKey(dayIdx, exIdx, setNum), []);
+      return Array.isArray(drops) ? drops : [];
+    }
+
+    function saveDrops(exIdx, setNum, drops) {
+      localStorage.setItem(dropsKey(currentDayIdx, exIdx, setNum), JSON.stringify(drops));
+    }
+
+    function addDrop(exIdx, setNum) {
+      const drops = getDrops(currentDayIdx, exIdx, setNum);
+      drops.push({ w: '', r: '' });
+      saveDrops(exIdx, setNum, drops);
+      renderWorkout();
+    }
+
+    function removeDrop(exIdx, setNum, dropIdx) {
+      const drops = getDrops(currentDayIdx, exIdx, setNum);
+      drops.splice(dropIdx, 1);
+      if (drops.length) saveDrops(exIdx, setNum, drops);
+      else localStorage.removeItem(dropsKey(currentDayIdx, exIdx, setNum));
+      renderWorkout();
+    }
+
+    function saveDropVal(exIdx, setNum, dropIdx, field, value) {
+      const drops = getDrops(currentDayIdx, exIdx, setNum);
+      if (!drops[dropIdx]) return;
+      drops[dropIdx][field] = value;
+      saveDrops(exIdx, setNum, drops);
+      touchDraft();
+    }
+
+    // Total kg moved in a set, including its drop sets
+    function setVolume(set) {
+      return set.weight * set.reps + (set.drops || []).reduce((sum, d) => sum + d.weight * d.reps, 0);
+    }
+
+    function fmtSetLine(set) {
+      return `${fmtNum(set.weight)} kg × ${set.reps}`;
+    }
+
     /* Custom Exercises Logic */
     function getCustomExercises(dayIdx) {
       return readJSON(`custom_ex_d${dayIdx}`, []);
@@ -909,7 +1057,7 @@
       const navContainer = document.getElementById('day-nav-tabs');
       navContainer.innerHTML = programData.map((d, i) => `
         <button class="tab-btn ${i === currentDayIdx ? 'active' : ''}" onclick="selectDay(${i})">
-          ${d.day}
+          ${d.day}${dayHasDraft(i) ? ' <span class="tab-dot">●</span>' : ''}
         </button>
       `).join('');
     }
@@ -931,6 +1079,21 @@
           <div class="day-title">${data.day}: ${data.title}</div>
         </div>
       `;
+
+      // Unsaved sets left over from an earlier date (e.g. forgot to tap Finish)
+      const meta = readJSON(draftMetaKey(currentDayIdx), null);
+      if (meta && dayHasDraft(currentDayIdx) && localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date())) {
+        const started = new Date(meta.startedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        html += `
+          <div class="draft-banner">
+            ⚠️ You have unsaved ${data.day} sets from <strong>${started}</strong>.
+            <div class="draft-banner-actions">
+              <button class="primary" onclick="finishAndSaveWorkout()">Save to ${started}</button>
+              <button onclick="discardDraft()">Discard</button>
+            </div>
+          </div>
+        `;
+      }
 
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
@@ -961,7 +1124,9 @@
           const valR = localStorage.getItem(rKey) || '';
           const valRest = localStorage.getItem(restKey) || ex.rest;
           const isDone = localStorage.getItem(doneKey) === 'true';
+          const drops = getDrops(currentDayIdx, exIdx, s);
           const lastSet = last ? (last.sets.find(x => x.set === s) || last.sets[s - 1]) : null;
+          const lastDrops = lastSet && lastSet.drops ? lastSet.drops.length : 0;
 
           html += `
             <div class="set-block ${isDone ? 'completed' : ''}" id="block_d${currentDayIdx}_e${exIdx}_s${s}">
@@ -969,7 +1134,7 @@
                 <button class="set-label-btn" onclick="toggleSetDone(${exIdx}, ${s})">
                   ${isDone ? '✓ Set' : 'Set'} ${s}
                 </button>
-
+                
                 <div class="input-group">
                   <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
                   <span class="unit-label">kg</span>
@@ -990,10 +1155,26 @@
                 ${totalSets > 1 ? `<button class="delete-set-btn" onclick="removeSet(${exIdx},${s})" title="Delete Set">✕</button>` : ''}
               </div>
 
+              ${drops.map((drop, i) => `
+                <div class="drop-row">
+                  <span class="drop-label">↳ Drop ${i + 1}</span>
+                  <div class="input-group">
+                    <input type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(drop.w)}" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'w', this.value)">
+                    <span class="unit-label">kg</span>
+                  </div>
+                  <div class="input-group">
+                    <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(drop.r)}" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'r', this.value)">
+                    <span class="unit-label">reps</span>
+                  </div>
+                  <button class="delete-set-btn" onclick="removeDrop(${exIdx}, ${s}, ${i})" title="Delete Drop">✕</button>
+                </div>
+              `).join('')}
+              <button class="add-drop-btn" onclick="addDrop(${exIdx}, ${s})">+ Drop set</button>
+
               <div class="set-hint">
                 <span>💡 Target: <strong>${escapeHtml(ex.repTarget)} @ ${escapeHtml(ex.weightTarget)}</strong></span>
                 ${lastSet
-                  ? `<span>Last: <strong>${fmtNum(lastSet.weight)} kg × ${lastSet.reps}</strong></span>`
+                  ? `<span>Last: <strong>${fmtSetLine(lastSet)}</strong>${lastDrops ? ` +${lastDrops} drop` : ''}</span>`
                   : `<span>Rec Rest: <strong>${ex.rest}s</strong></span>`}
               </div>
             </div>
@@ -1021,12 +1202,15 @@
 
     function saveVal(key, value) {
       localStorage.setItem(key, value);
+      touchDraft();
+      initNav();
     }
 
     function toggleSetDone(exIdx, setNum) {
       const doneKey = `active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`;
       const currentState = localStorage.getItem(doneKey) === 'true';
       localStorage.setItem(doneKey, (!currentState).toString());
+      touchDraft();
       renderWorkout();
     }
 
@@ -1042,29 +1226,27 @@
       const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
       if (currentCount <= 1) return;
 
+      const fields = ['w', 'r', 'rest', 'done', 'drops'];
+      const key = (s, f) => `active_d${currentDayIdx}_e${exIdx}_s${s}_${f}`;
+
+      // Shift later sets up one slot
       for (let s = setNum; s < currentCount; s++) {
-        const nextW = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_w`) || '';
-        const nextR = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_r`) || '';
-        const nextRest = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_rest`) || '';
-        const nextDone = localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s+1}_done`) || '';
-
-        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_w`, nextW);
-        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_r`, nextR);
-        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_rest`, nextRest);
-        localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_done`, nextDone);
+        fields.forEach(f => {
+          const next = localStorage.getItem(key(s + 1, f));
+          if (next === null) localStorage.removeItem(key(s, f));
+          else localStorage.setItem(key(s, f), next);
+        });
       }
-
-      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_w`);
-      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_r`);
-      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_rest`);
-      localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${currentCount}_done`);
+      fields.forEach(f => localStorage.removeItem(key(currentCount, f)));
 
       saveSetCount(currentDayIdx, exIdx, currentCount - 1);
+      initNav();
       renderWorkout();
     }
 
     function triggerRestTimerFromInput(restKey, exIdx, setNum) {
       localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'true');
+      touchDraft();
       renderWorkout();
 
       const inputEl = document.getElementById(restKey);
@@ -1119,10 +1301,6 @@
       const dayData = programData[currentDayIdx];
       const allExercises = getAllExercisesForDay(currentDayIdx);
 
-      const now = new Date();
-      const dateStr = localDateStr(now);
-      const displayDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
       const loggedExercises = [];
 
       allExercises.forEach((ex, exIdx) => {
@@ -1137,14 +1315,19 @@
           const weightVal = parseFloat(localStorage.getItem(wKey) || '0');
           const repsVal = parseInt(localStorage.getItem(rKey) || '0', 10);
           const restVal = parseInt(localStorage.getItem(restKey) || ex.rest.toString(), 10);
+          const drops = getDrops(currentDayIdx, exIdx, s)
+            .map(d => ({ weight: parseFloat(d.w) || 0, reps: parseInt(d.r, 10) || 0 }))
+            .filter(d => d.reps > 0);
 
-          if (repsVal > 0 || weightVal > 0) {
-            performedSets.push({
+          if (repsVal > 0 || weightVal > 0 || drops.length > 0) {
+            const setObj = {
               set: s,
               weight: weightVal,
               reps: repsVal,
               restSec: restVal
-            });
+            };
+            if (drops.length) setObj.drops = drops;
+            performedSets.push(setObj);
           }
         }
 
@@ -1161,25 +1344,48 @@
         return;
       }
 
-      const sessionObj = {
-        id: now.getTime(),
-        dateStr: dateStr,
-        displayDate: displayDate,
-        day: dayData.day,
-        title: dayData.title,
-        exercises: loggedExercises
-      };
+      // Date the workout by when logging started, so late sessions and next-morning saves land on the right day.
+      const nowMs = Date.now();
+      const meta = readJSON(draftMetaKey(currentDayIdx), null);
+      const startedAt = meta && meta.startedAt <= nowMs ? meta.startedAt : nowMs;
+      const workoutDate = localDateStr(new Date(startedAt));
+      const dateLabel = new Date(startedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
       const history = getHistory();
-      history.unshift(sessionObj);
+      // Saving the same program day again on the same date adds to that session instead of duplicating it.
+      const existing = history.find(s => s.day === dayData.day && sessionDateStr(s) === workoutDate);
+
+      if (existing) {
+        loggedExercises.forEach(ex => {
+          const target = existing.exercises.find(e => e.name === ex.name);
+          if (target) {
+            const offset = Math.max(0, ...target.sets.map(s => s.set));
+            ex.sets.forEach((s, i) => target.sets.push({ ...s, set: offset + i + 1 }));
+          } else {
+            existing.exercises.push(ex);
+          }
+        });
+        existing.updatedAt = nowMs;
+      } else {
+        history.unshift({
+          id: startedAt,
+          dateStr: workoutDate,
+          displayDate: new Date(startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          day: dayData.day,
+          title: dayData.title,
+          exercises: loggedExercises
+        });
+      }
       saveHistory(history);
 
-      // Reset this day's set inputs, added/removed set counts and custom exercises
-      removeKeysMatching(new RegExp(`^(active_)?d${currentDayIdx}_e\\d+_`));
-      localStorage.removeItem(`custom_ex_d${currentDayIdx}`);
+      // Reset this day's set inputs, drop sets, added/removed set counts and custom exercises
+      clearDayDraft(currentDayIdx);
 
+      initNav();
       renderWorkout();
-      alert(`${dayData.day} Workout Logged Successfully! 🎉`);
+      alert(existing
+        ? `Added to your ${dayData.day} session from ${dateLabel} — no duplicate created. 💪`
+        : `${dayData.day} workout logged for ${dateLabel}! 🎉`);
       calendarMonthOffset = 0;
       switchView('history');
     }
@@ -1271,35 +1477,51 @@
     }
 
     function openDateSessions(dStr) {
-      const session = getHistory().find(s => sessionDateStr(s) === dStr);
-      if (session) openSessionModal(session.id);
+      const sessions = getHistory().filter(s => sessionDateStr(s) === dStr).reverse();
+      if (sessions.length) openSessionsModal(sessions);
     }
 
     function openSessionModal(sessionId) {
-      const history = getHistory();
-      const session = history.find(s => s.id === sessionId);
-      if (!session) return;
+      const session = getHistory().find(s => s.id === sessionId);
+      if (session) openSessionsModal([session]);
+    }
 
-      document.getElementById('modal-title').innerText = `${session.day}: ${session.title}`;
-      document.getElementById('modal-date').innerText = session.displayDate;
-
-      let bodyHtml = '';
-      session.exercises.forEach(ex => {
-        bodyHtml += `
-          <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-            <div style="font-weight: 600; font-size: 0.95rem; color: #FFF; margin-bottom: 4px;">${escapeHtml(ex.name)}</div>
-            <div style="font-size: 0.8rem; color: var(--subtext); line-height: 1.4;">
-              ${ex.sets.map(s => `Set ${s.set}: <strong style="color:#FFF;">${s.weight} kg</strong> × <strong style="color:#FFF;">${s.reps} reps</strong> <span style="color:var(--accent); font-size:0.72rem;">(Rest ${s.restSec}s)</span>`).join('<br>')}
-            </div>
+    function sessionDetailHtml(session) {
+      return session.exercises.map(ex => `
+        <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+          <div style="font-weight: 600; font-size: 0.95rem; color: #FFF; margin-bottom: 4px;">${escapeHtml(ex.name)}</div>
+          <div style="font-size: 0.8rem; color: var(--subtext); line-height: 1.4;">
+            ${ex.sets.map(s => `Set ${s.set}: <strong style="color:#FFF;">${s.weight} kg</strong> × <strong style="color:#FFF;">${s.reps} reps</strong> <span style="color:var(--accent); font-size:0.72rem;">(Rest ${s.restSec}s)</span>` +
+              (s.drops || []).map((d, i) => `<br><span style="padding-left: 14px; color: var(--orange);">↳ Drop ${i + 1}: <strong>${d.weight} kg × ${d.reps} reps</strong></span>`).join('')
+            ).join('<br>')}
           </div>
-        `;
-      });
+        </div>
+      `).join('');
+    }
 
-      document.getElementById('modal-body').innerHTML = bodyHtml;
-
-      // Bind Delete Button Action
+    // One session, or every session logged on a calendar date (e.g. Day 1 and Day 2 on the same day)
+    function openSessionsModal(sessions) {
       const deleteBtn = document.getElementById('modal-delete-action-btn');
-      deleteBtn.onclick = () => deleteSession(sessionId);
+
+      if (sessions.length === 1) {
+        const session = sessions[0];
+        document.getElementById('modal-title').innerText = `${session.day}: ${session.title}`;
+        document.getElementById('modal-date').innerText = session.displayDate;
+        document.getElementById('modal-body').innerHTML = sessionDetailHtml(session);
+        deleteBtn.style.display = 'block';
+        deleteBtn.onclick = () => deleteSession(session.id);
+      } else {
+        document.getElementById('modal-title').innerText = `${sessions.length} Sessions`;
+        document.getElementById('modal-date').innerText = new Date(sessions[0].id).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('modal-body').innerHTML = sessions.map(session => `
+          <div class="session-block-head">
+            <span>${escapeHtml(session.day)}: ${escapeHtml(session.title)}</span>
+            <button class="session-del-btn" onclick="deleteSession(${session.id})">Delete</button>
+          </div>
+          ${sessionDetailHtml(session)}
+        `).join('');
+        deleteBtn.style.display = 'none';
+      }
 
       document.getElementById('detail-modal').style.display = 'flex';
     }
@@ -1388,7 +1610,7 @@
         // Epley estimate from the best set
         calc: sets => Math.max(...sets.map(s => s.weight > 0 && s.reps > 0 ? (s.reps === 1 ? s.weight : s.weight * (1 + s.reps / 30)) : 0))
       },
-      volume: { label: 'Volume', unit: 'kg', calc: sets => sets.reduce((sum, s) => sum + s.weight * s.reps, 0) },
+      volume: { label: 'Volume', unit: 'kg', calc: sets => sets.reduce((sum, s) => sum + setVolume(s), 0) },
       reps: { label: 'Best Reps', unit: 'reps', calc: sets => Math.max(...sets.map(s => s.reps)) }
     };
 
@@ -1437,7 +1659,7 @@
             return `
             <tr>
               <td>${shortDate(r.session.id)}</td>
-              <td>${fmtNum(best.weight)} kg × ${best.reps}</td>
+              <td>${fmtSetLine(best)}${best.drops ? ` +${best.drops.length} drop` : ''}</td>
               <td class="num">${fmtNum(METRICS.volume.calc(r.ex.sets))} kg</td>
             </tr>`;
           }).join('')}
