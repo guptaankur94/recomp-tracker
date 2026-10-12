@@ -929,11 +929,14 @@
     }
 
     function dayHasDraft(dayIdx) {
-      const regex = new RegExp(`^active_d${dayIdx}_e\\d+_s\\d+_(w|r|drops)$`);
+      if (getCustomExercises(dayIdx).length) return true;
+      const regex = new RegExp(`^active_d${dayIdx}_e\\d+_s\\d+_(w|r|drops|done)$`);
       return Object.keys(localStorage).some(k => {
         if (!regex.test(k)) return false;
         const val = localStorage.getItem(k);
-        return k.endsWith('_drops') ? readJSON(k, []).some(d => d.w || d.r) : !!val;
+        if (k.endsWith('_drops')) return readJSON(k, []).some(d => d.w || d.r);
+        if (k.endsWith('_done')) return val === 'true';
+        return !!val;
       });
     }
 
@@ -944,7 +947,7 @@
     }
 
     function discardDraft() {
-      if (!confirm(`Discard all unsaved sets for ${programData[currentDayIdx].day}?`)) return;
+      if (!confirm(`Clear all unsaved sets, drop sets and extra exercises for ${programData[currentDayIdx].day}? Saved workouts are not affected.`)) return;
       clearDayDraft(currentDayIdx);
       initNav();
       renderWorkout();
@@ -985,6 +988,7 @@
       drops[dropIdx][field] = value;
       saveDrops(exIdx, setNum, drops);
       touchDraft();
+      refreshDraftIndicators();
     }
 
     // Total kg moved in a set, including its drop sets
@@ -1082,13 +1086,16 @@
 
       // Unsaved sets left over from an earlier date (e.g. forgot to tap Finish)
       const meta = readJSON(draftMetaKey(currentDayIdx), null);
-      if (meta && dayHasDraft(currentDayIdx) && localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date())) {
-        const started = new Date(meta.startedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const hasDraft = dayHasDraft(currentDayIdx);
+      if (hasDraft && (!meta || localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date()))) {
+        const started = meta ? new Date(meta.startedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : null;
         html += `
           <div class="draft-banner">
-            ⚠️ You have unsaved ${data.day} sets from <strong>${started}</strong>.
+            ⚠️ ${started
+              ? `You have unsaved ${data.day} sets from <strong>${started}</strong>.`
+              : `You have unsaved ${data.day} sets from an earlier visit.`}
             <div class="draft-banner-actions">
-              <button class="primary" onclick="finishAndSaveWorkout()">Save to ${started}</button>
+              <button class="primary" onclick="finishAndSaveWorkout()">${started ? `Save to ${started}` : 'Save as today'}</button>
               <button onclick="discardDraft()">Discard</button>
             </div>
           </div>
@@ -1191,6 +1198,7 @@
       html += `
         <button class="add-custom-ex-btn" onclick="addCustomExercise()">+ Add Custom Extra Exercise</button>
         <button class="finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>
+        <button class="modal-delete-btn" id="clear-draft-btn" style="margin: -8px 0 20px; display: ${hasDraft ? 'block' : 'none'};" onclick="discardDraft()">Clear Unsaved Sets</button>
       `;
       main.innerHTML = html;
     }
@@ -1203,7 +1211,14 @@
     function saveVal(key, value) {
       localStorage.setItem(key, value);
       touchDraft();
+      refreshDraftIndicators();
+    }
+
+    // Update the tab dot and Clear button without re-rendering inputs (which would close the iPhone keyboard)
+    function refreshDraftIndicators() {
       initNav();
+      const clearBtn = document.getElementById('clear-draft-btn');
+      if (clearBtn) clearBtn.style.display = dayHasDraft(currentDayIdx) ? 'block' : 'none';
     }
 
     function toggleSetDone(exIdx, setNum) {
