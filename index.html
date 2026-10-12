@@ -610,7 +610,10 @@
       <div style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px;">All workout and bodyweight data is saved on this phone only. Export a backup regularly, and always before deleting or re-adding the app on your Home Screen.</div>
       <button class="modal-close-btn" onclick="exportData()" style="background: var(--blue); color:#FFF; margin-top:0; margin-bottom:8px;">Export Backup (JSON)</button>
       <button class="modal-close-btn" onclick="document.getElementById('import-file').click()" style="margin-top:0; margin-bottom:8px;">Import Backup (JSON)</button>
-      <input type="file" id="import-file" accept=".json,application/json" style="display:none;" onchange="importData(this)">
+      <input type="file" id="import-file" accept=".json,.txt,application/json,text/plain" style="display:none;" onchange="importData(this)">
+      <div style="font-size: 0.8rem; color: var(--subtext); margin: 6px 0 8px;">If export doesn't work, copy the backup as text and paste it into the Notes app instead.</div>
+      <button class="modal-close-btn" onclick="copyBackup()" style="margin-top:0; margin-bottom:8px;">Copy Backup as Text</button>
+      <button class="modal-close-btn" onclick="openBackupModal('paste')" style="margin-top:0; margin-bottom:8px;">Paste Backup Text</button>
       <button class="modal-close-btn" onclick="clearAllData()" style="background: rgba(255,69,58,0.15); color: var(--danger); border-color: var(--danger);">Reset All Local Logs</button>
     </div>
   </div>
@@ -623,6 +626,18 @@
       <div id="modal-body"></div>
       <button class="modal-delete-btn" id="modal-delete-action-btn">Delete Workout Session</button>
       <button class="modal-close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- Backup Text Modal -->
+  <div class="modal-overlay" id="backup-modal" onclick="if (event.target === this) closeBackupModal()">
+    <div class="modal-content">
+      <div class="modal-title" id="backup-modal-title">Backup</div>
+      <div class="modal-date" id="backup-modal-help"></div>
+      <textarea id="backup-text" rows="10" style="width:100%; background: var(--card-alt); color:#FFF; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.75rem; font-family: ui-monospace, Menlo, monospace;"></textarea>
+      <button class="modal-close-btn" id="backup-select-btn" onclick="selectBackupText()" style="background: var(--blue);">Select All</button>
+      <button class="modal-close-btn" id="backup-restore-btn" onclick="restoreFromPastedText()" style="background: var(--accent); color:#000; border-color: var(--accent);">Restore</button>
+      <button class="modal-close-btn" onclick="closeBackupModal()">Close</button>
     </div>
   </div>
 
@@ -1539,28 +1554,42 @@
     }
 
     /* Backup: export / import */
-    async function exportData() {
-      const backup = {
+    function buildBackupJson() {
+      return JSON.stringify({
         app: 'recomp-tracker',
         version: 2,
         exportedAt: new Date().toISOString(),
         history: getHistory(),
         bodyweight: getBodyweight()
-      };
-      const fileName = `recomp_backup_${localDateStr(new Date())}.json`;
-      const file = new File([JSON.stringify(backup, null, 2)], fileName, { type: 'application/json' });
+      }, null, 2);
+    }
 
-      // On iPhone the share sheet offers "Save to Files", which works reliably from a Home Screen app.
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: 'Recomp backup' });
-          return;
-        } catch (e) {
-          if (e.name === 'AbortError') return;
+    async function exportData() {
+      const json = buildBackupJson();
+      const fileName = `recomp_backup_${localDateStr(new Date())}.json`;
+
+      // On iPhone the share sheet ("Save to Files") is the only way a Home Screen app can save a file.
+      // Some iOS versions refuse JSON files, so plain text is tried as well.
+      if (navigator.canShare) {
+        for (const type of ['application/json', 'text/plain']) {
+          const file = new File([json], fileName, { type });
+          if (!navigator.canShare({ files: [file] })) continue;
+          try {
+            await navigator.share({ files: [file], title: 'Recomp backup' });
+            return;
+          } catch (e) {
+            if (e.name === 'AbortError') return;
+          }
         }
       }
 
-      const url = URL.createObjectURL(file);
+      // Home Screen apps on iPhone can't download files, so show the text to copy instead.
+      if (navigator.standalone) {
+        openBackupModal('show', json);
+        return;
+      }
+
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.href = url;
       downloadAnchor.download = fileName;
@@ -1570,65 +1599,107 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    async function copyBackup() {
+      const json = buildBackupJson();
+      try {
+        await navigator.clipboard.writeText(json);
+        alert(`Backup copied (${getHistory().length} workouts). Open the Notes app, paste it into a new note and keep that note safe.`);
+      } catch (e) {
+        openBackupModal('show', json);
+      }
+    }
+
+    function openBackupModal(mode, json) {
+      const text = document.getElementById('backup-text');
+      const isShow = mode === 'show';
+      document.getElementById('backup-modal-title').innerText = isShow ? 'Your Backup' : 'Paste Backup';
+      document.getElementById('backup-modal-help').innerText = isShow
+        ? 'Tap Select All, then Copy, and paste it into a note in the Notes app.'
+        : 'Paste the backup text you saved (for example from Notes), then tap Restore.';
+      text.value = isShow ? json : '';
+      text.readOnly = isShow;
+      document.getElementById('backup-select-btn').style.display = isShow ? 'block' : 'none';
+      document.getElementById('backup-restore-btn').style.display = isShow ? 'none' : 'block';
+      document.getElementById('backup-modal').style.display = 'flex';
+    }
+
+    function closeBackupModal() {
+      document.getElementById('backup-modal').style.display = 'none';
+    }
+
+    function selectBackupText() {
+      const text = document.getElementById('backup-text');
+      text.focus();
+      text.setSelectionRange(0, text.value.length);
+    }
+
+    function restoreFromPastedText() {
+      if (restoreBackupText(document.getElementById('backup-text').value)) closeBackupModal();
+    }
+
     function importData(inputEl) {
       const file = inputEl.files[0];
       inputEl.value = '';
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = () => {
-        let data;
-        try {
-          data = JSON.parse(reader.result);
-        } catch (e) {
-          alert("That file isn't valid JSON.");
-          return;
-        }
-
-        // Old backups are a plain array of sessions; new ones are { history, bodyweight }.
-        const importedHistory = Array.isArray(data) ? data : (data && Array.isArray(data.history) ? data.history : null);
-        const importedBw = data && Array.isArray(data.bodyweight) ? data.bodyweight : [];
-        if (!importedHistory) {
-          alert("This doesn't look like a Recomp backup file.");
-          return;
-        }
-
-        // Merge: entries already on this phone are kept, so importing the same file twice is harmless.
-        const history = getHistory();
-        const knownIds = new Set(history.map(s => s.id));
-        let added = 0;
-        importedHistory
-          .filter(s => s && typeof s.id === 'number' && Array.isArray(s.exercises) && !knownIds.has(s.id))
-          .forEach(s => {
-            history.push({
-              ...s,
-              dateStr: s.dateStr || localDateStr(new Date(s.id)),
-              displayDate: s.displayDate || new Date(s.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              day: s.day || 'Day ?',
-              title: s.title || 'Workout'
-            });
-            knownIds.add(s.id);
-            added++;
-          });
-
-        const bw = getBodyweight();
-        const knownDates = new Set(bw.map(e => e.dateStr));
-        let addedBw = 0;
-        importedBw
-          .filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.dateStr) && typeof e.kg === 'number' && !knownDates.has(e.dateStr))
-          .forEach(e => {
-            bw.push({ dateStr: e.dateStr, kg: e.kg });
-            knownDates.add(e.dateStr);
-            addedBw++;
-          });
-
-        saveHistory(history.sort((a, b) => b.id - a.id));
-        saveBodyweight(bw);
-        renderWorkout();
-        alert(`Backup restored: ${added} workout${added === 1 ? '' : 's'} and ${addedBw} bodyweight entr${addedBw === 1 ? 'y' : 'ies'} added.` +
-          (importedHistory.length - added > 0 ? ` ${importedHistory.length - added} workout(s) were already here.` : ''));
-      };
+      reader.onload = () => restoreBackupText(reader.result);
       reader.readAsText(file);
+    }
+
+    // Returns true when the text was a valid backup and was merged in.
+    function restoreBackupText(text) {
+      let data;
+      try {
+        data = JSON.parse(String(text).trim());
+      } catch (e) {
+        alert("That isn't a valid backup. Make sure you copied the whole text, from the first { or [ to the last } or ].");
+        return false;
+      }
+
+      // Old backups are a plain array of sessions; new ones are { history, bodyweight }.
+      const importedHistory = Array.isArray(data) ? data : (data && Array.isArray(data.history) ? data.history : null);
+      const importedBw = data && Array.isArray(data.bodyweight) ? data.bodyweight : [];
+      if (!importedHistory) {
+        alert("This doesn't look like a Recomp backup.");
+        return false;
+      }
+
+      // Merge: entries already on this phone are kept, so importing the same backup twice is harmless.
+      const history = getHistory();
+      const knownIds = new Set(history.map(s => s.id));
+      let added = 0;
+      importedHistory
+        .filter(s => s && typeof s.id === 'number' && Array.isArray(s.exercises) && !knownIds.has(s.id))
+        .forEach(s => {
+          history.push({
+            ...s,
+            dateStr: s.dateStr || localDateStr(new Date(s.id)),
+            displayDate: s.displayDate || new Date(s.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            day: s.day || 'Day ?',
+            title: s.title || 'Workout'
+          });
+          knownIds.add(s.id);
+          added++;
+        });
+
+      const bw = getBodyweight();
+      const knownDates = new Set(bw.map(e => e.dateStr));
+      let addedBw = 0;
+      importedBw
+        .filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.dateStr) && typeof e.kg === 'number' && !knownDates.has(e.dateStr))
+        .forEach(e => {
+          bw.push({ dateStr: e.dateStr, kg: e.kg });
+          knownDates.add(e.dateStr);
+          addedBw++;
+        });
+
+      saveHistory(history.sort((a, b) => b.id - a.id));
+      saveBodyweight(bw);
+      renderWorkout();
+      alert(`Backup restored: ${added} workout${added === 1 ? '' : 's'} and ${addedBw} bodyweight entr${addedBw === 1 ? 'y' : 'ies'} added.` +
+        (importedHistory.length - added > 0 ? ` ${importedHistory.length - added} workout(s) were already here.` : ''));
+      return true;
     }
 
     function clearAllData() {
