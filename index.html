@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Recomp Engine">
+  <meta name="theme-color" content="#000000">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
   <title>2-Month Recomp Execution Engine</title>
   <style>
     :root {
@@ -412,6 +417,127 @@
       background: var(--danger);
       color: #FFF;
     }
+
+    /* Exercise card extras */
+    .ex-actions { display: flex; gap: 6px; }
+    .remove-ex-btn {
+      background: rgba(255, 69, 58, 0.12);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .ex-last { font-size: 0.72rem; color: var(--subtext); margin-bottom: 4px; }
+
+    /* Calendar navigation */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .cal-nav-btn {
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 34px;
+      height: 30px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .cal-date.active-logged { cursor: pointer; }
+    .cal-date.today { box-shadow: inset 0 0 0 1px var(--blue); }
+
+    /* Progress view */
+    .section-title { font-weight: 700; font-size: 1rem; margin-bottom: 10px; }
+    .section-meta { font-size: 0.78rem; color: var(--subtext); margin: 8px 0; }
+    .section-meta strong { color: var(--text); }
+    .bw-form { display: flex; gap: 6px; }
+    .bw-form input[type="number"] { flex: 1; width: auto; min-width: 0; }
+    input[type="date"], select {
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-alt);
+      color: #FFF;
+      font-size: 0.85rem;
+      font-family: inherit;
+      padding: 0 8px;
+    }
+    input[type="date"] { flex: 1.3; min-width: 0; }
+    select { width: 100%; }
+    .primary-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: var(--card-alt);
+      padding: 3px;
+      border-radius: 9px;
+      margin: 10px 0;
+    }
+    .seg-btn {
+      background: none;
+      border: none;
+      color: var(--subtext);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 6px 2px;
+      border-radius: 7px;
+    }
+    .seg-btn.active { background: #48484A; color: #FFF; }
+
+    /* Charts (inline SVG, single series) */
+    .chart-wrap { position: relative; }
+    .chart-wrap svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+    .chart-grid { stroke: var(--border); stroke-width: 1; }
+    .chart-axis-label { fill: var(--subtext); font-size: 10px; }
+    .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .chart-dot { fill: var(--accent); stroke: var(--card); stroke-width: 2; }
+    .chart-target { stroke: var(--subtext); stroke-width: 1; stroke-dasharray: 4 4; }
+    .chart-cross { stroke: var(--subtext); stroke-width: 1; }
+    .chart-tip {
+      position: absolute;
+      top: 0;
+      display: none;
+      pointer-events: none;
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      color: var(--subtext);
+      white-space: nowrap;
+    }
+    .chart-tip strong { color: var(--text); }
+    .chart-empty {
+      font-size: 0.82rem;
+      color: var(--subtext);
+      text-align: center;
+      padding: 24px 8px;
+    }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 10px; }
+    .data-table th {
+      color: var(--subtext);
+      text-align: left;
+      font-weight: 600;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td { padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .data-table .num { text-align: right; }
+    .mini-del-btn { background: none; border: none; color: var(--danger); font-weight: 700; padding: 0 4px; }
   </style>
 </head>
 <body>
@@ -428,12 +554,12 @@
       <div class="stat-lbl">Completed</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" id="stat-streak">0 Sessions</div>
-      <div class="stat-lbl">Streak</div>
+      <div class="stat-val" id="stat-streak">0 Weeks</div>
+      <div class="stat-lbl">Week Streak</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-val" style="color: var(--accent);">70 kg</div>
-      <div class="stat-lbl">Target Frame</div>
+    <div class="stat-card" onclick="switchView('progress')">
+      <div class="stat-val" id="stat-bodyweight" style="color: var(--accent);">— kg</div>
+      <div class="stat-lbl">Weight · Goal 70</div>
     </div>
   </div>
 
@@ -445,24 +571,52 @@
 
   <div id="view-history" style="display: none;">
     <div class="calendar-card">
-      <div style="font-weight: 700; font-size: 1rem; margin-bottom: 8px;" id="calendar-month-title">Calendar</div>
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="shiftCalendarMonth(-1)" aria-label="Previous month">‹</button>
+        <div style="font-weight: 700; font-size: 1rem;" id="calendar-month-title">Calendar</div>
+        <button class="cal-nav-btn" onclick="shiftCalendarMonth(1)" aria-label="Next month">›</button>
+      </div>
       <div class="calendar-grid" id="calendar-grid"></div>
     </div>
     <div style="font-weight: 700; font-size: 1rem; margin-bottom: 10px;">Logged Workout Sessions</div>
     <div id="history-list-container"></div>
   </div>
 
+  <div id="view-progress" style="display: none;">
+    <div class="card">
+      <div class="section-title">Bodyweight</div>
+      <div class="bw-form">
+        <input type="number" id="bw-input" step="0.1" inputmode="decimal" placeholder="kg">
+        <input type="date" id="bw-date">
+        <button class="primary-btn" onclick="logBodyweight()">Save</button>
+      </div>
+      <div class="section-meta" id="bw-summary"></div>
+      <div id="bw-chart"></div>
+      <div id="bw-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Exercise Progress</div>
+      <select id="progress-ex-select" onchange="selectProgressExercise(this.value)"></select>
+      <div class="segmented" id="metric-seg"></div>
+      <div id="ex-chart"></div>
+      <div id="ex-table"></div>
+    </div>
+  </div>
+
   <div id="view-settings" style="display: none;">
     <div class="card">
       <div style="font-weight: 700; margin-bottom: 8px;">Backup & Data Storage</div>
-      <div style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px;">All workout data is saved locally on your iPhone browser.</div>
+      <div style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px;">All workout and bodyweight data is saved on this phone only. Export a backup regularly, and always before deleting or re-adding the app on your Home Screen.</div>
       <button class="modal-close-btn" onclick="exportData()" style="background: var(--blue); color:#FFF; margin-top:0; margin-bottom:8px;">Export Backup (JSON)</button>
+      <button class="modal-close-btn" onclick="document.getElementById('import-file').click()" style="margin-top:0; margin-bottom:8px;">Import Backup (JSON)</button>
+      <input type="file" id="import-file" accept=".json,application/json" style="display:none;" onchange="importData(this)">
       <button class="modal-close-btn" onclick="clearAllData()" style="background: rgba(255,69,58,0.15); color: var(--danger); border-color: var(--danger);">Reset All Local Logs</button>
     </div>
   </div>
 
   <!-- Detail Modal -->
-  <div class="modal-overlay" id="detail-modal">
+  <div class="modal-overlay" id="detail-modal" onclick="if (event.target === this) closeModal()">
     <div class="modal-content">
       <div class="modal-title" id="modal-title">Session Details</div>
       <div class="modal-date" id="modal-date">Date</div>
@@ -493,6 +647,10 @@
     <button class="nav-item" id="tab-nav-history" onclick="switchView('history')">
       <span class="nav-item-icon">📅</span>
       Calendar
+    </button>
+    <button class="nav-item" id="tab-nav-progress" onclick="switchView('progress')">
+      <span class="nav-item-icon">📈</span>
+      Progress
     </button>
     <button class="nav-item" id="tab-nav-settings" onclick="switchView('settings')">
       <span class="nav-item-icon">⚙️</span>
@@ -557,23 +715,104 @@
       }
     ];
 
+    // Storage keys are kept identical to earlier versions so existing data carries over.
+    const HISTORY_KEY = 'recomp_history';
+    const BODYWEIGHT_KEY = 'recomp_bodyweight';
+    const TARGET_KG = 70;
+
     let currentDayIdx = 0;
     let timerCountdown = null;
     let timerSecondsRemaining = 0;
+    let calendarMonthOffset = 0;
+    let progressExercise = null;
+    let progressMetric = 'top';
 
+    /* Helpers */
+    function readJSON(key, fallback) {
+      try {
+        const val = JSON.parse(localStorage.getItem(key));
+        return val ?? fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function fmtNum(n) {
+      return (Math.round(n * 10) / 10).toLocaleString('en-US');
+    }
+
+    // Local calendar date (YYYY-MM-DD). toISOString() is UTC and shifts early-morning workouts to the previous day.
+    function localDateStr(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    // Session ids are creation timestamps, so the local date is derived from them (this also corrects older UTC-dated logs).
+    function sessionDateStr(session) {
+      return typeof session.id === 'number' ? localDateStr(new Date(session.id)) : session.dateStr;
+    }
+
+    function shortDate(ms) {
+      return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function removeKeysMatching(regex) {
+      Object.keys(localStorage).filter(k => regex.test(k)).forEach(k => localStorage.removeItem(k));
+    }
+
+    /* History & bodyweight storage */
     function getHistory() {
-      return JSON.parse(localStorage.getItem('recomp_history') || '[]');
+      const history = readJSON(HISTORY_KEY, []);
+      return Array.isArray(history) ? history.sort((a, b) => b.id - a.id) : [];
     }
 
     function saveHistory(historyArr) {
-      localStorage.setItem('recomp_history', JSON.stringify(historyArr));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(historyArr));
       updateStats();
+    }
+
+    function getBodyweight() {
+      const entries = readJSON(BODYWEIGHT_KEY, []);
+      return Array.isArray(entries) ? entries.sort((a, b) => a.dateStr.localeCompare(b.dateStr)) : [];
+    }
+
+    function saveBodyweight(entries) {
+      localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(entries));
+      updateStats();
+    }
+
+    function startOfWeek(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Monday
+      return d;
+    }
+
+    // Consecutive weeks (Mon–Sun) with at least one logged workout. The current week
+    // doesn't break the streak until it ends without a session.
+    function calcWeekStreak(history) {
+      const weeks = new Set(history.map(s => startOfWeek(new Date(s.id)).getTime()));
+      const cursor = startOfWeek(new Date());
+      if (!weeks.has(cursor.getTime())) cursor.setDate(cursor.getDate() - 7);
+      let streak = 0;
+      while (weeks.has(cursor.getTime())) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 7);
+      }
+      return streak;
     }
 
     function updateStats() {
       const history = getHistory();
+      const streak = calcWeekStreak(history);
+      const bw = getBodyweight();
+      const latest = bw[bw.length - 1];
       document.getElementById('stat-total-workouts').innerText = history.length;
-      document.getElementById('stat-streak').innerText = `${history.length > 0 ? history.length : 0} Sessions`;
+      document.getElementById('stat-streak').innerText = `${streak} ${streak === 1 ? 'Week' : 'Weeks'}`;
+      document.getElementById('stat-bodyweight').innerText = latest ? `${fmtNum(latest.kg)} kg` : '— kg';
     }
 
     function getSetCount(dayIdx, exIdx, defaultSets) {
@@ -585,9 +824,18 @@
       localStorage.setItem(`d${dayIdx}_e${exIdx}_setcount`, count);
     }
 
+    // Most recent logged sets for an exercise (matched by name, across all days).
+    function getLastPerformance(exName, history) {
+      for (const session of history) {
+        const ex = session.exercises.find(e => e.name === exName);
+        if (ex) return { session, sets: ex.sets };
+      }
+      return null;
+    }
+
     /* Custom Exercises Logic */
     function getCustomExercises(dayIdx) {
-      return JSON.parse(localStorage.getItem(`custom_ex_d${dayIdx}`) || '[]');
+      return readJSON(`custom_ex_d${dayIdx}`, []);
     }
 
     function addCustomExercise() {
@@ -606,6 +854,34 @@
       });
       localStorage.setItem(`custom_ex_d${currentDayIdx}`, JSON.stringify(customs));
       renderWorkout();
+    }
+
+    function removeCustomExercise(exIdx) {
+      const allExercises = getAllExercisesForDay(currentDayIdx);
+      const ex = allExercises[exIdx];
+      if (!ex || !ex.isCustom) return;
+      if (!confirm(`Remove "${ex.name}" and any sets entered for it?`)) return;
+
+      // Set data is keyed by exercise position, so later extras shift down one slot.
+      removeKeysMatching(new RegExp(`^(active_)?d${currentDayIdx}_e${exIdx}_`));
+      for (let e = exIdx + 1; e < allExercises.length; e++) {
+        moveExerciseKeys(currentDayIdx, e, e - 1);
+      }
+
+      const customs = getCustomExercises(currentDayIdx);
+      customs.splice(exIdx - programData[currentDayIdx].exercises.length, 1);
+      localStorage.setItem(`custom_ex_d${currentDayIdx}`, JSON.stringify(customs));
+      renderWorkout();
+    }
+
+    function moveExerciseKeys(dayIdx, fromIdx, toIdx) {
+      const regex = new RegExp(`^(active_)?d${dayIdx}_e${fromIdx}_(.+)$`);
+      Object.keys(localStorage).forEach(key => {
+        const m = key.match(regex);
+        if (!m) return;
+        localStorage.setItem(`${m[1] || ''}d${dayIdx}_e${toIdx}_${m[2]}`, localStorage.getItem(key));
+        localStorage.removeItem(key);
+      });
     }
 
     function getAllExercisesForDay(dayIdx) {
@@ -633,6 +909,7 @@
       const main = document.getElementById('workout-content');
       const data = programData[currentDayIdx];
       const allExercises = getAllExercisesForDay(currentDayIdx);
+      const history = getHistory();
 
       let html = `
         <div class="day-header">
@@ -642,14 +919,20 @@
 
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
+        const last = getLastPerformance(ex.name, history);
 
         html += `
           <div class="card">
             <div class="ex-header">
-              <span class="ex-name">${ex.name} ${ex.isCustom ? '<span style="font-size:0.7rem; color:var(--accent);">(Extra)</span>' : ''}</span>
-              <button class="alt-btn" onclick="toggleAlt(${exIdx})">Swap Alt</button>
+              <span class="ex-name">${escapeHtml(ex.name)} ${ex.isCustom ? '<span style="font-size:0.7rem; color:var(--accent);">(Extra)</span>' : ''}</span>
+              <div class="ex-actions">
+                ${ex.isCustom
+                  ? `<button class="remove-ex-btn" onclick="removeCustomExercise(${exIdx})">Remove</button>`
+                  : `<button class="alt-btn" onclick="toggleAlt(${exIdx})">Swap Alt</button>`}
+              </div>
             </div>
-            <div class="alt-text" id="alt-${exIdx}">Smart Alt: ${ex.alt}</div>
+            ${last ? `<div class="ex-last">Last done ${shortDate(last.session.id)}</div>` : ''}
+            <div class="alt-text" id="alt-${exIdx}">Smart Alt: ${escapeHtml(ex.alt)}</div>
             <div class="set-container">
         `;
 
@@ -663,6 +946,7 @@
           const valR = localStorage.getItem(rKey) || '';
           const valRest = localStorage.getItem(restKey) || ex.rest;
           const isDone = localStorage.getItem(doneKey) === 'true';
+          const lastSet = last ? (last.sets.find(x => x.set === s) || last.sets[s - 1]) : null;
 
           html += `
             <div class="set-block ${isDone ? 'completed' : ''}" id="block_d${currentDayIdx}_e${exIdx}_s${s}">
@@ -670,19 +954,19 @@
                 <button class="set-label-btn" onclick="toggleSetDone(${exIdx}, ${s})">
                   ${isDone ? '✓ Set' : 'Set'} ${s}
                 </button>
-                
+
                 <div class="input-group">
-                  <input type="number" id="${wKey}" step="0.5" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
+                  <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="0" value="${valW}" onchange="saveVal('${wKey}', this.value)">
                   <span class="unit-label">kg</span>
                 </div>
 
                 <div class="input-group">
-                  <input type="number" id="${rKey}" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
+                  <input type="number" id="${rKey}" inputmode="numeric" placeholder="0" value="${valR}" onchange="saveVal('${rKey}', this.value)">
                   <span class="unit-label">reps</span>
                 </div>
 
                 <div class="input-group">
-                  <input type="number" id="${restKey}" class="rest-input" value="${valRest}" onchange="saveVal('${restKey}', this.value)">
+                  <input type="number" id="${restKey}" class="rest-input" inputmode="numeric" value="${valRest}" onchange="saveVal('${restKey}', this.value)">
                   <span class="unit-label">s</span>
                 </div>
 
@@ -692,8 +976,10 @@
               </div>
 
               <div class="set-hint">
-                <span>💡 Target: <strong>${ex.repTarget} @ ${ex.weightTarget}</strong></span>
-                <span>Rec Rest: <strong>${ex.rest}s</strong></span>
+                <span>💡 Target: <strong>${escapeHtml(ex.repTarget)} @ ${escapeHtml(ex.weightTarget)}</strong></span>
+                ${lastSet
+                  ? `<span>Last: <strong>${fmtNum(lastSet.weight)} kg × ${lastSet.reps}</strong></span>`
+                  : `<span>Rec Rest: <strong>${ex.rest}s</strong></span>`}
               </div>
             </div>
           `;
@@ -775,7 +1061,7 @@
       clearInterval(timerCountdown);
       const banner = document.getElementById('timer-banner');
       const display = document.getElementById('timer-seconds');
-      
+
       timerSecondsRemaining = seconds;
       banner.style.display = 'block';
       display.innerText = timerSecondsRemaining;
@@ -819,7 +1105,7 @@
       const allExercises = getAllExercisesForDay(currentDayIdx);
 
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
+      const dateStr = localDateStr(now);
       const displayDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
       const loggedExercises = [];
@@ -861,7 +1147,7 @@
       }
 
       const sessionObj = {
-        id: Date.now(),
+        id: now.getTime(),
         dateStr: dateStr,
         displayDate: displayDate,
         day: dayData.day,
@@ -873,49 +1159,46 @@
       history.unshift(sessionObj);
       saveHistory(history);
 
-      // Reset active session inputs and custom exercises for this day
-      allExercises.forEach((ex, exIdx) => {
-        const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
-        for (let s = 1; s <= totalSets; s++) {
-          localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_w`);
-          localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_r`);
-          localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_rest`);
-          localStorage.removeItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_done`);
-        }
-      });
+      // Reset this day's set inputs, added/removed set counts and custom exercises
+      removeKeysMatching(new RegExp(`^(active_)?d${currentDayIdx}_e\\d+_`));
       localStorage.removeItem(`custom_ex_d${currentDayIdx}`);
 
       renderWorkout();
       alert(`${dayData.day} Workout Logged Successfully! 🎉`);
+      calendarMonthOffset = 0;
       switchView('history');
     }
 
     function switchView(viewName) {
-      document.getElementById('view-workout').style.display = viewName === 'workout' ? 'block' : 'none';
-      document.getElementById('view-history').style.display = viewName === 'history' ? 'block' : 'none';
-      document.getElementById('view-settings').style.display = viewName === 'settings' ? 'block' : 'none';
-
-      document.getElementById('tab-nav-workout').classList.toggle('active', viewName === 'workout');
-      document.getElementById('tab-nav-history').classList.toggle('active', viewName === 'history');
-      document.getElementById('tab-nav-settings').classList.toggle('active', viewName === 'settings');
+      ['workout', 'history', 'progress', 'settings'].forEach(name => {
+        document.getElementById(`view-${name}`).style.display = viewName === name ? 'block' : 'none';
+        document.getElementById(`tab-nav-${name}`).classList.toggle('active', viewName === name);
+      });
 
       if (viewName === 'history') {
         renderCalendarAndHistory();
+      } else if (viewName === 'progress') {
+        renderProgress();
       }
+    }
+
+    function shiftCalendarMonth(delta) {
+      calendarMonthOffset += delta;
+      renderCalendarAndHistory();
     }
 
     function renderCalendarAndHistory() {
       const history = getHistory();
       const historyContainer = document.getElementById('history-list-container');
-      
+
       if (history.length === 0) {
         historyContainer.innerHTML = `<div style="font-size:0.85rem; color: var(--subtext); text-align:center; padding: 20px;">No workout sessions logged yet. Complete a workout to see your history!</div>`;
       } else {
         historyContainer.innerHTML = history.map(item => `
           <div class="history-card" onclick="openSessionModal(${item.id})">
             <div>
-              <div class="history-info-title">${item.day}: ${item.title}</div>
-              <div class="history-info-date">${item.displayDate} • ${item.exercises.length} Exercises</div>
+              <div class="history-info-title">${escapeHtml(item.day)}: ${escapeHtml(item.title)}</div>
+              <div class="history-info-date">${escapeHtml(item.displayDate)} • ${item.exercises.length} Exercises</div>
             </div>
             <div style="color: var(--blue); font-weight: 600; font-size: 0.8rem;">View Details ›</div>
           </div>
@@ -924,22 +1207,25 @@
 
       // Render Calendar Grid with Subtext Badges
       const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const monthName = now.toLocaleString('default', { month: 'long' });
+      const shown = new Date(now.getFullYear(), now.getMonth() + calendarMonthOffset, 1);
+      const year = shown.getFullYear();
+      const month = shown.getMonth();
+      const monthName = shown.toLocaleString('default', { month: 'long' });
       document.getElementById('calendar-month-title').innerText = `${monthName} ${year}`;
 
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const todayStr = localDateStr(now);
 
       // Map sessions to dates
       const dateMap = {};
       history.forEach(h => {
-        if (!dateMap[h.dateStr]) dateMap[h.dateStr] = [];
+        const key = sessionDateStr(h);
+        if (!dateMap[key]) dateMap[key] = [];
         // Extract Day short code like "D1", "D5"
         const shortDay = h.day.replace('Day ', 'D');
-        if (!dateMap[h.dateStr].includes(shortDay)) {
-          dateMap[h.dateStr].push(shortDay);
+        if (!dateMap[key].includes(shortDay)) {
+          dateMap[key].push(shortDay);
         }
       });
 
@@ -956,10 +1242,10 @@
         const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const loggedDays = dateMap[dStr];
         const isLogged = !!loggedDays;
-        const subtext = isLogged ? loggedDays.join(',') : '';
+        const subtext = isLogged ? escapeHtml(loggedDays.join(',')) : '';
 
         calHtml += `
-          <div class="cal-date ${isLogged ? 'active-logged' : ''}">
+          <div class="cal-date ${isLogged ? 'active-logged' : ''} ${dStr === todayStr ? 'today' : ''}" ${isLogged ? `onclick="openDateSessions('${dStr}')"` : ''}>
             <span>${d}</span>
             ${isLogged ? `<span class="cal-subtext">${subtext}</span>` : ''}
           </div>
@@ -967,6 +1253,11 @@
       }
 
       document.getElementById('calendar-grid').innerHTML = calHtml;
+    }
+
+    function openDateSessions(dStr) {
+      const session = getHistory().find(s => sessionDateStr(s) === dStr);
+      if (session) openSessionModal(session.id);
     }
 
     function openSessionModal(sessionId) {
@@ -981,7 +1272,7 @@
       session.exercises.forEach(ex => {
         bodyHtml += `
           <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-            <div style="font-weight: 600; font-size: 0.95rem; color: #FFF; margin-bottom: 4px;">${ex.name}</div>
+            <div style="font-weight: 600; font-size: 0.95rem; color: #FFF; margin-bottom: 4px;">${escapeHtml(ex.name)}</div>
             <div style="font-size: 0.8rem; color: var(--subtext); line-height: 1.4;">
               ${ex.sets.map(s => `Set ${s.set}: <strong style="color:#FFF;">${s.weight} kg</strong> × <strong style="color:#FFF;">${s.reps} reps</strong> <span style="color:var(--accent); font-size:0.72rem;">(Rest ${s.restSec}s)</span>`).join('<br>')}
             </div>
@@ -1013,19 +1304,335 @@
       document.getElementById('detail-modal').style.display = 'none';
     }
 
-    function exportData() {
+    /* Progress: bodyweight log */
+    function logBodyweight() {
+      const kg = parseFloat(document.getElementById('bw-input').value);
+      const dateStr = document.getElementById('bw-date').value || localDateStr(new Date());
+      if (isNaN(kg) || kg < 20 || kg > 300) {
+        alert("Please enter a valid bodyweight in kg.");
+        return;
+      }
+      // One entry per day; logging again on the same date replaces it.
+      const entries = getBodyweight().filter(e => e.dateStr !== dateStr);
+      entries.push({ dateStr, kg: Math.round(kg * 10) / 10 });
+      saveBodyweight(entries);
+      document.getElementById('bw-input').value = '';
+      renderProgress();
+    }
+
+    function deleteBodyweight(dateStr) {
+      if (!confirm(`Delete bodyweight entry for ${dateStr}?`)) return;
+      saveBodyweight(getBodyweight().filter(e => e.dateStr !== dateStr));
+      renderProgress();
+    }
+
+    function bwDateMs(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d).getTime();
+    }
+
+    function renderBodyweight() {
+      const entries = getBodyweight();
+      const dateInput = document.getElementById('bw-date');
+      if (!dateInput.value) dateInput.value = localDateStr(new Date());
+
+      const latest = entries[entries.length - 1];
+      let summary = `Goal: <strong>${TARGET_KG} kg</strong>`;
+      if (latest) {
+        const diff = Math.round((latest.kg - TARGET_KG) * 10) / 10;
+        const gap = diff === 0 ? 'at goal' : `${fmtNum(Math.abs(diff))} kg ${diff > 0 ? 'above' : 'below'} goal`;
+        summary = `Latest <strong>${fmtNum(latest.kg)} kg</strong> · ${gap}`;
+      }
+      document.getElementById('bw-summary').innerHTML = summary;
+
+      renderLineChart('bw-chart', entries.map(e => ({ x: bwDateMs(e.dateStr), y: e.kg })), {
+        target: TARGET_KG,
+        targetLabel: `Goal ${TARGET_KG} kg`,
+        emptyText: 'Log your bodyweight to see the trend.',
+        tip: p => `${shortDate(p.x)} · <strong>${fmtNum(p.y)} kg</strong>`
+      });
+
+      const recent = entries.slice(-8).reverse();
+      document.getElementById('bw-list').innerHTML = recent.length ? `
+        <table class="data-table">
+          <tr><th>Date</th><th class="num">Weight</th><th></th></tr>
+          ${recent.map(e => `
+            <tr>
+              <td>${shortDate(bwDateMs(e.dateStr))}</td>
+              <td class="num">${fmtNum(e.kg)} kg</td>
+              <td class="num"><button class="mini-del-btn" onclick="deleteBodyweight('${e.dateStr}')" aria-label="Delete entry">✕</button></td>
+            </tr>`).join('')}
+        </table>` : '';
+    }
+
+    /* Progress: exercise charts */
+    const METRICS = {
+      top: { label: 'Top Set', unit: 'kg', calc: sets => Math.max(...sets.map(s => s.weight)) },
+      e1rm: {
+        label: 'Est. 1RM', unit: 'kg',
+        // Epley estimate from the best set
+        calc: sets => Math.max(...sets.map(s => s.weight > 0 && s.reps > 0 ? (s.reps === 1 ? s.weight : s.weight * (1 + s.reps / 30)) : 0))
+      },
+      volume: { label: 'Volume', unit: 'kg', calc: sets => sets.reduce((sum, s) => sum + s.weight * s.reps, 0) },
+      reps: { label: 'Best Reps', unit: 'reps', calc: sets => Math.max(...sets.map(s => s.reps)) }
+    };
+
+    function selectProgressExercise(name) {
+      progressExercise = name;
+      renderExerciseProgress();
+    }
+
+    function selectProgressMetric(key) {
+      progressMetric = key;
+      renderExerciseProgress();
+    }
+
+    function renderExerciseProgress() {
       const history = getHistory();
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+      const names = [...new Set(history.flatMap(s => s.exercises.map(e => e.name)))].sort((a, b) => a.localeCompare(b));
+      const select = document.getElementById('progress-ex-select');
+
+      if (!names.includes(progressExercise)) {
+        progressExercise = history.length ? history[0].exercises[0].name : null;
+      }
+      select.innerHTML = names.map(n => `<option value="${escapeHtml(n)}" ${n === progressExercise ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
+      select.style.display = names.length ? 'block' : 'none';
+
+      document.getElementById('metric-seg').innerHTML = Object.entries(METRICS).map(([key, m]) =>
+        `<button class="seg-btn ${key === progressMetric ? 'active' : ''}" onclick="selectProgressMetric('${key}')">${m.label}</button>`
+      ).join('');
+
+      const metric = METRICS[progressMetric];
+      const rows = history
+        .map(s => ({ session: s, ex: s.exercises.find(e => e.name === progressExercise) }))
+        .filter(r => r.ex)
+        .reverse(); // oldest first
+
+      renderLineChart('ex-chart', rows.map(r => ({ x: r.session.id, y: metric.calc(r.ex.sets), day: r.session.day })), {
+        emptyText: 'Finish a workout to start tracking progress.',
+        tip: p => `${shortDate(p.x)} · ${escapeHtml(p.day)} · <strong>${fmtNum(p.y)} ${metric.unit}</strong>`
+      });
+
+      const recent = rows.slice(-8).reverse();
+      document.getElementById('ex-table').innerHTML = recent.length ? `
+        <table class="data-table">
+          <tr><th>Date</th><th>Best Set</th><th class="num">Volume</th></tr>
+          ${recent.map(r => {
+            const best = r.ex.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
+            return `
+            <tr>
+              <td>${shortDate(r.session.id)}</td>
+              <td>${fmtNum(best.weight)} kg × ${best.reps}</td>
+              <td class="num">${fmtNum(METRICS.volume.calc(r.ex.sets))} kg</td>
+            </tr>`;
+          }).join('')}
+        </table>` : '';
+    }
+
+    function renderProgress() {
+      renderBodyweight();
+      renderExerciseProgress();
+    }
+
+    /* Single-series line chart (inline SVG) with tap/hover tooltip */
+    function niceStep(range, count) {
+      const raw = range / count;
+      const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+      const n = raw / mag;
+      return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+    }
+
+    function fmtAxis(v) {
+      return Math.abs(v) >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v);
+    }
+
+    function renderLineChart(containerId, points, opts) {
+      const box = document.getElementById(containerId);
+      if (!points.length) {
+        box.innerHTML = `<div class="chart-empty">${opts.emptyText}</div>`;
+        return;
+      }
+
+      const W = Math.max(260, box.clientWidth || 320);
+      const H = 190;
+      const pad = { l: 40, r: 12, t: 30, b: 24 };
+
+      const ys = points.map(p => p.y);
+      if (opts.target != null) ys.push(opts.target);
+      let lo = Math.min(...ys);
+      let hi = Math.max(...ys);
+      if (lo === hi) {
+        const d = Math.max(1, Math.abs(lo) * 0.05);
+        lo -= d;
+        hi += d;
+      }
+      const step = niceStep(hi - lo, 4);
+      lo = Math.floor(lo / step) * step;
+      hi = Math.ceil(hi / step) * step;
+
+      const x0 = points[0].x;
+      const x1 = points[points.length - 1].x;
+      const sx = x => x1 === x0 ? (pad.l + W - pad.r) / 2 : pad.l + (x - x0) / (x1 - x0) * (W - pad.l - pad.r);
+      const sy = y => pad.t + (hi - y) / (hi - lo) * (H - pad.t - pad.b);
+
+      let svg = '';
+      for (let i = 0; lo + i * step <= hi + step / 1000; i++) {
+        const v = lo + i * step;
+        svg += `<line class="chart-grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
+        svg += `<text class="chart-axis-label" x="${pad.l - 6}" y="${sy(v) + 3}" text-anchor="end">${fmtAxis(v)}</text>`;
+      }
+      svg += `<text class="chart-axis-label" x="${pad.l}" y="${H - 6}" text-anchor="start">${shortDate(x0)}</text>`;
+      if (x1 !== x0) svg += `<text class="chart-axis-label" x="${W - pad.r}" y="${H - 6}" text-anchor="end">${shortDate(x1)}</text>`;
+
+      if (opts.target != null) {
+        svg += `<line class="chart-target" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(opts.target)}" y2="${sy(opts.target)}"/>`;
+        svg += `<text class="chart-axis-label" x="${W - pad.r}" y="${sy(opts.target) - 4}" text-anchor="end">${opts.targetLabel}</text>`;
+      }
+
+      svg += `<path class="chart-line" d="${points.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x)},${sy(p.y)}`).join(' ')}"/>`;
+      svg += points.map(p => `<circle class="chart-dot" cx="${sx(p.x)}" cy="${sy(p.y)}" r="4"/>`).join('');
+      svg += `<line class="chart-cross" id="${containerId}-cross" y1="${pad.t}" y2="${H - pad.b}" style="display:none"/>`;
+      svg += `<circle class="chart-dot" id="${containerId}-focus" r="6" style="display:none"/>`;
+      svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>`;
+
+      box.innerHTML = `
+        <div class="chart-wrap">
+          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart">${svg}</svg>
+          <div class="chart-tip"></div>
+        </div>`;
+
+      const svgEl = box.querySelector('svg');
+      const tip = box.querySelector('.chart-tip');
+      const cross = document.getElementById(`${containerId}-cross`);
+      const focus = document.getElementById(`${containerId}-focus`);
+
+      const show = ev => {
+        const rect = svgEl.getBoundingClientRect();
+        const px = (ev.clientX - rect.left) * (W / rect.width);
+        let best = points[0];
+        points.forEach(p => { if (Math.abs(sx(p.x) - px) < Math.abs(sx(best.x) - px)) best = p; });
+
+        const cx = sx(best.x);
+        cross.setAttribute('x1', cx);
+        cross.setAttribute('x2', cx);
+        cross.style.display = '';
+        focus.setAttribute('cx', cx);
+        focus.setAttribute('cy', sy(best.y));
+        focus.style.display = '';
+
+        tip.innerHTML = opts.tip(best);
+        tip.style.display = 'block';
+        const cssX = cx * (rect.width / W);
+        const left = Math.min(Math.max(0, cssX - tip.offsetWidth / 2), rect.width - tip.offsetWidth);
+        tip.style.left = `${left}px`;
+      };
+      const hide = () => {
+        tip.style.display = 'none';
+        cross.style.display = 'none';
+        focus.style.display = 'none';
+      };
+
+      svgEl.addEventListener('pointerdown', show);
+      svgEl.addEventListener('pointermove', show);
+      // On touch, keep the tooltip after lifting the finger; on mouse, hide when leaving.
+      svgEl.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') hide(); });
+    }
+
+    /* Backup: export / import */
+    async function exportData() {
+      const backup = {
+        app: 'recomp-tracker',
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        history: getHistory(),
+        bodyweight: getBodyweight()
+      };
+      const fileName = `recomp_backup_${localDateStr(new Date())}.json`;
+      const file = new File([JSON.stringify(backup, null, 2)], fileName, { type: 'application/json' });
+
+      // On iPhone the share sheet offers "Save to Files", which works reliably from a Home Screen app.
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'Recomp backup' });
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+
+      const url = URL.createObjectURL(file);
       const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "recomp_workout_history.json");
+      downloadAnchor.href = url;
+      downloadAnchor.download = fileName;
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function importData(inputEl) {
+      const file = inputEl.files[0];
+      inputEl.value = '';
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(reader.result);
+        } catch (e) {
+          alert("That file isn't valid JSON.");
+          return;
+        }
+
+        // Old backups are a plain array of sessions; new ones are { history, bodyweight }.
+        const importedHistory = Array.isArray(data) ? data : (data && Array.isArray(data.history) ? data.history : null);
+        const importedBw = data && Array.isArray(data.bodyweight) ? data.bodyweight : [];
+        if (!importedHistory) {
+          alert("This doesn't look like a Recomp backup file.");
+          return;
+        }
+
+        // Merge: entries already on this phone are kept, so importing the same file twice is harmless.
+        const history = getHistory();
+        const knownIds = new Set(history.map(s => s.id));
+        let added = 0;
+        importedHistory
+          .filter(s => s && typeof s.id === 'number' && Array.isArray(s.exercises) && !knownIds.has(s.id))
+          .forEach(s => {
+            history.push({
+              ...s,
+              dateStr: s.dateStr || localDateStr(new Date(s.id)),
+              displayDate: s.displayDate || new Date(s.id).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              day: s.day || 'Day ?',
+              title: s.title || 'Workout'
+            });
+            knownIds.add(s.id);
+            added++;
+          });
+
+        const bw = getBodyweight();
+        const knownDates = new Set(bw.map(e => e.dateStr));
+        let addedBw = 0;
+        importedBw
+          .filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.dateStr) && typeof e.kg === 'number' && !knownDates.has(e.dateStr))
+          .forEach(e => {
+            bw.push({ dateStr: e.dateStr, kg: e.kg });
+            knownDates.add(e.dateStr);
+            addedBw++;
+          });
+
+        saveHistory(history.sort((a, b) => b.id - a.id));
+        saveBodyweight(bw);
+        renderWorkout();
+        alert(`Backup restored: ${added} workout${added === 1 ? '' : 's'} and ${addedBw} bodyweight entr${addedBw === 1 ? 'y' : 'ies'} added.` +
+          (importedHistory.length - added > 0 ? ` ${importedHistory.length - added} workout(s) were already here.` : ''));
+      };
+      reader.readAsText(file);
     }
 
     function clearAllData() {
-      if (confirm("Are you sure you want to delete all saved local workout logs?")) {
+      if (confirm("Are you sure you want to delete all saved local workout logs? Export a backup first if you want to keep them.")) {
         localStorage.clear();
         updateStats();
         renderCalendarAndHistory();
@@ -1034,10 +1641,22 @@
       }
     }
 
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (document.getElementById('view-progress').style.display === 'block') renderProgress();
+      }, 200);
+    });
+
     // Init App
     initNav();
     renderWorkout();
     updateStats();
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
