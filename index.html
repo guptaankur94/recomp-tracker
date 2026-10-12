@@ -736,58 +736,84 @@
   </div>
 
   <script>
+    // Each exercise has a swappable alternative with its own targets. Alternatives are tuned for
+    // equal effort: when the alt load is lighter (e.g. 12.5 kg DBs), reps rise and tempo slows so
+    // every set still finishes 1–2 reps short of failure.
     const programData = [
       {
         day: "Day 1",
         title: "Upper Chest & Heavy Biceps Focus",
         exercises: [
-          { name: "Barbell Bench Press", alt: "Incline DB Press (12.5 kg DBs, 3s eccentric)", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3 },
-          { name: "Pec Deck Machine Flyes", alt: "Incline DB Flyes (10–12.5 kg DBs)", repTarget: "10–12 reps", weightTarget: "Moderate", rest: 90, sets: 3 },
-          { name: "Barbell Bicep Curls", alt: "Standing Alt DB Curls (12.5 kg DBs)", repTarget: "8–10 reps", weightTarget: "20–27.5 kg", rest: 120, sets: 3 },
-          { name: "Incline DB Curls (45°)", alt: "Seated DB Curls (3-second lowering)", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3 },
-          { name: "Barbell Reverse Curls", alt: "Cross-Body DB Hammer Curls (10–12.5 kg)", repTarget: "8–10 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3 }
+          { name: "Barbell Bench Press", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
+            alt: { name: "Incline DB Press", repTarget: "12–15 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering, 1s pause at the chest" } },
+          { name: "Pec Deck Machine Flyes", repTarget: "10–12 reps", weightTarget: "Moderate", rest: 90, sets: 3,
+            alt: { name: "Incline DB Flyes", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Deep stretch, 2s pause at the bottom" } },
+          { name: "Barbell Bicep Curls", repTarget: "8–10 reps", weightTarget: "20–27.5 kg", rest: 120, sets: 3,
+            alt: { name: "Standing Alt DB Curls", repTarget: "10–12 reps / arm", weightTarget: "12.5 kg DBs", rest: 90, sets: 3, cue: "Twist palm up at the top, no swinging" } },
+          { name: "Incline DB Curls (45°)", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
+            alt: { name: "Seated DB Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "3s lowering, full stretch at the bottom" } },
+          { name: "Barbell Reverse Curls", repTarget: "8–10 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
+            alt: { name: "Cross-Body DB Hammer Curls", repTarget: "10–12 reps / arm", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Curl toward the opposite shoulder" } }
         ]
       },
       {
         day: "Day 2",
         title: "Lower Body & Core Focus",
         exercises: [
-          { name: "Leg Press Machine", alt: "Barbell Squats (35–50 kg total bar)", repTarget: "10–12 reps", weightTarget: "Moderate-Heavy", rest: 150, sets: 3 },
-          { name: "Barbell Romanian Deadlifts", alt: "Single-Leg DB RDLs (12.5 kg DB)", repTarget: "8–10 reps", weightTarget: "45–60 kg", rest: 180, sets: 3 },
-          { name: "Single-Leg DB Calf Raise", alt: "Standing Barbell Calf Raise", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DB", rest: 90, sets: 3 },
-          { name: "Hanging Leg Raises / Knee Raises", alt: "Incline Crunches or 60s Planks", repTarget: "12–15 reps", weightTarget: "Bodyweight", rest: 60, sets: 3 }
+          { name: "Leg Press Machine", repTarget: "10–12 reps", weightTarget: "Moderate-Heavy", rest: 150, sets: 3,
+            alt: { name: "Barbell Squats", repTarget: "8–12 reps", weightTarget: "35–50 kg bar", rest: 150, sets: 3, cue: "3s down, hips below knees if mobility allows" } },
+          { name: "Barbell Romanian Deadlifts", repTarget: "8–10 reps", weightTarget: "45–60 kg", rest: 180, sets: 3,
+            alt: { name: "Single-Leg DB RDLs", repTarget: "10–12 reps / leg", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, hips square, feel the hamstring stretch" } },
+          { name: "Single-Leg DB Calf Raise", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DB", rest: 90, sets: 3,
+            alt: { name: "Standing Barbell Calf Raise", repTarget: "12–15 reps", weightTarget: "40–50 kg bar", rest: 60, sets: 3, cue: "2s pause at the bottom stretch, 1s squeeze at the top" } },
+          { name: "Hanging Leg Raises / Knee Raises", repTarget: "12–15 reps", weightTarget: "Bodyweight", rest: 60, sets: 3,
+            alt: { name: "Incline Crunches / 60s Plank", repTarget: "12–15 reps or 60s", weightTarget: "Bodyweight", rest: 60, sets: 3, cue: "Hold a 5 kg plate once 15 reps is easy" } }
         ]
       },
       {
         day: "Day 3",
         title: "Shoulders & Heavy Triceps Focus",
         exercises: [
-          { name: "Barbell Overhead Shoulder Press", alt: "Seated DB Overhead Press (12.5 kg)", repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3 },
-          { name: "Standing DB Lateral Raises", alt: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4 },
-          { name: "Close-Grip Barbell Bench Press", alt: "Weighted Bench Dips (10–15 kg plate)", repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3 },
-          { name: "Seated 60° Incline DB Overhead Ext", alt: "Seated Barbell French Press", repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3 },
-          { name: "Incline DB Skullcrushers (30°)", alt: "Lying Barbell Skullcrushers", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3 }
+          { name: "Barbell Overhead Shoulder Press", repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3,
+            alt: { name: "Seated DB Overhead Press", repTarget: "10–12 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering to ear level" } },
+          { name: "Standing DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4,
+            alt: { name: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps / arm", weightTarget: "7.5–10 kg DB", rest: 60, sets: 4, cue: "Lean away holding a post, lead with the elbow" } },
+          { name: "Close-Grip Barbell Bench Press", repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3,
+            alt: { name: "Weighted Bench Dips", repTarget: "8–12 reps", weightTarget: "10–15 kg plate", rest: 120, sets: 3, cue: "Elbows back, stop at 90°" } },
+          { name: "Seated 60° Incline DB Overhead Ext", repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3,
+            alt: { name: "Seated Barbell French Press", repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Elbows in, deep stretch behind the head" } },
+          { name: "Incline DB Skullcrushers (30°)", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
+            alt: { name: "Lying Barbell Skullcrushers", repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Lower to just behind the head" } }
         ]
       },
       {
         day: "Day 4",
         title: "Back & Lower Arm Width",
         exercises: [
-          { name: "Lat Pulldown Machine", alt: "Bodyweight Pull-ups / Negative Pull-ups", repTarget: "8–10 reps", weightTarget: "Moderate-Heavy", rest: 120, sets: 3 },
-          { name: "Barbell Bent-Over Rows", alt: "Single-Arm DB Rows (12.5 kg DB)", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3 },
-          { name: "Cross-Body DB Hammer Curls", alt: "Incline Neutral-Grip DB Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3 },
-          { name: "Heavy DB Farmer’s Carries", alt: "Barbell Static Grip Hold (50 kg bar)", repTarget: "45s walks", weightTarget: "12.5 kg DBs", rest: 90, sets: 3 }
+          { name: "Lat Pulldown Machine", repTarget: "8–10 reps", weightTarget: "Moderate-Heavy", rest: 120, sets: 3,
+            alt: { name: "Pull-ups / Negative Pull-ups", repTarget: "Max reps (3–8) or 5 negatives", weightTarget: "Bodyweight", rest: 120, sets: 3, cue: "Negatives: jump up, lower for 5s" } },
+          { name: "Barbell Bent-Over Rows", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
+            alt: { name: "Single-Arm DB Rows", repTarget: "12–15 reps / arm", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "Pull to the hip, 2s squeeze at the top" } },
+          { name: "Cross-Body DB Hammer Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Incline Neutral-Grip DB Curls", repTarget: "10–12 reps", weightTarget: "8–12.5 kg DBs", rest: 90, sets: 3, cue: "Arms hang straight down, no shoulder swing" } },
+          { name: "Heavy DB Farmer’s Carries", repTarget: "45s walks", weightTarget: "12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Barbell Static Grip Hold", repTarget: "30–45s hold", weightTarget: "50 kg bar", rest: 90, sets: 3, cue: "Double overhand, shoulders packed" } }
         ]
       },
       {
         day: "Day 5",
         title: "Chest Definition & Arm Pump",
         exercises: [
-          { name: "Pec Deck Machine Flyes", alt: "Flat DB Flyes (10–12.5 kg DBs)", repTarget: "12–15 reps", weightTarget: "Moderate", rest: 90, sets: 3 },
-          { name: "Barbell Pullovers", alt: "Single DB Pullover (12.5 kg DB)", repTarget: "10–12 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3 },
-          { name: "Standing DB Bicep Curls", alt: "Barbell 21s", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3 },
-          { name: "Bench Dips", alt: "Overhand DB Tricep Kickbacks", repTarget: "10–12 reps", weightTarget: "BW + 10 kg plate", rest: 90, sets: 3 },
-          { name: "Bodyweight Push-ups", alt: "Decline Push-ups (Feet elevated)", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2 }
+          { name: "Pec Deck Machine Flyes", repTarget: "12–15 reps", weightTarget: "Moderate", rest: 90, sets: 3,
+            alt: { name: "Flat DB Flyes", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Slight elbow bend, 2s stretch at the bottom" } },
+          { name: "Barbell Pullovers", repTarget: "10–12 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
+            alt: { name: "Single DB Pullover", repTarget: "12–15 reps", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, ribs down" } },
+          { name: "Standing DB Bicep Curls", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Barbell 21s", repTarget: "21 reps (7+7+7)", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "7 bottom half, 7 top half, 7 full" } },
+          { name: "Bench Dips", repTarget: "10–12 reps", weightTarget: "BW + 10 kg plate", rest: 90, sets: 3,
+            alt: { name: "Overhand DB Tricep Kickbacks", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 60, sets: 3, cue: "Upper arm locked, 1s squeeze at lockout" } },
+          { name: "Bodyweight Push-ups", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2,
+            alt: { name: "Decline Push-ups (Feet elevated)", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2, cue: "Body straight, chest to the floor" } }
         ]
       }
     ];
@@ -1051,10 +1077,37 @@
       });
     }
 
+    function swapKey(dayIdx, exIdx) {
+      return `swap_d${dayIdx}_e${exIdx}`;
+    }
+
     function getAllExercisesForDay(dayIdx) {
-      const base = programData[dayIdx].exercises;
+      const base = programData[dayIdx].exercises.map((ex, exIdx) => {
+        const swapped = localStorage.getItem(swapKey(dayIdx, exIdx)) === 'true';
+        return swapped
+          ? { ...ex.alt, swapped: true, otherName: ex.name }
+          : { ...ex, swapped: false, otherName: ex.alt.name };
+      });
       const customs = getCustomExercises(dayIdx);
       return [...base, ...customs];
+    }
+
+    // The swap choice is remembered (equipment rarely changes); entered values stay in place.
+    function toggleSwap(exIdx) {
+      const key = swapKey(currentDayIdx, exIdx);
+      if (localStorage.getItem(key) === 'true') localStorage.removeItem(key);
+      else localStorage.setItem(key, 'true');
+      renderWorkout();
+    }
+
+    // Double progression: once the top of the rep range is hit, add load (or reps/tempo when the DB is maxed).
+    function progressionTip(ex, lastSet) {
+      const range = String(ex.repTarget).match(/(\d+)\s*[–-]\s*(\d+)/);
+      if (!range || !lastSet || !lastSet.weight || lastSet.reps < parseInt(range[2], 10)) return '';
+      const isDumbbell = /\bDBs?\b/.test(ex.name) || /\bDBs?\b/.test(ex.weightTarget);
+      return isDumbbell
+        ? '↑ go heavier, or slow the lowering to 4s'
+        : `↑ try ${fmtNum(lastSet.weight + 2.5)} kg`;
     }
 
     function initNav() {
@@ -1113,11 +1166,12 @@
               <div class="ex-actions">
                 ${ex.isCustom
                   ? `<button class="remove-ex-btn" onclick="removeCustomExercise(${exIdx})">Remove</button>`
-                  : `<button class="alt-btn" onclick="toggleAlt(${exIdx})">Swap Alt</button>`}
+                  : `<button class="alt-btn" onclick="toggleSwap(${exIdx})">${ex.swapped ? '⇄ Original' : '⇄ Swap Alt'}</button>`}
               </div>
             </div>
+            ${ex.isCustom ? '' : `<div class="ex-last">${ex.swapped ? `Swapped from ${escapeHtml(ex.otherName)}` : `Alt: ${escapeHtml(ex.otherName)}`}</div>`}
+            ${ex.cue ? `<div class="alt-text" style="display:block;">🎯 ${escapeHtml(ex.cue)}</div>` : ''}
             ${last ? `<div class="ex-last">Last done ${shortDate(last.session.id)}</div>` : ''}
-            <div class="alt-text" id="alt-${exIdx}">Smart Alt: ${escapeHtml(ex.alt)}</div>
             <div class="set-container">
         `;
 
@@ -1134,6 +1188,7 @@
           const drops = getDrops(currentDayIdx, exIdx, s);
           const lastSet = last ? (last.sets.find(x => x.set === s) || last.sets[s - 1]) : null;
           const lastDrops = lastSet && lastSet.drops ? lastSet.drops.length : 0;
+          const tip = progressionTip(ex, lastSet);
 
           html += `
             <div class="set-block ${isDone ? 'completed' : ''}" id="block_d${currentDayIdx}_e${exIdx}_s${s}">
@@ -1184,6 +1239,7 @@
                   ? `<span>Last: <strong>${fmtSetLine(lastSet)}</strong>${lastDrops ? ` +${lastDrops} drop` : ''}</span>`
                   : `<span>Rec Rest: <strong>${ex.rest}s</strong></span>`}
               </div>
+              ${tip ? `<div class="set-hint" style="border-top: none; padding-top: 0; color: var(--accent);">${tip}</div>` : ''}
             </div>
           `;
         }
@@ -1201,11 +1257,6 @@
         <button class="modal-delete-btn" id="clear-draft-btn" style="margin: -8px 0 20px; display: ${hasDraft ? 'block' : 'none'};" onclick="discardDraft()">Clear Unsaved Sets</button>
       `;
       main.innerHTML = html;
-    }
-
-    function toggleAlt(exIdx) {
-      const el = document.getElementById(`alt-${exIdx}`);
-      el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
     function saveVal(key, value) {
