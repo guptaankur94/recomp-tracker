@@ -600,13 +600,46 @@
       font-weight: 600;
       padding: 3px 8px;
     }
+
+    /* Settings forms */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--subtext);
+      min-width: 0;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-grid input, .form-grid select {
+      width: 100%;
+      height: 36px;
+      text-align: left;
+      padding: 0 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-alt);
+      color: #FFF;
+      font-size: 0.88rem;
+      font-family: inherit;
+    }
+    .full-btn { width: 100%; height: 42px; margin-top: 6px; }
+    .steps { margin: 4px 0 8px; padding-left: 20px; font-size: 0.78rem; color: var(--subtext); line-height: 1.45; }
+    .steps strong { color: var(--text); }
+    .targets-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+    .target-tile { background: var(--card-alt); border-radius: 10px; padding: 8px 4px; text-align: center; }
+    .target-val { font-weight: 700; font-size: 0.95rem; }
+    .target-lbl { font-size: 0.62rem; color: var(--subtext); text-transform: uppercase; margin-top: 2px; }
+    #app-subtitle.clickable { color: var(--blue); cursor: pointer; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>RECOMP EXECUTION ENGINE</h1>
-    <div class="subtitle">70kg Bodyweight Target | Recomposition Split</div>
+    <div class="subtitle" id="app-subtitle"></div>
   </header>
 
   <!-- Top Metric Bar -->
@@ -621,7 +654,7 @@
     </div>
     <div class="stat-card" onclick="switchView('progress')">
       <div class="stat-val" id="stat-bodyweight" style="color: var(--accent);">— kg</div>
-      <div class="stat-lbl">Weight · Goal 70</div>
+      <div class="stat-lbl" id="stat-bodyweight-label">Weight</div>
     </div>
   </div>
 
@@ -668,6 +701,64 @@
 
   <div id="view-settings" style="display: none;">
     <div class="card">
+      <div class="section-title">Your Profile</div>
+      <div class="section-meta" style="margin-top: -6px;">Used for your goal line, the AI plan prompt and daily nutrition targets. Stays on this phone.</div>
+      <div class="form-grid">
+        <label>Name<input type="text" id="pf-name" placeholder="Optional"></label>
+        <label>Sex
+          <select id="pf-sex"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select>
+        </label>
+        <label>Birth date<input type="date" id="pf-birth"></label>
+        <label>Height (cm)<input type="number" id="pf-height" inputmode="decimal" placeholder="e.g. 174"></label>
+        <label>Weight (kg)<input type="number" id="pf-weight" step="0.1" inputmode="decimal" placeholder="e.g. 70"></label>
+        <label>Goal weight (kg)<input type="number" id="pf-goal" step="0.1" inputmode="decimal" placeholder="e.g. 70"></label>
+        <label class="full">Daily activity
+          <select id="pf-activity">
+            <option value="desk">Desk job + training</option>
+            <option value="feet">On my feet a lot + training</option>
+            <option value="physical">Physical job + training</option>
+          </select>
+        </label>
+        <label class="full">Goal
+          <select id="pf-goaltype">
+            <option value="recomp">Body recomposition (lose fat, build muscle)</option>
+            <option value="lose">Fat loss</option>
+            <option value="gain">Muscle gain</option>
+          </select>
+        </label>
+      </div>
+      <button class="primary-btn full-btn" onclick="saveProfileForm()">Save Profile</button>
+      <div id="pf-targets"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Workout Plan</div>
+      <div class="section-meta" id="plan-summary" style="margin-top: -6px;"></div>
+      <div class="section-meta"><strong>Create your own plan with any AI chatbot</strong> (ChatGPT, Gemini, Claude…)</div>
+      <ol class="steps">
+        <li>Fill in the details below and tap <strong>Copy AI Prompt</strong>.</li>
+        <li>Paste it into the chatbot and send it.</li>
+        <li>Copy the chatbot's whole reply, tap <strong>Paste Plan</strong> and paste it. You can also save the reply as a .txt or .json file and use <strong>Upload Plan File</strong>.</li>
+      </ol>
+      <div class="form-grid">
+        <label>Days per week
+          <select id="ai-days"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select>
+        </label>
+        <label>Experience
+          <select id="ai-level"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select>
+        </label>
+        <label class="full">Equipment available<input type="text" id="ai-equipment" placeholder="e.g. full gym, or DBs up to 12.5 kg + barbell"></label>
+        <label class="full">Focus / notes<input type="text" id="ai-notes" placeholder="e.g. bigger arms, sore left knee, 60 min max"></label>
+      </div>
+      <button class="modal-close-btn" onclick="copyAiPrompt()" style="background: var(--blue); color:#FFF; margin-bottom:8px;">1. Copy AI Prompt</button>
+      <button class="modal-close-btn" onclick="openPlanPaste()" style="margin-top:0; margin-bottom:8px;">2. Paste Plan</button>
+      <button class="modal-close-btn" onclick="document.getElementById('plan-file').click()" style="margin-top:0; margin-bottom:8px;">Upload Plan File</button>
+      <input type="file" id="plan-file" accept=".json,.txt,application/json,text/plain" style="display:none;" onchange="importPlanFile(this)">
+      <button class="modal-close-btn" onclick="copyCurrentPlan()" style="margin-top:0; margin-bottom:8px;">Copy Current Plan (to edit with AI)</button>
+      <button class="modal-close-btn" id="restore-plan-btn" onclick="restoreDefaultPlan()" style="margin-top:0; display:none;">Restore Default Plan</button>
+    </div>
+
+    <div class="card">
       <div style="font-weight: 700; margin-bottom: 8px;">Backup & Data Storage</div>
       <div style="font-size: 0.8rem; color: var(--subtext); margin-bottom: 12px;">All workout and bodyweight data is saved on this phone only. Export a backup regularly, and always before deleting or re-adding the app on your Home Screen.</div>
       <button class="modal-close-btn" onclick="exportData()" style="background: var(--blue); color:#FFF; margin-top:0; margin-bottom:8px;">Export Backup (JSON)</button>
@@ -698,7 +789,7 @@
       <div class="modal-date" id="backup-modal-help"></div>
       <textarea id="backup-text" rows="10" style="width:100%; background: var(--card-alt); color:#FFF; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.75rem; font-family: ui-monospace, Menlo, monospace;"></textarea>
       <button class="modal-close-btn" id="backup-select-btn" onclick="selectBackupText()" style="background: var(--blue);">Select All</button>
-      <button class="modal-close-btn" id="backup-restore-btn" onclick="restoreFromPastedText()" style="background: var(--accent); color:#000; border-color: var(--accent);">Restore</button>
+      <button class="modal-close-btn" id="backup-restore-btn" onclick="submitTextModal()" style="background: var(--accent); color:#000; border-color: var(--accent);">Restore</button>
       <button class="modal-close-btn" onclick="closeBackupModal()">Close</button>
     </div>
   </div>
@@ -731,7 +822,7 @@
     </button>
     <button class="nav-item" id="tab-nav-settings" onclick="switchView('settings')">
       <span class="nav-item-icon">⚙️</span>
-      Data
+      Settings
     </button>
   </div>
 
@@ -739,7 +830,7 @@
     // Each exercise has a swappable alternative with its own targets. Alternatives are tuned for
     // equal effort: when the alt load is lighter (e.g. 12.5 kg DBs), reps rise and tempo slows so
     // every set still finishes 1–2 reps short of failure.
-    const programData = [
+    const DEFAULT_PLAN = [
       {
         day: "Day 1",
         title: "Upper Chest & Heavy Biceps Focus",
@@ -821,7 +912,9 @@
     // Storage keys are kept identical to earlier versions so existing data carries over.
     const HISTORY_KEY = 'recomp_history';
     const BODYWEIGHT_KEY = 'recomp_bodyweight';
-    const TARGET_KG = 70;
+    const PROFILE_KEY = 'recomp_profile';
+    const PLAN_KEY = 'recomp_plan';
+    let programData = DEFAULT_PLAN;
 
     let currentDayIdx = 0;
     let timerCountdown = null;
@@ -1084,9 +1177,9 @@
     function getAllExercisesForDay(dayIdx) {
       const base = programData[dayIdx].exercises.map((ex, exIdx) => {
         const swapped = localStorage.getItem(swapKey(dayIdx, exIdx)) === 'true';
-        return swapped
+        return swapped && ex.alt
           ? { ...ex.alt, swapped: true, otherName: ex.name }
-          : { ...ex, swapped: false, otherName: ex.alt.name };
+          : { ...ex, swapped: false, otherName: ex.alt ? ex.alt.name : null };
       });
       const customs = getCustomExercises(dayIdx);
       return [...base, ...customs];
@@ -1166,10 +1259,10 @@
               <div class="ex-actions">
                 ${ex.isCustom
                   ? `<button class="remove-ex-btn" onclick="removeCustomExercise(${exIdx})">Remove</button>`
-                  : `<button class="alt-btn" onclick="toggleSwap(${exIdx})">${ex.swapped ? '⇄ Original' : '⇄ Swap Alt'}</button>`}
+                  : (ex.otherName ? `<button class="alt-btn" onclick="toggleSwap(${exIdx})">${ex.swapped ? '⇄ Original' : '⇄ Swap Alt'}</button>` : '')}
               </div>
             </div>
-            ${ex.isCustom ? '' : `<div class="ex-last">${ex.swapped ? `Swapped from ${escapeHtml(ex.otherName)}` : `Alt: ${escapeHtml(ex.otherName)}`}</div>`}
+            ${ex.isCustom || !ex.otherName ? '' : `<div class="ex-last">${ex.swapped ? `Swapped from ${escapeHtml(ex.otherName)}` : `Alt: ${escapeHtml(ex.otherName)}`}</div>`}
             ${ex.cue ? `<div class="alt-text" style="display:block;">🎯 ${escapeHtml(ex.cue)}</div>` : ''}
             ${last ? `<div class="ex-last">Last done ${shortDate(last.session.id)}</div>` : ''}
             <div class="set-container">
@@ -1466,6 +1559,8 @@
         renderCalendarAndHistory();
       } else if (viewName === 'progress') {
         renderProgress();
+      } else if (viewName === 'settings') {
+        renderSettings();
       }
     }
 
@@ -1640,17 +1735,21 @@
       if (!dateInput.value) dateInput.value = localDateStr(new Date());
 
       const latest = entries[entries.length - 1];
-      let summary = `Goal: <strong>${TARGET_KG} kg</strong>`;
+      const goalKg = getGoalKg();
+      let summary = goalKg ? `Goal: <strong>${fmtNum(goalKg)} kg</strong>` : 'Set a goal weight in Settings → Your Profile.';
       if (latest) {
-        const diff = Math.round((latest.kg - TARGET_KG) * 10) / 10;
-        const gap = diff === 0 ? 'at goal' : `${fmtNum(Math.abs(diff))} kg ${diff > 0 ? 'above' : 'below'} goal`;
+        let gap = 'set a goal weight in Settings';
+        if (goalKg) {
+          const diff = Math.round((latest.kg - goalKg) * 10) / 10;
+          gap = diff === 0 ? 'at goal' : `${fmtNum(Math.abs(diff))} kg ${diff > 0 ? 'above' : 'below'} goal`;
+        }
         summary = `Latest <strong>${fmtNum(latest.kg)} kg</strong> · ${gap}`;
       }
       document.getElementById('bw-summary').innerHTML = summary;
 
       renderLineChart('bw-chart', entries.map(e => ({ x: bwDateMs(e.dateStr), y: e.kg })), {
-        target: TARGET_KG,
-        targetLabel: `Goal ${TARGET_KG} kg`,
+        target: goalKg,
+        targetLabel: `Goal ${fmtNum(goalKg)} kg`,
         emptyText: 'Log your bodyweight to see the trend.',
         tip: p => `${shortDate(p.x)} · <strong>${fmtNum(p.y)} kg</strong>`
       });
@@ -1848,7 +1947,9 @@
         version: 2,
         exportedAt: new Date().toISOString(),
         history: getHistory(),
-        bodyweight: getBodyweight()
+        bodyweight: getBodyweight(),
+        profile: getProfile(),
+        plan: getCustomPlan()
       }, null, 2);
     }
 
@@ -1873,7 +1974,7 @@
 
       // Home Screen apps on iPhone can't download files, so show the text to copy instead.
       if (navigator.standalone) {
-        openBackupModal('show', json);
+        openTextModal({ title: 'Your Backup', help: 'Tap Select All, then Copy, and paste it into a note in the Notes app.', text: json, readOnly: true });
         return;
       }
 
@@ -1887,28 +1988,19 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    async function copyBackup() {
-      const json = buildBackupJson();
-      try {
-        await navigator.clipboard.writeText(json);
-        alert(`Backup copied (${getHistory().length} workouts). Open the Notes app, paste it into a new note and keep that note safe.`);
-      } catch (e) {
-        openBackupModal('show', json);
-      }
+    function copyBackup() {
+      copyText(buildBackupJson(),
+        `Backup copied (${getHistory().length} workouts). Open the Notes app, paste it into a new note and keep that note safe.`,
+        'Your Backup');
     }
 
-    function openBackupModal(mode, json) {
-      const text = document.getElementById('backup-text');
-      const isShow = mode === 'show';
-      document.getElementById('backup-modal-title').innerText = isShow ? 'Your Backup' : 'Paste Backup';
-      document.getElementById('backup-modal-help').innerText = isShow
-        ? 'Tap Select All, then Copy, and paste it into a note in the Notes app.'
-        : 'Paste the backup text you saved (for example from Notes), then tap Restore.';
-      text.value = isShow ? json : '';
-      text.readOnly = isShow;
-      document.getElementById('backup-select-btn').style.display = isShow ? 'block' : 'none';
-      document.getElementById('backup-restore-btn').style.display = isShow ? 'none' : 'block';
-      document.getElementById('backup-modal').style.display = 'flex';
+    function openBackupModal() {
+      openTextModal({
+        title: 'Paste Backup',
+        help: 'Paste the backup text you saved (for example from Notes), then tap Restore.',
+        submitLabel: 'Restore',
+        onSubmit: restoreBackupText
+      });
     }
 
     function closeBackupModal() {
@@ -1919,10 +2011,6 @@
       const text = document.getElementById('backup-text');
       text.focus();
       text.setSelectionRange(0, text.value.length);
-    }
-
-    function restoreFromPastedText() {
-      if (restoreBackupText(document.getElementById('backup-text').value)) closeBackupModal();
     }
 
     function importData(inputEl) {
@@ -1982,10 +2070,28 @@
           addedBw++;
         });
 
+      // Profile and plan are restored only when this phone doesn't have its own yet.
+      const extras = [];
+      if (data && data.profile && typeof data.profile === 'object' && !getProfile()) {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(data.profile));
+        extras.push('profile');
+      }
+      if (data && data.plan && !getCustomPlan() && !anyUnsavedSets()) {
+        try {
+          localStorage.setItem(PLAN_KEY, JSON.stringify(normalizePlan(data.plan)));
+          loadActivePlan();
+          extras.push('workout plan');
+        } catch (e) {}
+      }
+
       saveHistory(history.sort((a, b) => b.id - a.id));
       saveBodyweight(bw);
+      initNav();
       renderWorkout();
-      alert(`Backup restored: ${added} workout${added === 1 ? '' : 's'} and ${addedBw} bodyweight entr${addedBw === 1 ? 'y' : 'ies'} added.` +
+      updateHeader();
+      if (document.getElementById('view-settings').style.display === 'block') renderSettings();
+      alert(`Backup restored: ${added} workout${added === 1 ? '' : 's'} and ${addedBw} bodyweight entr${addedBw === 1 ? 'y' : 'ies'} added` +
+        (extras.length ? `, plus your ${extras.join(' and ')}` : '') + '.' +
         (importedHistory.length - added > 0 ? ` ${importedHistory.length - added} workout(s) were already here.` : ''));
       return true;
     }
@@ -1993,11 +2099,404 @@
     function clearAllData() {
       if (confirm("Are you sure you want to delete all saved local workout logs? Export a backup first if you want to keep them.")) {
         localStorage.clear();
+        loadActivePlan();
+        initNav();
+        updateHeader();
         updateStats();
         renderCalendarAndHistory();
         renderWorkout();
         alert("All local data has been reset.");
       }
+    }
+
+    /* Generic text modal (show text to copy, or paste text in) */
+    let textModalSubmit = null;
+
+    function openTextModal({ title, help, text = '', readOnly = false, submitLabel = 'Restore', onSubmit = null }) {
+      const textEl = document.getElementById('backup-text');
+      document.getElementById('backup-modal-title').innerText = title;
+      document.getElementById('backup-modal-help').innerText = help;
+      textEl.value = text;
+      textEl.readOnly = readOnly;
+      textModalSubmit = onSubmit;
+      document.getElementById('backup-select-btn').style.display = readOnly ? 'block' : 'none';
+      const submitBtn = document.getElementById('backup-restore-btn');
+      submitBtn.style.display = onSubmit ? 'block' : 'none';
+      submitBtn.innerText = submitLabel;
+      document.getElementById('backup-modal').style.display = 'flex';
+    }
+
+    function submitTextModal() {
+      if (textModalSubmit && textModalSubmit(document.getElementById('backup-text').value)) closeBackupModal();
+    }
+
+    async function copyText(text, successMsg, fallbackTitle) {
+      try {
+        await navigator.clipboard.writeText(text);
+        alert(successMsg);
+      } catch (e) {
+        openTextModal({ title: fallbackTitle, help: 'Tap Select All, then Copy.', text, readOnly: true });
+      }
+    }
+
+    /* Profile */
+    const ACTIVITY_LEVELS = {
+      desk: { label: 'Desk job + training', factor: 1.45 },
+      feet: { label: 'On my feet a lot + training', factor: 1.6 },
+      physical: { label: 'Physical job + training', factor: 1.75 }
+    };
+    const GOAL_TYPES = {
+      recomp: { label: 'Body recomposition', calories: 0.93, proteinPerKg: 2.0 },
+      lose: { label: 'Fat loss', calories: 0.8, proteinPerKg: 2.2 },
+      gain: { label: 'Muscle gain', calories: 1.1, proteinPerKg: 1.8 }
+    };
+
+    function getProfile() {
+      const profile = readJSON(PROFILE_KEY, null);
+      return profile && typeof profile === 'object' ? profile : null;
+    }
+
+    function getGoalKg() {
+      const profile = getProfile();
+      return profile && profile.goalKg > 0 ? profile.goalKg : null;
+    }
+
+    function calcAge(birthDate) {
+      if (!birthDate) return null;
+      const b = new Date(`${birthDate}T00:00:00`);
+      const now = new Date();
+      let age = now.getFullYear() - b.getFullYear();
+      if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) age--;
+      return age > 0 && age < 120 ? age : null;
+    }
+
+    function currentWeightKg(profile) {
+      const bw = getBodyweight();
+      return bw.length ? bw[bw.length - 1].kg : (profile && profile.weightKg) || null;
+    }
+
+    // Mifflin-St Jeor resting burn × activity, adjusted for the goal. Estimates, not prescriptions.
+    function nutritionTargets(profile) {
+      const weight = currentWeightKg(profile);
+      const age = calcAge(profile.birthDate);
+      if (!profile.sex || !age || !profile.heightCm || !weight) return null;
+      const bmr = 10 * weight + 6.25 * profile.heightCm - 5 * age + (profile.sex === 'male' ? 5 : -161);
+      const maintenance = bmr * (ACTIVITY_LEVELS[profile.activity] || ACTIVITY_LEVELS.desk).factor;
+      const goal = GOAL_TYPES[profile.goalType] || GOAL_TYPES.recomp;
+      const round = (n, step) => Math.round(n / step) * step;
+      const calories = round(maintenance * goal.calories, 50);
+      const protein = round(weight * goal.proteinPerKg, 5);
+      const fat = round(weight * 0.9, 5);
+      const carbs = Math.max(0, round((calories - protein * 4 - fat * 9) / 4, 5));
+      return { maintenance: round(maintenance, 50), calories, protein, fat, carbs };
+    }
+
+    function fillProfileForm() {
+      const p = getProfile() || {};
+      document.getElementById('pf-name').value = p.name || '';
+      document.getElementById('pf-sex').value = p.sex || '';
+      document.getElementById('pf-birth').value = p.birthDate || '';
+      document.getElementById('pf-height').value = p.heightCm || '';
+      document.getElementById('pf-weight').value = p.weightKg || '';
+      document.getElementById('pf-goal').value = p.goalKg || '';
+      document.getElementById('pf-activity').value = p.activity || 'desk';
+      document.getElementById('pf-goaltype').value = p.goalType || 'recomp';
+    }
+
+    function saveProfileForm() {
+      const num = id => {
+        const v = parseFloat(document.getElementById(id).value);
+        return isNaN(v) ? null : Math.round(v * 10) / 10;
+      };
+      const profile = {
+        name: document.getElementById('pf-name').value.trim(),
+        sex: document.getElementById('pf-sex').value,
+        birthDate: document.getElementById('pf-birth').value,
+        heightCm: num('pf-height'),
+        weightKg: num('pf-weight'),
+        goalKg: num('pf-goal'),
+        activity: document.getElementById('pf-activity').value,
+        goalType: document.getElementById('pf-goaltype').value
+      };
+      if ((profile.heightCm && (profile.heightCm < 100 || profile.heightCm > 250)) ||
+          (profile.weightKg && (profile.weightKg < 25 || profile.weightKg > 300)) ||
+          (profile.goalKg && (profile.goalKg < 25 || profile.goalKg > 300))) {
+        alert("Please check your height (cm) and weights (kg).");
+        return;
+      }
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      updateHeader();
+      updateStats();
+      renderProfileTargets();
+      alert("Profile saved.");
+    }
+
+    function renderProfileTargets() {
+      const profile = getProfile();
+      const box = document.getElementById('pf-targets');
+      const t = profile && nutritionTargets(profile);
+      if (!t) {
+        box.innerHTML = `<div class="section-meta" style="margin-top: 10px;">Add sex, birth date, height and weight to see your daily calorie and protein targets.</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <div class="targets-grid">
+          <div class="target-tile"><div class="target-val">${t.calories.toLocaleString('en-US')}</div><div class="target-lbl">kcal</div></div>
+          <div class="target-tile"><div class="target-val">${t.protein} g</div><div class="target-lbl">Protein</div></div>
+          <div class="target-tile"><div class="target-val">${t.fat} g</div><div class="target-lbl">Fat</div></div>
+          <div class="target-tile"><div class="target-val">${t.carbs} g</div><div class="target-lbl">Carbs</div></div>
+        </div>
+        <div class="section-meta">Daily targets for ${(GOAL_TYPES[profile.goalType] || GOAL_TYPES.recomp).label.toLowerCase()}. Estimated maintenance: ${t.maintenance.toLocaleString('en-US')} kcal. Uses your latest logged bodyweight.</div>`;
+    }
+
+    function updateHeader() {
+      const profile = getProfile();
+      const goal = getGoalKg();
+      const subtitle = document.getElementById('app-subtitle');
+      const planName = getPlanName();
+      if (profile) {
+        subtitle.innerText = `${profile.name ? `${profile.name} · ` : ''}${goal ? `${fmtNum(goal)}kg Target | ` : ''}${planName}`;
+        subtitle.classList.remove('clickable');
+        subtitle.onclick = null;
+      } else {
+        subtitle.innerText = `${planName} · Tap to set up your profile`;
+        subtitle.classList.add('clickable');
+        subtitle.onclick = () => switchView('settings');
+      }
+      document.getElementById('stat-bodyweight-label').innerText = goal ? `Weight · Goal ${fmtNum(goal)}` : 'Weight';
+    }
+
+    /* Workout plans: built-in default or a custom plan imported from an AI chatbot */
+    const DEFAULT_PLAN_NAME = 'Recomposition Split';
+
+    function getCustomPlan() {
+      const plan = readJSON(PLAN_KEY, null);
+      return plan && Array.isArray(plan.days) && plan.days.length ? plan : null;
+    }
+
+    function getPlanName() {
+      const plan = getCustomPlan();
+      return plan ? plan.planName : DEFAULT_PLAN_NAME;
+    }
+
+    function loadActivePlan() {
+      const plan = getCustomPlan();
+      programData = plan ? plan.days : DEFAULT_PLAN;
+      if (currentDayIdx >= programData.length) currentDayIdx = 0;
+    }
+
+    function planExerciseOut(ex) {
+      const out = { name: ex.name, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
+      if (ex.cue) out.cue = ex.cue;
+      return out;
+    }
+
+    // Plan in the same friendly format the AI prompt asks for
+    function planToJson() {
+      return JSON.stringify({
+        planName: getPlanName(),
+        days: programData.map(d => ({
+          title: d.title,
+          exercises: d.exercises.map(ex => ex.alt ? { ...planExerciseOut(ex), alt: planExerciseOut(ex.alt) } : planExerciseOut(ex))
+        }))
+      }, null, 2);
+    }
+
+    function buildAiPrompt() {
+      const p = getProfile() || {};
+      const age = calcAge(p.birthDate);
+      const days = document.getElementById('ai-days').value;
+      const level = document.getElementById('ai-level').value;
+      const equipment = document.getElementById('ai-equipment').value.trim() || 'Standard commercial gym';
+      const notes = document.getElementById('ai-notes').value.trim();
+      const about = [
+        p.sex && `Sex: ${p.sex}`,
+        age && `Age: ${age}`,
+        p.heightCm && `Height: ${p.heightCm} cm`,
+        currentWeightKg(p) && `Weight: ${currentWeightKg(p)} kg`,
+        p.goalKg && `Goal weight: ${p.goalKg} kg`,
+        `Goal: ${(GOAL_TYPES[p.goalType] || GOAL_TYPES.recomp).label}`,
+        p.activity && `Daily activity: ${ACTIVITY_LEVELS[p.activity].label}`,
+        `Experience: ${level}`,
+        `Equipment: ${equipment}`,
+        notes && `Notes: ${notes}`
+      ].filter(Boolean).map(line => `- ${line}`).join('\n');
+
+      return `Act as an experienced strength coach. Create a ${days}-day-per-week workout plan for me, to be imported into my workout tracker app.
+
+About me:
+${about}
+
+Rules:
+- Exactly ${days} training days, 4–7 exercises per day, ordered big compound lifts first.
+- "sets": 2–5. "reps": a range like "8–12 reps" (or "45s hold" / "Failure" where it fits).
+- "weight": a realistic starting load for me, e.g. "40–50 kg", "12.5 kg DBs", "Moderate" or "Bodyweight".
+- "rest": seconds between sets as a number (60–180).
+- "cue": one short technique tip.
+- Every exercise needs an "alt": an alternative using different equipment, with its own sets/reps/weight/rest/cue tuned for the same effort (lighter load = more reps or slower tempo).
+
+Reply with ONLY valid JSON in exactly this format, no other text:
+{
+  "planName": "Short plan name",
+  "days": [
+    {
+      "title": "Push – Chest, Shoulders & Triceps",
+      "exercises": [
+        {
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "40–50 kg",
+          "rest": 150,
+          "cue": "3s lowering, pause on the chest",
+          "alt": { "name": "DB Bench Press", "sets": 3, "reps": "10–12 reps", "weight": "15–20 kg DBs", "rest": 120, "cue": "Full stretch at the bottom" }
+        }
+      ]
+    }
+  ]
+}`;
+    }
+
+    function copyAiPrompt() {
+      copyText(buildAiPrompt(), 'Prompt copied! Paste it into ChatGPT, Gemini or Claude. Then copy the whole reply, come back and tap "Paste Plan".', 'AI Prompt');
+    }
+
+    function copyCurrentPlan() {
+      copyText(`Here is my current workout plan. Please adjust it as I describe below and reply with ONLY the updated JSON in the same format.\n\nMy changes: \n\n${planToJson()}`,
+        'Current plan copied. Paste it into a chatbot, describe the changes you want, then paste the reply back with "Paste Plan".', 'Current Plan');
+    }
+
+    function openPlanPaste() {
+      openTextModal({
+        title: 'Paste Plan',
+        help: "Paste the chatbot's whole reply, then tap Use This Plan.",
+        submitLabel: 'Use This Plan',
+        onSubmit: applyPlanText
+      });
+    }
+
+    function importPlanFile(inputEl) {
+      const file = inputEl.files[0];
+      inputEl.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => applyPlanText(reader.result);
+      reader.readAsText(file);
+    }
+
+    // Chatbots often wrap JSON in ``` fences or add a sentence around it; pull out the JSON object.
+    function extractJson(text) {
+      let t = String(text).replace(/```(?:json)?/gi, '').trim();
+      const start = t.indexOf('{');
+      const end = t.lastIndexOf('}');
+      if (start === -1 || end <= start) throw new Error("Couldn't find the plan in that text. Make sure you copied the chatbot's whole reply.");
+      t = t.slice(start, end + 1);
+      try {
+        return JSON.parse(t);
+      } catch (e) {
+        try {
+          return JSON.parse(t.replace(/[“”]/g, '"'));
+        } catch (e2) {
+          throw new Error("The plan text is incomplete or has a formatting error. Ask the chatbot to \"reply with only valid JSON\" and try again.");
+        }
+      }
+    }
+
+    function normalizePlan(data) {
+      const rawDays = Array.isArray(data) ? data : (data && data.days);
+      if (!Array.isArray(rawDays) || !rawDays.length) throw new Error('The plan has no training days.');
+      if (rawDays.length > 7) throw new Error(`The plan has ${rawDays.length} days; the maximum is 7.`);
+
+      const text = v => (v === undefined || v === null) ? '' : String(v).trim();
+      const int = (v, min, max, fallback) => {
+        const n = parseInt(v, 10);
+        return isNaN(n) ? fallback : Math.min(max, Math.max(min, n));
+      };
+      const exercise = (raw, where) => {
+        if (!raw || typeof raw !== 'object' || !text(raw.name)) throw new Error(`${where} is missing an exercise name.`);
+        const reps = raw.reps ?? raw.repTarget;
+        const ex = {
+          name: text(raw.name),
+          repTarget: typeof reps === 'number' ? `${reps} reps` : (text(reps) || '8–12 reps'),
+          weightTarget: text(raw.weight ?? raw.weightTarget) || 'Moderate',
+          rest: int(raw.rest ?? raw.restSec, 15, 600, 90),
+          sets: int(raw.sets, 1, 10, 3)
+        };
+        if (text(raw.cue)) ex.cue = text(raw.cue);
+        return ex;
+      };
+
+      const days = rawDays.map((d, i) => {
+        const exercises = d && (d.exercises || d.workout);
+        if (!Array.isArray(exercises) || !exercises.length) throw new Error(`Day ${i + 1} has no exercises.`);
+        if (exercises.length > 15) throw new Error(`Day ${i + 1} has ${exercises.length} exercises; the maximum is 15.`);
+        return {
+          day: `Day ${i + 1}`,
+          title: text(d.title || d.name || d.focus) || `Workout ${i + 1}`,
+          exercises: exercises.map((raw, j) => {
+            const ex = exercise(raw, `Day ${i + 1}, exercise ${j + 1}`);
+            if (raw.alt && typeof raw.alt === 'object' && text(raw.alt.name)) ex.alt = exercise(raw.alt, `Day ${i + 1}, exercise ${j + 1} (alt)`);
+            return ex;
+          })
+        };
+      });
+      return { planName: text(data.planName || data.name) || 'Custom Plan', days };
+    }
+
+    function anyUnsavedSets() {
+      return programData.some((_, i) => dayHasDraft(i));
+    }
+
+    // Unsaved sets, swaps and set counts are tied to exercise positions, so they reset with a new plan.
+    function setActivePlan(plan) {
+      removeKeysMatching(/^(active_)?d\d+_e\d+_/);
+      removeKeysMatching(/^active_d\d+_meta$/);
+      removeKeysMatching(/^custom_ex_d\d+$/);
+      removeKeysMatching(/^swap_d\d+_e\d+$/);
+      if (plan) localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+      else localStorage.removeItem(PLAN_KEY);
+      currentDayIdx = 0;
+      loadActivePlan();
+      initNav();
+      renderWorkout();
+      updateHeader();
+      renderPlanSummary();
+    }
+
+    function applyPlanText(text) {
+      let plan;
+      try {
+        plan = normalizePlan(extractJson(text));
+      } catch (e) {
+        alert(e.message);
+        return false;
+      }
+      const summary = plan.days.map(d => `${d.day}: ${d.title} (${d.exercises.length})`).join('\n');
+      const warning = anyUnsavedSets() ? '\n\nUnsaved sets in your current plan will be cleared.' : '';
+      if (!confirm(`Use "${plan.planName}"?\n\n${summary}${warning}\n\nYour saved workout history is kept.`)) return false;
+      setActivePlan(plan);
+      alert(`"${plan.planName}" is now your workout plan. 💪`);
+      return true;
+    }
+
+    function restoreDefaultPlan() {
+      const warning = anyUnsavedSets() ? ' Unsaved sets will be cleared.' : '';
+      if (!confirm(`Switch back to the default "${DEFAULT_PLAN_NAME}"?${warning} Your saved history is kept.`)) return;
+      setActivePlan(null);
+    }
+
+    function renderPlanSummary() {
+      const total = programData.reduce((n, d) => n + d.exercises.length, 0);
+      document.getElementById('plan-summary').innerHTML =
+        `Current: <strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises<br>` +
+        programData.map(d => `${d.day}: ${escapeHtml(d.title)}`).join('<br>');
+      document.getElementById('restore-plan-btn').style.display = getCustomPlan() ? 'block' : 'none';
+    }
+
+    function renderSettings() {
+      fillProfileForm();
+      renderProfileTargets();
+      renderPlanSummary();
     }
 
     let resizeTimer = null;
@@ -2009,9 +2508,11 @@
     });
 
     // Init App
+    loadActivePlan();
     initNav();
     renderWorkout();
     updateStats();
+    updateHeader();
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
