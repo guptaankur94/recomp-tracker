@@ -518,7 +518,6 @@
     .cal-date.today { box-shadow: inset 0 0 0 1.5px var(--text); color: var(--text); }
     .cal-subtext { font-size: 9px; font-weight: 700; color: var(--accent); margin-top: 1px; line-height: 1; }
 
-    .list-title { font-weight: 700; font-size: var(--t-headline); margin: 0 4px 10px; }
     .history-card {
       background: var(--surface);
       border-radius: var(--r-md);
@@ -552,6 +551,92 @@
       font-weight: 700;
       font-size: var(--t-body);
     }
+
+    /* History: calendar dots, legend, weekly groups */
+    .cal-month { text-align: center; }
+    .cal-month-sub { display: block; font-size: var(--t-caption); font-weight: 600; color: var(--text-2); margin-top: 1px; }
+    .calendar-grid { touch-action: pan-y; }
+    .cal-date { gap: 3px; }
+    .cal-date.active-logged { background: var(--surface-2); color: var(--text); }
+    .cal-dots { display: flex; gap: 2px; height: 6px; }
+    .cal-dots i { width: 6px; height: 6px; border-radius: 50%; }
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--separator); }
+    .cal-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-caption); font-weight: 600; color: var(--text-2); }
+    .cal-legend-item i { width: 8px; height: 8px; border-radius: 50%; }
+    .week-head { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 4px 8px; font-size: var(--t-footnote); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); }
+    .week-meta { text-transform: none; letter-spacing: 0; font-weight: 600; }
+    .history-group { background: var(--surface); border-radius: var(--r-md); overflow: hidden; }
+    .history-group .history-card { margin: 0; border-radius: 0; background: none; }
+    .history-group .history-card + .history-card { border-top: 0.5px solid var(--separator); }
+    .history-main { flex: 1; min-width: 0; }
+    .history-info-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-right: 2px; }
+    .session-block-head .day-dot { margin-right: 8px; }
+
+    /* Session detail */
+    .detail-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 10px; }
+    .detail-tile { background: var(--surface-2); border-radius: var(--r-sm); padding: 10px 8px; }
+    .detail-tile-val { font-size: var(--t-body); font-weight: 700; white-space: nowrap; }
+    .detail-tile-lbl { font-size: var(--t-caption); color: var(--text-2); margin-top: 2px; }
+    .detail-tile.gold .detail-tile-val { color: var(--gold); }
+    .detail-compare { font-size: var(--t-footnote); color: var(--text-2); margin-bottom: 4px; }
+    .detail-compare strong.up { color: var(--accent); }
+    .detail-ex-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+    .detail-ex-vol { font-size: var(--t-footnote); color: var(--text-2); white-space: nowrap; }
+    .detail-set { align-items: center; color: var(--text); }
+    .detail-set-num { width: 20px; color: var(--text-2); }
+    .detail-set-val { font-weight: 600; }
+    .detail-set-rest { color: var(--text-2); }
+    .detail-drop { padding-left: 30px; }
+
+    /* Progress: range, stat tiles, lift cards, chart key */
+    .range-bar { margin: 0 0 14px; }
+    .range-bar .segmented { margin: 0; }
+    .stat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 6px; }
+    .stat-tile { background: var(--surface-2); border-radius: var(--r-sm); padding: 10px; min-width: 0; }
+    .stat-tile-val { font-size: var(--t-headline); font-weight: 700; white-space: nowrap; }
+    .stat-tile-val small { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; margin-left: 2px; }
+    .stat-tile-val.good { color: var(--accent); }
+    .stat-tile-val.bad { color: var(--orange); }
+    .stat-tile-lbl { font-size: var(--t-caption); color: var(--text-2); margin-top: 2px; line-height: 1.3; }
+    .entries-btn { width: 100%; min-height: 40px; margin-top: 4px; font-size: var(--t-footnote); }
+    .lift-cards { display: flex; gap: 8px; overflow-x: auto; margin: 10px -16px 0; padding: 0 16px 2px; scrollbar-width: none; scroll-snap-type: x mandatory; }
+    .lift-cards::-webkit-scrollbar { display: none; }
+    .lift-card {
+      flex: 0 0 148px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 12px;
+      border: 1px solid transparent;
+      border-radius: var(--r-md);
+      background: var(--surface-2);
+      color: var(--text);
+      text-align: left;
+    }
+    .lift-card.active { border-color: var(--text-2); }
+    .lift-name { font-size: var(--t-footnote); font-weight: 600; line-height: 1.25; height: 2.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .lift-spark { width: 100%; height: 28px; }
+    .lift-spark polyline { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+    .lift-val { font-size: var(--t-headline); font-weight: 700; }
+    .lift-val small { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; margin: 0 2px 0 1px; }
+    .lift-change { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; }
+    .lift-change.up { color: var(--accent); }
+    .chart-key { display: flex; align-items: center; gap: 6px; font-size: var(--t-caption); color: var(--text-2); font-weight: 600; margin-top: 6px; }
+    .key-line { width: 14px; height: 2.5px; border-radius: 2px; background: var(--accent); }
+    .key-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-2); margin-left: 8px; }
+    .key-dot.gold { width: 9px; height: 9px; background: var(--gold); margin-left: 0; }
+    .chart-raw { fill: var(--text-2); opacity: 0.55; }
+    .chart-area.fade { animation: chartFade 0.9s ease-out; }
+    .chart-line.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: chartDraw 0.9s var(--ease-out) forwards; }
+    .chart-dot.record { fill: var(--gold); }
+    .chart-dot.focus { fill: var(--text); }
+    .chart-dot.focus.record { fill: var(--gold); }
+    .tip-pr { color: var(--gold); font-weight: 700; }
+    @keyframes chartDraw { to { stroke-dashoffset: 0; } }
+    @keyframes chartFade { from { opacity: 0; } to { opacity: 1; } }
 
     /* Progress view */
     .section-title { font-weight: 700; font-size: var(--t-headline); margin-bottom: 4px; }
@@ -939,7 +1024,8 @@
     @media (prefers-reduced-motion: reduce) {
       .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
       .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
-      .rest-pill, .just-collapsed, .summary-badge, .just-completed .pr-badge { animation: none; }
+      .rest-pill, .just-collapsed, .summary-badge, .just-completed .pr-badge, .chart-area.fade { animation: none; }
+      .chart-line.draw { animation: none; stroke-dashoffset: 0; }
       .confetti { display: none; }
       .summary { transition: none; }
     }
@@ -970,29 +1056,39 @@
         <button class="icon-btn" onclick="shiftCalendarMonth(1)" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
       <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="cal-legend" id="cal-legend"></div>
     </div>
-    <div class="list-title">Logged Workout Sessions</div>
     <div id="history-list-container"></div>
   </div>
 
   <div id="view-progress" class="view" hidden>
+    <div class="range-bar"><div class="segmented" id="range-seg" role="group" aria-label="Time range"></div></div>
+
     <div class="card">
       <div class="section-title">Bodyweight</div>
-      <div class="bw-form">
-        <input type="number" id="bw-input" step="0.1" inputmode="decimal" placeholder="kg">
-        <input type="date" id="bw-date">
-        <button class="btn btn-primary" onclick="logBodyweight()">Save</button>
-      </div>
-      <div class="section-meta" id="bw-summary"></div>
+      <div class="stat-tiles" id="bw-stats"></div>
       <div id="bw-chart"></div>
+      <div class="bw-form">
+        <input type="number" id="bw-input" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Weight in kg">
+        <input type="date" id="bw-date" aria-label="Date">
+        <button class="btn btn-primary" onclick="logBodyweight()">Log</button>
+      </div>
+      <button class="btn btn-plain entries-btn" id="bw-entries-btn" onclick="toggleEntries('bw')" hidden></button>
       <div id="bw-list"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="lifts-card" hidden>
+      <div class="section-title">Main Lifts</div>
+      <div class="section-meta lead">Latest best set and change in estimated 1RM since you started.</div>
+      <div class="lift-cards" id="lift-cards"></div>
+    </div>
+
+    <div class="card" id="ex-card">
       <div class="section-title">Exercise Progress</div>
-      <select id="progress-ex-select" onchange="selectProgressExercise(this.value)"></select>
+      <select id="progress-ex-select" onchange="selectProgressExercise(this.value)" aria-label="Exercise"></select>
       <div class="segmented" id="metric-seg"></div>
       <div id="ex-chart"></div>
+      <button class="btn btn-plain entries-btn" id="ex-entries-btn" onclick="toggleEntries('ex')" hidden></button>
       <div id="ex-table"></div>
     </div>
   </div>
@@ -3015,73 +3111,142 @@
       renderCalendarAndHistory();
     }
 
+    /* One colour per program day (validated categorical slots for the dark surface); a legend names them. */
+    const DAY_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9'];
+
+    function dayColor(dayLabel) {
+      const m = String(dayLabel).match(/(\d+)/);
+      return m ? DAY_COLORS[(parseInt(m[1], 10) - 1) % DAY_COLORS.length] : 'var(--text-2)';
+    }
+
+    function fmtVolume(kg) {
+      return kg >= 10000 ? `${fmtNum(kg / 1000)} t` : `${fmtNum(Math.round(kg))} kg`;
+    }
+
+    function fmtDuration(sec) {
+      const min = Math.max(1, Math.round(sec / 60));
+      return min >= 60 ? `${Math.floor(min / 60)} h ${min % 60} min` : `${min} min`;
+    }
+
+    function sessionStats(session) {
+      let sets = 0;
+      let volume = 0;
+      let prs = 0;
+      session.exercises.forEach(e => e.sets.forEach(s => {
+        sets++;
+        volume += setVolume(s);
+        if (s.pr) prs++;
+      }));
+      return { sets, volume, prs, durationSec: session.durationSec || 0 };
+    }
+
+    function previousSameDay(session) {
+      return getHistory().find(s => s.day === session.day && s.id < session.id) || null;
+    }
+
     function renderCalendarAndHistory() {
       const history = getHistory();
-      const historyContainer = document.getElementById('history-list-container');
-
-      if (history.length === 0) {
-        historyContainer.innerHTML = `<div class="empty-state">No workouts logged yet. Finish a workout to see it here.</div>`;
-      } else {
-        historyContainer.innerHTML = history.map(item => `
-          <div class="history-card" onclick="openSessionModal(${item.id})">
-            <div>
-              <div class="history-info-title">${escapeHtml(item.day)}: ${escapeHtml(item.title)}</div>
-              <div class="history-info-date">${escapeHtml(item.displayDate)} · ${item.exercises.length} exercise${item.exercises.length === 1 ? '' : 's'}</div>
-            </div>
-            <span class="chevron">${icon('chevron')}</span>
-          </div>
-        `).join('');
-      }
-
-      // Render Calendar Grid with Subtext Badges
       const now = new Date();
       const shown = new Date(now.getFullYear(), now.getMonth() + calendarMonthOffset, 1);
       const year = shown.getFullYear();
       const month = shown.getMonth();
-      const monthName = shown.toLocaleString('default', { month: 'long' });
-      document.getElementById('calendar-month-title').innerText = `${monthName} ${year}`;
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
       const todayStr = localDateStr(now);
 
-      // Map sessions to dates
       const dateMap = {};
       history.forEach(h => {
         const key = sessionDateStr(h);
-        if (!dateMap[key]) dateMap[key] = [];
-        // Extract Day short code like "D1", "D5"
-        const shortDay = h.day.replace('Day ', 'D');
-        if (!dateMap[key].includes(shortDay)) {
-          dateMap[key].push(shortDay);
+        (dateMap[key] = dateMap[key] || []).push(h);
+      });
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+      const monthCount = history.filter(h => sessionDateStr(h).startsWith(monthPrefix)).length;
+      document.getElementById('calendar-month-title').innerHTML =
+        `${shown.toLocaleString('en-US', { month: 'long' })} ${year}<span class="cal-month-sub">${monthCount ? `${monthCount} workout${monthCount === 1 ? '' : 's'}` : 'No workouts'}</span>`;
+
+      // Monday-first, matching how week streaks are counted
+      let calHtml = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<div class="cal-day-head">${d}</div>`).join('');
+      const lead = (new Date(year, month, 1).getDay() + 6) % 7;
+      for (let i = 0; i < lead; i++) calHtml += '<div></div>';
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${monthPrefix}${String(d).padStart(2, '0')}`;
+        const sessions = dateMap[dStr];
+        const label = sessions ? `${d}: ${sessions.map(s => `${s.day} ${s.title}`).join(', ')}` : '';
+        calHtml += `
+          <div class="cal-date ${sessions ? 'active-logged' : ''} ${dStr === todayStr ? 'today' : ''}" ${sessions ? `onclick="openDateSessions('${dStr}')" role="button" aria-label="${escapeHtml(label)}"` : ''}>
+            <span>${d}</span>
+            ${sessions ? `<span class="cal-dots">${sessions.slice(0, 3).map(s => `<i style="background:${dayColor(s.day)}"></i>`).join('')}</span>` : ''}
+          </div>`;
+      }
+      document.getElementById('calendar-grid').innerHTML = calHtml;
+      document.getElementById('cal-legend').innerHTML = programData.map(d =>
+        `<span class="cal-legend-item"><i style="background:${dayColor(d.day)}"></i>${escapeHtml(d.day.replace('Day ', 'D'))} ${escapeHtml(shortDayTitle(d.title))}</span>`
+      ).join('');
+
+      // Session list, grouped by week (Monday to Sunday), newest first
+      const container = document.getElementById('history-list-container');
+      if (!history.length) {
+        container.innerHTML = `<div class="empty-state">No workouts logged yet. Finish a workout to see it here.</div>`;
+        return;
+      }
+      const thisWeek = startOfWeek(now).getTime();
+      const lastWeek = startOfWeek(new Date(now.getTime() - 7 * 864e5)).getTime();
+      const groups = [];
+      history.forEach(s => {
+        const key = startOfWeek(new Date(s.id)).getTime();
+        let g = groups[groups.length - 1];
+        if (!g || g.key !== key) groups.push(g = { key, sessions: [] });
+        g.sessions.push(s);
+      });
+      container.innerHTML = groups.map(g => {
+        const end = new Date(g.key + 6 * 864e5);
+        const label = g.key === thisWeek ? 'This week' : g.key === lastWeek ? 'Last week' : `${shortDate(g.key)} – ${shortDate(end.getTime())}`;
+        const volume = g.sessions.reduce((v, s) => v + sessionStats(s).volume, 0);
+        return `
+          <div class="week-head">
+            <span>${label}</span>
+            <span class="week-meta">${g.sessions.length} workout${g.sessions.length === 1 ? '' : 's'} · ${fmtVolume(volume)}</span>
+          </div>
+          <div class="history-group">
+            ${g.sessions.map(item => {
+              const st = sessionStats(item);
+              const meta = [
+                new Date(item.id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                st.durationSec ? fmtDuration(st.durationSec) : '',
+                `${st.sets} set${st.sets === 1 ? '' : 's'}`,
+                st.volume ? fmtVolume(st.volume) : ''
+              ].filter(Boolean).join(' · ');
+              return `
+                <div class="history-card" onclick="openSessionModal(${item.id})">
+                  <span class="day-dot" style="background:${dayColor(item.day)}"></span>
+                  <div class="history-main">
+                    <div class="history-info-title">${escapeHtml(item.day)} · ${escapeHtml(item.title)}</div>
+                    <div class="history-info-date">${meta}</div>
+                  </div>
+                  ${st.prs ? `<span class="pr-badge">${st.prs} PR</span>` : ''}
+                  <span class="chevron">${icon('chevron')}</span>
+                </div>`;
+            }).join('')}
+          </div>`;
+      }).join('');
+    }
+
+    // Swipe the calendar left/right to change month
+    (() => {
+      const grid = document.getElementById('calendar-grid');
+      let start = null;
+      grid.addEventListener('pointerdown', e => { start = { x: e.clientX, y: e.clientY }; });
+      grid.addEventListener('pointerup', e => {
+        if (!start) return;
+        const dx = e.clientX - start.x;
+        const dy = e.clientY - start.y;
+        start = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          haptic('light');
+          shiftCalendarMonth(dx < 0 ? 1 : -1);
         }
       });
-
-      let calHtml = `
-        <div class="cal-day-head">S</div><div class="cal-day-head">M</div><div class="cal-day-head">T</div>
-        <div class="cal-day-head">W</div><div class="cal-day-head">T</div><div class="cal-day-head">F</div><div class="cal-day-head">S</div>
-      `;
-
-      for (let i = 0; i < firstDay; i++) {
-        calHtml += `<div></div>`;
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const loggedDays = dateMap[dStr];
-        const isLogged = !!loggedDays;
-        const subtext = isLogged ? escapeHtml(loggedDays.join(',')) : '';
-
-        calHtml += `
-          <div class="cal-date ${isLogged ? 'active-logged' : ''} ${dStr === todayStr ? 'today' : ''}" ${isLogged ? `onclick="openDateSessions('${dStr}')"` : ''}>
-            <span>${d}</span>
-            ${isLogged ? `<span class="cal-subtext">${subtext}</span>` : ''}
-          </div>
-        `;
-      }
-
-      document.getElementById('calendar-grid').innerHTML = calHtml;
-    }
+      grid.addEventListener('pointercancel', () => { start = null; });
+    })();
 
     function openDateSessions(dStr) {
       const sessions = getHistory().filter(s => sessionDateStr(s) === dStr).reverse();
@@ -3094,38 +3259,62 @@
     }
 
     function sessionDetailHtml(session) {
-      return session.exercises.map(ex => `
-        <div class="detail-ex">
-          <div class="detail-ex-name">${escapeHtml(ex.name)}</div>
-          ${ex.sets.map(s => `
-            <div class="detail-set">
-              <span class="detail-set-num">Set ${s.set}</span>
-              <span><strong>${s.weight} kg</strong> × <strong>${s.reps}</strong></span>
-              <span class="detail-set-rest">${s.restSec}s rest</span>
-            </div>` +
-            (s.drops || []).map((d, i) => `<div class="detail-drop">↳ Drop ${i + 1}: ${d.weight} kg × ${d.reps}</div>`).join('')
-          ).join('')}
+      const st = sessionStats(session);
+      const prev = previousSameDay(session);
+      let compare = '';
+      if (prev) {
+        const prevVol = sessionStats(prev).volume;
+        if (prevVol > 0 && st.volume > 0) {
+          const pct = Math.round((st.volume - prevVol) / prevVol * 100);
+          compare = `<div class="detail-compare">${pct === 0 ? 'Same volume as' : `<strong class="${pct > 0 ? 'up' : ''}">${pct > 0 ? '+' : ''}${pct}% volume</strong> vs`} the previous ${escapeHtml(session.day)} on ${shortDate(prev.id)}</div>`;
+        }
+      }
+      const tile = (val, lbl, cls = '') => `<div class="detail-tile ${cls}"><div class="detail-tile-val">${val}</div><div class="detail-tile-lbl">${lbl}</div></div>`;
+      return `
+        <div class="detail-stats">
+          ${tile(st.durationSec ? fmtDuration(st.durationSec) : '—', 'Duration')}
+          ${tile(st.sets, 'Sets')}
+          ${tile(fmtVolume(st.volume), 'Volume')}
+          ${tile(st.prs, st.prs === 1 ? 'PR' : 'PRs', st.prs ? 'gold' : '')}
         </div>
-      `).join('');
+        ${compare}
+        ${session.exercises.map(ex => `
+          <div class="detail-ex">
+            <div class="detail-ex-head">
+              <span class="detail-ex-name">${escapeHtml(ex.name)}</span>
+              <span class="detail-ex-vol">${fmtVolume(ex.sets.reduce((v, s) => v + setVolume(s), 0))}</span>
+            </div>
+            ${ex.sets.map((s, i) => `
+              <div class="detail-set">
+                <span class="detail-set-num">${i + 1}</span>
+                <span class="detail-set-val">${Number(s.weight) > 0 ? `${fmtNum(Number(s.weight))} kg` : 'BW'} × ${Number(s.reps) || 0}</span>
+                ${s.pr ? `<span class="pr-badge" title="${PR_LABELS[s.pr] || 'Personal record'}">PR</span>` : ''}
+                <span class="detail-set-rest">${s.restSec ? fmtClock(s.restSec) : ''}</span>
+              </div>` +
+              (s.drops || []).map((d, j) => `<div class="detail-drop">↳ Drop ${j + 1}: ${Number(d.weight) > 0 ? `${fmtNum(Number(d.weight))} kg` : 'BW'} × ${Number(d.reps) || 0}</div>`).join('')
+            ).join('')}
+          </div>
+        `).join('')}`;
     }
 
     // One session, or every session logged on a calendar date (e.g. Day 1 and Day 2 on the same day)
     function openSessionsModal(sessions) {
       const deleteBtn = document.getElementById('modal-delete-action-btn');
+      const when = s => new Date(s.id).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
       if (sessions.length === 1) {
         const session = sessions[0];
-        document.getElementById('modal-title').innerText = `${session.day}: ${session.title}`;
-        document.getElementById('modal-date').innerText = session.displayDate;
+        document.getElementById('modal-title').innerText = `${session.day} · ${session.title}`;
+        document.getElementById('modal-date').innerText = `${when(session)} · ${new Date(session.id).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
         document.getElementById('modal-body').innerHTML = sessionDetailHtml(session);
         deleteBtn.hidden = false;
         deleteBtn.onclick = () => deleteSession(session.id);
       } else {
-        document.getElementById('modal-title').innerText = `${sessions.length} Sessions`;
-        document.getElementById('modal-date').innerText = new Date(sessions[0].id).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('modal-title').innerText = `${sessions.length} Workouts`;
+        document.getElementById('modal-date').innerText = when(sessions[0]);
         document.getElementById('modal-body').innerHTML = sessions.map(session => `
           <div class="session-block-head">
-            <span>${escapeHtml(session.day)}: ${escapeHtml(session.title)}</span>
+            <span><span class="day-dot" style="background:${dayColor(session.day)}"></span>${escapeHtml(session.day)} · ${escapeHtml(session.title)}</span>
             <button class="btn btn-danger btn-sm" onclick="deleteSession(${session.id})">Delete</button>
           </div>
           ${sessionDetailHtml(session)}
@@ -3200,33 +3389,105 @@
       return new Date(y, m - 1, d).getTime();
     }
 
+    /* Progress: one time range for every chart on the tab */
+    const RANGES = { '1m': { label: '1M', days: 31 }, '3m': { label: '3M', days: 92 }, '6m': { label: '6M', days: 183 }, all: { label: 'All', days: null } };
+    let progressRange = '3m';
+    let chartAnimate = true;
+    let showBwEntries = false;
+    let showExEntries = false;
+
+    function rangeStartMs() {
+      const days = RANGES[progressRange].days;
+      return days ? Date.now() - days * 864e5 : -Infinity;
+    }
+
+    function selectRange(key) {
+      progressRange = key;
+      haptic('light');
+      renderProgress();
+    }
+
+    function toggleEntries(which) {
+      if (which === 'bw') showBwEntries = !showBwEntries;
+      else showExEntries = !showExEntries;
+      chartAnimate = false;
+      renderProgress();
+    }
+
+    /* Bodyweight: daily weigh-ins swing 1–2 kg, so the 7-day average is the line to watch */
+    function movingAverage(entries) {
+      return entries.map((e, i) => {
+        const t = bwDateMs(e.dateStr);
+        const win = entries.slice(0, i + 1).filter(x => t - bwDateMs(x.dateStr) < 7 * 864e5);
+        return { x: t, y: win.reduce((sum, x) => sum + x.kg, 0) / win.length, raw: e.kg };
+      });
+    }
+
+    // Least-squares slope of the last 28 days of weigh-ins, in kg per week
+    function weeklyRate(entries) {
+      if (!entries.length) return null;
+      const lastT = bwDateMs(entries[entries.length - 1].dateStr);
+      const recent = entries.filter(e => lastT - bwDateMs(e.dateStr) <= 28 * 864e5);
+      if (recent.length < 3) return null;
+      const xs = recent.map(e => bwDateMs(e.dateStr) / 864e5);
+      if (xs[xs.length - 1] - xs[0] < 7) return null;
+      const ys = recent.map(e => e.kg);
+      const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+      const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+      let num = 0;
+      let den = 0;
+      xs.forEach((x, i) => { num += (x - mx) * (ys[i] - my); den += (x - mx) ** 2; });
+      return den ? (num / den) * 7 : null;
+    }
+
     function renderBodyweight() {
       const entries = getBodyweight();
       const dateInput = document.getElementById('bw-date');
       if (!dateInput.value) dateInput.value = localDateStr(new Date());
-
-      const latest = entries[entries.length - 1];
+      const input = document.getElementById('bw-input');
+      if (!input.value && entries.length) input.placeholder = fmtNum(entries[entries.length - 1].kg);
       const goalKg = getGoalKg();
-      let summary = goalKg ? `Goal: <strong>${fmtNum(goalKg)} kg</strong>` : 'Set a goal weight in Settings → Your Profile.';
-      if (latest) {
-        let gap = 'set a goal weight in Settings';
-        if (goalKg) {
-          const diff = Math.round((latest.kg - goalKg) * 10) / 10;
-          gap = diff === 0 ? 'at goal' : `${fmtNum(Math.abs(diff))} kg ${diff > 0 ? 'above' : 'below'} goal`;
-        }
-        summary = `Latest <strong>${fmtNum(latest.kg)} kg</strong> · ${gap}`;
-      }
-      document.getElementById('bw-summary').innerHTML = summary;
+      const avg = movingAverage(entries);
+      const trend = avg.length ? avg[avg.length - 1].y : null;
+      const rate = weeklyRate(entries);
 
-      renderLineChart('bw-chart', entries.map(e => ({ x: bwDateMs(e.dateStr), y: e.kg })), {
+      // Trend, weekly rate and projected goal date
+      const towardGoal = r => goalKg && trend != null && r !== 0 && Math.sign(goalKg - trend) === Math.sign(r);
+      let goalVal = goalKg ? `${fmtNum(goalKg)}<small>kg</small>` : '—';
+      let goalLbl = goalKg ? 'Goal' : 'Set a goal in Settings';
+      if (goalKg && trend != null) {
+        const left = Math.round((goalKg - trend) * 10) / 10;
+        if (Math.abs(left) <= 0.2) {
+          goalLbl = 'At goal';
+        } else if (rate && towardGoal(rate)) {
+          const weeks = (goalKg - trend) / rate;
+          goalLbl = weeks < 104
+            ? `~${new Date(Date.now() + weeks * 7 * 864e5).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at this rate`
+            : `${fmtNum(Math.abs(left))} kg to go`;
+        } else {
+          goalLbl = `${fmtNum(Math.abs(left))} kg to go`;
+        }
+      }
+      const rateCls = rate == null || Math.abs(rate) < 0.05 ? '' : towardGoal(rate) ? 'good' : goalKg ? 'bad' : '';
+      document.getElementById('bw-stats').innerHTML = trend == null ? '' : `
+        <div class="stat-tile"><div class="stat-tile-val">${fmtNum(trend)}<small>kg</small></div><div class="stat-tile-lbl">7-day average</div></div>
+        <div class="stat-tile"><div class="stat-tile-val ${rateCls}">${rate == null ? '—' : `${rate > 0 ? '+' : rate < 0 ? '−' : ''}${fmtNum(Math.abs(rate))}`}<small>kg/wk</small></div><div class="stat-tile-lbl">${rate == null ? 'Need 1 week of data' : rateCls === 'good' ? '↗ Toward goal' : rateCls === 'bad' ? '↘ Away from goal' : 'Last 4 weeks'}</div></div>
+        <div class="stat-tile"><div class="stat-tile-val">${goalVal}</div><div class="stat-tile-lbl">${goalLbl}</div></div>`;
+
+      const start = rangeStartMs();
+      renderLineChart('bw-chart', avg.filter(p => p.x >= start), {
+        raw: avg.filter(p => p.x >= start).map(p => ({ x: p.x, y: p.raw })),
         target: goalKg,
         targetLabel: `Goal ${fmtNum(goalKg)} kg`,
-        emptyText: 'Log your bodyweight to see the trend.',
-        tip: p => `${shortDate(p.x)} · <strong>${fmtNum(p.y)} kg</strong>`
+        emptyText: entries.length ? 'No weigh-ins in this range.' : 'Log your weight to see your trend.',
+        key: entries.length ? '<span class="key-line"></span>7-day average<span class="key-dot"></span>Weigh-ins' : '',
+        tip: p => `${shortDate(p.x)} · avg <strong>${fmtNum(p.y)} kg</strong> · weighed ${fmtNum(p.raw)}`
       });
 
-      const recent = entries.slice(-8).reverse();
-      document.getElementById('bw-list').innerHTML = recent.length ? `
+      const recent = entries.slice().reverse();
+      document.getElementById('bw-entries-btn').hidden = !entries.length;
+      document.getElementById('bw-entries-btn').textContent = showBwEntries ? 'Hide entries' : `Show all entries (${entries.length})`;
+      document.getElementById('bw-list').innerHTML = showBwEntries && recent.length ? `
         <table class="data-table">
           <tr><th>Date</th><th class="num">Weight</th><th></th></tr>
           ${recent.map(e => `
@@ -3238,13 +3499,13 @@
         </table>` : '';
     }
 
-    /* Progress: exercise charts */
+    /* Exercise charts */
     const METRICS = {
       top: { label: 'Top Set', unit: 'kg', calc: sets => Math.max(...sets.map(s => s.weight)) },
       e1rm: {
         label: 'Est. 1RM', unit: 'kg',
         // Epley estimate from the best set
-        calc: sets => Math.max(...sets.map(s => s.weight > 0 && s.reps > 0 ? (s.reps === 1 ? s.weight : s.weight * (1 + s.reps / 30)) : 0))
+        calc: sets => Math.max(...sets.map(s => estOneRepMax(s.weight, s.reps)))
       },
       volume: { label: 'Volume', unit: 'kg', calc: sets => sets.reduce((sum, s) => sum + setVolume(s), 0) },
       reps: { label: 'Best Reps', unit: 'reps', calc: sets => Math.max(...sets.map(s => s.reps)) }
@@ -3252,42 +3513,88 @@
 
     function selectProgressExercise(name) {
       progressExercise = name;
+      showExEntries = false;
       renderExerciseProgress();
+      renderLiftCards();
     }
 
     function selectProgressMetric(key) {
       progressMetric = key;
+      haptic('light');
       renderExerciseProgress();
+    }
+
+    // Sessions for one exercise, oldest first
+    function exerciseSessions(name, history = getHistory()) {
+      return history
+        .map(s => ({ session: s, ex: s.exercises.find(e => e.name === name) }))
+        .filter(r => r.ex && r.ex.sets.length)
+        .reverse();
+    }
+
+    // Gold markers: sessions that logged a PR, plus the all-time best on this metric.
+    // (Marking every new high would turn steady progress into a row of gold dots.)
+    function markRecords(points) {
+      const bestIdx = points.reduce((bi, p, i) => (p.y >= points[bi].y ? i : bi), 0);
+      return points.map((p, i) => ({ ...p, record: p.pr || (points.length > 1 && i === bestIdx), best: points.length > 1 && i === bestIdx }));
+    }
+
+    /* Main lifts: the six most-logged exercises, each with a sparkline of estimated 1RM */
+    function renderLiftCards() {
+      const history = getHistory();
+      const counts = new Map();
+      history.forEach(s => s.exercises.forEach(e => counts.set(e.name, (counts.get(e.name) || 0) + 1)));
+      const top = [...counts.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => name);
+      const box = document.getElementById('lift-cards');
+      document.getElementById('lifts-card').hidden = !top.length;
+      if (!top.length) return;
+      box.innerHTML = top.map(name => {
+        const rows = exerciseSessions(name, history);
+        const usesWeight = rows.some(r => r.ex.sets.some(s => s.weight > 0));
+        const vals = rows.map(r => usesWeight ? METRICS.e1rm.calc(r.ex.sets) : METRICS.reps.calc(r.ex.sets));
+        const latest = rows[rows.length - 1].ex.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
+        const change = vals[vals.length - 1] - vals[0];
+        const lo = Math.min(...vals);
+        const hi = Math.max(...vals);
+        const pts = vals.map((v, i) => `${(i / Math.max(1, vals.length - 1) * 96 + 2).toFixed(1)},${(hi === lo ? 14 : 26 - (v - lo) / (hi - lo) * 22).toFixed(1)}`).join(' ');
+        return `
+          <button class="lift-card ${name === progressExercise ? 'active' : ''}" onclick="selectProgressExercise(${escapeHtml(JSON.stringify(name))}); document.getElementById('ex-card').scrollIntoView({ behavior: 'smooth', block: 'start' })">
+            <span class="lift-name">${escapeHtml(name)}</span>
+            <svg class="lift-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}"/></svg>
+            <span class="lift-val">${latest.weight > 0 ? `${fmtNum(latest.weight)}<small>kg</small> × ${latest.reps}` : `${latest.reps}<small>reps</small>`}</span>
+            <span class="lift-change ${change > 0.05 ? 'up' : ''}">${Math.abs(change) < 0.05 ? 'No change yet' : `${change > 0 ? '↑' : '↓'} ${fmtNum(Math.abs(change))} ${usesWeight ? 'kg est. 1RM' : 'reps'}`}</span>
+          </button>`;
+      }).join('');
     }
 
     function renderExerciseProgress() {
       const history = getHistory();
       const names = [...new Set(history.flatMap(s => s.exercises.map(e => e.name)))].sort((a, b) => a.localeCompare(b));
       const select = document.getElementById('progress-ex-select');
-
       if (!names.includes(progressExercise)) {
         progressExercise = history.length ? history[0].exercises[0].name : null;
       }
       select.innerHTML = names.map(n => `<option value="${escapeHtml(n)}" ${n === progressExercise ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
       select.style.display = names.length ? 'block' : 'none';
-
       document.getElementById('metric-seg').innerHTML = Object.entries(METRICS).map(([key, m]) =>
         `<button class="seg-btn ${key === progressMetric ? 'active' : ''}" onclick="selectProgressMetric('${key}')">${m.label}</button>`
       ).join('');
 
       const metric = METRICS[progressMetric];
-      const rows = history
-        .map(s => ({ session: s, ex: s.exercises.find(e => e.name === progressExercise) }))
-        .filter(r => r.ex)
-        .reverse(); // oldest first
-
-      renderLineChart('ex-chart', rows.map(r => ({ x: r.session.id, y: metric.calc(r.ex.sets), day: r.session.day })), {
-        emptyText: 'Finish a workout to start tracking progress.',
-        tip: p => `${shortDate(p.x)} · ${escapeHtml(p.day)} · <strong>${fmtNum(p.y)} ${metric.unit}</strong>`
+      const rows = exerciseSessions(progressExercise, history);
+      const points = markRecords(rows.map(r => ({ x: r.session.id, y: metric.calc(r.ex.sets), day: r.session.day, pr: r.ex.sets.some(s => s.pr) })));
+      const start = rangeStartMs();
+      const shown = points.filter(p => p.x >= start);
+      renderLineChart('ex-chart', shown, {
+        emptyText: rows.length ? 'No sessions in this range.' : 'Finish a workout to start tracking progress.',
+        key: shown.some(p => p.record) ? '<span class="key-dot gold"></span>PR session or all-time best' : '',
+        tip: p => `${shortDate(p.x)} · ${escapeHtml(p.day)} · <strong>${fmtNum(p.y)} ${metric.unit}</strong>${p.best ? ' · <span class="tip-pr">Best</span>' : p.pr ? ' · <span class="tip-pr">PR</span>' : ''}`
       });
 
-      const recent = rows.slice(-8).reverse();
-      document.getElementById('ex-table').innerHTML = recent.length ? `
+      const recent = rows.slice().reverse();
+      document.getElementById('ex-entries-btn').hidden = !rows.length;
+      document.getElementById('ex-entries-btn').textContent = showExEntries ? 'Hide sessions' : `Show all sessions (${rows.length})`;
+      document.getElementById('ex-table').innerHTML = showExEntries && recent.length ? `
         <table class="data-table">
           <tr><th>Date</th><th>Best Set</th><th class="num">Volume</th></tr>
           ${recent.map(r => {
@@ -3295,19 +3602,25 @@
             return `
             <tr>
               <td>${shortDate(r.session.id)}</td>
-              <td>${fmtSetLine(best)}${best.drops ? ` +${best.drops.length} drop` : ''}</td>
-              <td class="num">${fmtNum(METRICS.volume.calc(r.ex.sets))} kg</td>
+              <td>${fmtSetLine(best)}${best.drops ? ` +${best.drops.length} drop` : ''}${r.ex.sets.some(s => s.pr) ? ' <span class="pr-badge">PR</span>' : ''}</td>
+              <td class="num">${fmtVolume(METRICS.volume.calc(r.ex.sets))}</td>
             </tr>`;
           }).join('')}
         </table>` : '';
     }
 
     function renderProgress() {
+      document.getElementById('range-seg').innerHTML = Object.entries(RANGES).map(([key, r]) =>
+        `<button class="seg-btn ${key === progressRange ? 'active' : ''}" onclick="selectRange('${key}')">${r.label}</button>`
+      ).join('');
       renderBodyweight();
+      renderLiftCards();
       renderExerciseProgress();
+      chartAnimate = true;
     }
 
-    /* Single-series line chart (inline SVG) with tap/hover tooltip */
+    /* Single-series line chart (inline SVG): area fill, draw-in, optional faint raw dots, gold record
+       markers, a dashed target line and a tap/hover crosshair with tooltip */
     function niceStep(range, count) {
       const raw = range / count;
       const mag = Math.pow(10, Math.floor(Math.log10(raw)));
@@ -3319,18 +3632,37 @@
       return Math.abs(v) >= 10000 ? `${fmtNum(v / 1000)}k` : fmtNum(v);
     }
 
+    // Date ticks: weekly for short spans, month starts otherwise, at most five
+    function dateTicks(x0, x1) {
+      const ticks = [];
+      if (x1 - x0 <= 45 * 864e5) {
+        const d = startOfWeek(new Date(x0));
+        while (d.getTime() <= x1) {
+          if (d.getTime() >= x0) ticks.push({ x: d.getTime(), label: shortDate(d.getTime()) });
+          d.setDate(d.getDate() + 7);
+        }
+      } else {
+        const d = new Date(new Date(x0).getFullYear(), new Date(x0).getMonth() + 1, 1);
+        while (d.getTime() <= x1) {
+          ticks.push({ x: d.getTime(), label: d.toLocaleDateString('en-US', { month: 'short' }) });
+          d.setMonth(d.getMonth() + 1);
+        }
+      }
+      const step = Math.ceil(ticks.length / 5);
+      return ticks.filter((_, i) => i % step === 0);
+    }
+
     function renderLineChart(containerId, points, opts) {
       const box = document.getElementById(containerId);
       if (!points.length) {
         box.innerHTML = `<div class="chart-empty">${opts.emptyText}</div>`;
         return;
       }
-
       const W = Math.max(260, box.clientWidth || 320);
-      const H = 190;
-      const pad = { l: 40, r: 12, t: 30, b: 24 };
-
-      const ys = points.map(p => p.y);
+      const H = 200;
+      const pad = { l: 36, r: 10, t: 16, b: 26 };
+      const raw = opts.raw || [];
+      const ys = points.map(p => p.y).concat(raw.map(p => p.y));
       if (opts.target != null) ys.push(opts.target);
       let lo = Math.min(...ys);
       let hi = Math.max(...ys);
@@ -3342,57 +3674,70 @@
       const step = niceStep(hi - lo, 4);
       lo = Math.floor(lo / step) * step;
       hi = Math.ceil(hi / step) * step;
-
       const x0 = points[0].x;
       const x1 = points[points.length - 1].x;
       const sx = x => x1 === x0 ? (pad.l + W - pad.r) / 2 : pad.l + (x - x0) / (x1 - x0) * (W - pad.l - pad.r);
       const sy = y => pad.t + (hi - y) / (hi - lo) * (H - pad.t - pad.b);
+      const gid = `${containerId}-fill`;
 
-      let svg = '';
+      let svg = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
       for (let i = 0; lo + i * step <= hi + step / 1000; i++) {
         const v = lo + i * step;
         svg += `<line class="chart-grid" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(v)}" y2="${sy(v)}"/>`;
         svg += `<text class="chart-axis-label" x="${pad.l - 6}" y="${sy(v) + 3}" text-anchor="end">${fmtAxis(v)}</text>`;
       }
-      svg += `<text class="chart-axis-label" x="${pad.l}" y="${H - 6}" text-anchor="start">${shortDate(x0)}</text>`;
-      if (x1 !== x0) svg += `<text class="chart-axis-label" x="${W - pad.r}" y="${H - 6}" text-anchor="end">${shortDate(x1)}</text>`;
-
+      const ticks = x1 > x0 ? dateTicks(x0, x1) : [{ x: x0, label: shortDate(x0) }];
+      ticks.forEach(t => {
+        const x = sx(t.x);
+        const anchor = x < pad.l + 20 ? 'start' : x > W - pad.r - 20 ? 'end' : 'middle';
+        svg += `<text class="chart-axis-label" x="${x}" y="${H - 8}" text-anchor="${anchor}">${t.label}</text>`;
+      });
       if (opts.target != null) {
         svg += `<line class="chart-target" x1="${pad.l}" x2="${W - pad.r}" y1="${sy(opts.target)}" y2="${sy(opts.target)}"/>`;
-        svg += `<text class="chart-axis-label" x="${W - pad.r}" y="${sy(opts.target) - 4}" text-anchor="end">${opts.targetLabel}</text>`;
+        svg += `<text class="chart-axis-label" x="${W - pad.r}" y="${sy(opts.target) - 5}" text-anchor="end">${opts.targetLabel}</text>`;
       }
+      raw.forEach(p => { svg += `<circle class="chart-raw" cx="${sx(p.x)}" cy="${sy(p.y)}" r="2.5"/>`; });
 
-      svg += `<path class="chart-line" d="${points.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x)},${sy(p.y)}`).join(' ')}"/>`;
-      svg += points.map(p => `<circle class="chart-dot" cx="${sx(p.x)}" cy="${sy(p.y)}" r="4"/>`).join('');
+      const line = points.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
+      if (points.length > 1) {
+        svg += `<path class="chart-area ${chartAnimate ? 'fade' : ''}" fill="url(#${gid})" d="${line} L${sx(x1).toFixed(1)},${H - pad.b} L${sx(x0).toFixed(1)},${H - pad.b} Z"/>`;
+        svg += `<path class="chart-line ${chartAnimate ? 'draw' : ''}" pathLength="1" d="${line}"/>`;
+      }
+      // Dots only where they help: few points, the last point, and records
+      points.forEach((p, i) => {
+        if (p.record) svg += `<circle class="chart-dot record" cx="${sx(p.x)}" cy="${sy(p.y)}" r="5"/>`;
+        else if (points.length <= 24 || i === points.length - 1) svg += `<circle class="chart-dot" cx="${sx(p.x)}" cy="${sy(p.y)}" r="${raw.length ? 0 : 3.5}"/>`;
+      });
+      const last = points[points.length - 1];
+      if (raw.length) svg += `<circle class="chart-dot" cx="${sx(last.x)}" cy="${sy(last.y)}" r="4"/>`;
       svg += `<line class="chart-cross" id="${containerId}-cross" y1="${pad.t}" y2="${H - pad.b}" style="display:none"/>`;
-      svg += `<circle class="chart-dot" id="${containerId}-focus" r="6" style="display:none"/>`;
+      svg += `<circle class="chart-dot focus" id="${containerId}-focus" r="6" style="display:none"/>`;
       svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent"/>`;
 
       box.innerHTML = `
         <div class="chart-wrap">
           <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart">${svg}</svg>
           <div class="chart-tip"></div>
-        </div>`;
+        </div>
+        ${opts.key ? `<div class="chart-key">${opts.key}</div>` : ''}`;
 
       const svgEl = box.querySelector('svg');
       const tip = box.querySelector('.chart-tip');
       const cross = document.getElementById(`${containerId}-cross`);
       const focus = document.getElementById(`${containerId}-focus`);
-
       const show = ev => {
         const rect = svgEl.getBoundingClientRect();
         const px = (ev.clientX - rect.left) * (W / rect.width);
         let best = points[0];
         points.forEach(p => { if (Math.abs(sx(p.x) - px) < Math.abs(sx(best.x) - px)) best = p; });
-
         const cx = sx(best.x);
         cross.setAttribute('x1', cx);
         cross.setAttribute('x2', cx);
         cross.style.display = '';
         focus.setAttribute('cx', cx);
         focus.setAttribute('cy', sy(best.y));
+        focus.classList.toggle('record', !!best.record);
         focus.style.display = '';
-
         tip.innerHTML = opts.tip(best);
         tip.style.display = 'block';
         const cssX = cx * (rect.width / W);
@@ -3404,7 +3749,6 @@
         cross.style.display = 'none';
         focus.style.display = 'none';
       };
-
       svgEl.addEventListener('pointerdown', show);
       svgEl.addEventListener('pointermove', show);
       // On touch, keep the tooltip after lifting the finger; on mouse, hide when leaving.
@@ -4009,6 +4353,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
+        chartAnimate = false;
         if (!document.getElementById('view-progress').hidden) renderProgress();
       }, 200);
     });
