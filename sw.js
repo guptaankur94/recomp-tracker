@@ -1,8 +1,8 @@
 // Offline support: cache-first so the app opens instantly even on weak gym signal.
 // Each request also refreshes the cache in the background; when a newer index.html
 // arrives, open pages are told so they can offer a reload.
-const CACHE = 'recomp-v2';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
+const CACHE = 'recomp-v3';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(

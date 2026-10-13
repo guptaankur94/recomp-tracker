@@ -6,12 +6,25 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Recomp Engine">
+  <meta name="apple-mobile-web-app-title" content="Recomp">
   <meta name="theme-color" content="#000000">
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <title>2-Month Recomp Execution Engine</title>
+  <title>Recomp</title>
+  <meta name="description" content="Log workouts, rest timer, personal records and bodyweight trend. Works offline; data stays on your phone.">
+  <!-- iPhone launch screens -->
+  <link rel="apple-touch-startup-image" href="splash/splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-1080x2340.png" media="(device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <style>
     /* Design tokens. Surfaces are separated by tone, not borders; green means "done / positive" only. */
     :root {
@@ -312,7 +325,8 @@
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-2); }
-    input::placeholder, textarea::placeholder { color: var(--text-3); }
+    input::placeholder, textarea::placeholder { color: #8E8E93; }
+    .set-row input::placeholder { color: #98989D; }
     .unit-label { font-size: var(--t-caption); color: var(--text-2); }
 
     .delete-set-btn {
@@ -978,6 +992,73 @@
       100% { opacity: 0; transform: translate3d(var(--dx), 95vh, 0) rotate(var(--rot)); }
     }
 
+    /* Settings: grouped list */
+    .group { background: var(--surface); border-radius: var(--r-md); overflow: hidden; }
+    .group-label { font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 16px 8px; }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 56px;
+      padding: 10px 14px;
+      border: none;
+      background: none;
+      color: var(--text);
+      text-align: left;
+    }
+    .row:active:not(:disabled) { transform: none; opacity: 1; background: var(--surface-2); }
+    .row + .row { border-top: 0.5px solid var(--separator); box-shadow: none; }
+    .row-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #FFF; flex-shrink: 0; }
+    .row-icon svg { width: 18px; height: 18px; }
+    .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .row-title { font-size: var(--t-headline); font-weight: 500; }
+    .row-sub { font-size: var(--t-footnote); color: var(--text-2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-sub.warn { color: var(--orange); font-weight: 600; }
+    .row-value { font-size: var(--t-body); color: var(--text-2); }
+    .row.danger .row-title { color: var(--danger); }
+    .profile-row { min-height: 76px; }
+    .profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: var(--t-title); font-weight: 700; flex-shrink: 0; }
+    .profile-avatar svg { width: 26px; height: 26px; color: var(--text-2); }
+    .profile-row .row-title { font-size: var(--t-title); font-weight: 700; }
+    .targets-group { padding: 12px; cursor: pointer; }
+    .targets-group .targets-grid { margin: 0; }
+    .settings-foot { font-size: var(--t-footnote); color: var(--text-3); text-align: center; margin: 22px 16px 8px; }
+    .nav-item { position: relative; }
+    .nav-item.badged::after { content: ''; position: absolute; top: -2px; left: calc(50% + 9px); width: 9px; height: 9px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 2px #121214; }
+
+    /* Sheets used by Settings */
+    .sheet-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .saved-tick { font-size: var(--t-footnote); font-weight: 700; color: var(--accent); }
+    .saved-tick.pop { animation: checkIn 0.3s ease-out; }
+    .sheet-foot { margin-top: 14px; }
+    .plan-days { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    .plan-day { display: flex; gap: 10px; align-items: flex-start; background: var(--surface-2); border-radius: var(--r-sm); padding: 10px 12px; }
+    .plan-day .day-dot { margin-top: 5px; }
+    .plan-day-main { min-width: 0; }
+    .plan-day-title { font-size: var(--t-body); font-weight: 600; }
+    .plan-day-sub { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.35; margin-top: 2px; }
+    .plan-warning { font-size: var(--t-footnote); color: var(--orange); margin-top: 4px; }
+    .step { padding: 14px 0; border-bottom: 0.5px solid var(--separator); }
+    .step:last-of-type { border-bottom: none; }
+    .step-head { display: flex; align-items: center; gap: 10px; font-size: var(--t-headline); font-weight: 600; margin-bottom: 10px; }
+    .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--text); color: #000; font-size: var(--t-footnote); font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step .form-grid { margin: 0; }
+    .chatbot-links { display: flex; gap: 8px; margin-top: 10px; }
+    .chatbot-links .chip { text-decoration: none; }
+    .step textarea { width: 100%; height: auto; padding: 10px; font-size: var(--t-footnote); font-family: ui-monospace, Menlo, monospace; resize: vertical; }
+    .plan-status { display: flex; align-items: flex-start; gap: 6px; font-size: var(--t-footnote); color: var(--text-2); margin: 8px 0 4px; min-height: 0; }
+    .plan-status:empty { display: none; }
+    .plan-status.ok { color: var(--accent); }
+    .plan-status.ok strong { color: var(--accent); }
+    .plan-status.error { color: var(--danger); }
+    .plan-status svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+    .btn:disabled { opacity: 0.35; }
+
+    /* Keyboard focus */
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--blue); }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -1024,7 +1105,7 @@
     @media (prefers-reduced-motion: reduce) {
       .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
       .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
-      .rest-pill, .just-collapsed, .summary-badge, .just-completed .pr-badge, .chart-area.fade { animation: none; }
+      .rest-pill, .just-collapsed, .summary-badge, .just-completed .pr-badge, .chart-area.fade, .saved-tick.pop { animation: none; }
       .chart-line.draw { animation: none; stroke-dashoffset: 0; }
       .confetti { display: none; }
       .summary { transition: none; }
@@ -1094,11 +1175,40 @@
   </div>
 
   <div id="view-settings" class="view" hidden>
-    <div class="card">
-      <div class="section-title">Your Profile</div>
-      <div class="section-meta lead">Used for your goal line, the AI plan prompt and daily nutrition targets. Stays on this phone.</div>
+    <div id="settings-list"></div>
+    <input type="file" id="plan-file" class="file-input" accept=".json,.txt,application/json,text/plain" onchange="importPlanFile(this)">
+    <input type="file" id="import-file" class="file-input" accept=".json,.txt,application/json,text/plain" onchange="importData(this)">
+  </div>
+
+  <!-- Session detail sheet -->
+  <div class="sheet-overlay" id="detail-modal">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="modal-title">Session Details</div>
+        <div class="sheet-sub" id="modal-date"></div>
+      </div>
+      <div id="modal-body"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-danger" id="modal-delete-action-btn">Delete Workout Session</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile sheet: saves as you edit -->
+  <div class="sheet-overlay" id="profile-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title" id="profile-title">Your Profile</div>
+          <span class="saved-tick" id="profile-saved" hidden>Saved</span>
+        </div>
+        <div class="sheet-sub">Used for your goal line, the AI plan prompt and daily nutrition targets. Stays on this phone.</div>
+      </div>
       <div class="form-grid">
-        <label>Name<input type="text" id="pf-name" placeholder="Optional"></label>
+        <label>Name<input type="text" id="pf-name" placeholder="Optional" autocomplete="given-name"></label>
         <label>Sex
           <select id="pf-sex"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select>
         </label>
@@ -1121,63 +1231,92 @@
           </select>
         </label>
       </div>
-      <button class="btn btn-primary" onclick="saveProfileForm()">Save Profile</button>
       <div id="pf-targets"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Workout Plan</div>
-      <div class="section-meta lead" id="plan-summary"></div>
-      <div class="section-meta"><strong>Create your own plan with any AI chatbot</strong> (ChatGPT, Gemini, Claude…)</div>
-      <ol class="steps">
-        <li>Fill in the details below and tap <strong>Copy AI Prompt</strong>.</li>
-        <li>Paste it into the chatbot and send it.</li>
-        <li>Copy the chatbot's whole reply, tap <strong>Paste Plan</strong> and paste it. You can also save the reply as a .txt or .json file and use <strong>Upload Plan File</strong>.</li>
-      </ol>
-      <div class="form-grid">
-        <label>Days per week
-          <select id="ai-days"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select>
-        </label>
-        <label>Experience
-          <select id="ai-level"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select>
-        </label>
-        <label class="full">Equipment available<input type="text" id="ai-equipment" placeholder="e.g. full gym, or DBs up to 12.5 kg + barbell"></label>
-        <label class="full">Focus / notes<input type="text" id="ai-notes" placeholder="e.g. bigger arms, sore left knee, 60 min max"></label>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="closeSheet('profile-sheet')">Done</button>
       </div>
-      <button class="btn btn-primary" onclick="copyAiPrompt()">1. Copy AI Prompt</button>
-      <button class="btn btn-secondary" onclick="openPlanPaste()">2. Paste Plan</button>
-      <button class="btn btn-secondary" onclick="document.getElementById('plan-file').click()">Upload Plan File</button>
-      <input type="file" id="plan-file" class="file-input" accept=".json,.txt,application/json,text/plain" onchange="importPlanFile(this)">
-      <button class="btn btn-plain" onclick="copyCurrentPlan()">Copy Current Plan (to edit with AI)</button>
-      <button class="btn btn-plain" id="restore-plan-btn" onclick="restoreDefaultPlan()" hidden>Restore Default Plan</button>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Backup & Data Storage</div>
-      <div class="section-meta lead">All workout and bodyweight data is saved on this phone only. Export a backup regularly, and always before deleting or re-adding the app on your Home Screen.</div>
-      <button class="btn btn-primary" onclick="exportData()">Export Backup (JSON)</button>
-      <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Backup (JSON)</button>
-      <input type="file" id="import-file" class="file-input" accept=".json,.txt,application/json,text/plain" onchange="importData(this)">
-      <div class="section-meta">If export doesn't work, copy the backup as text and paste it into the Notes app instead.</div>
-      <button class="btn btn-secondary" onclick="copyBackup()">Copy Backup as Text</button>
-      <button class="btn btn-secondary" onclick="openBackupModal()">Paste Backup Text</button>
-      <button class="btn btn-danger" onclick="clearAllData()">Reset All Local Logs</button>
     </div>
   </div>
 
-  <!-- Session detail sheet -->
-  <div class="sheet-overlay" id="detail-modal">
-    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <!-- Workout plan sheet -->
+  <div class="sheet-overlay" id="plan-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="plan-title">
       <div class="sheet-head">
         <div class="sheet-grabber"></div>
-        <div class="sheet-title" id="modal-title">Session Details</div>
-        <div class="sheet-sub" id="modal-date"></div>
+        <div class="sheet-title" id="plan-title">Workout Plan</div>
+        <div class="sheet-sub" id="plan-summary"></div>
       </div>
-      <div id="modal-body"></div>
+      <div class="plan-days" id="plan-days"></div>
       <div class="sheet-actions">
-        <button class="btn btn-danger" id="modal-delete-action-btn">Delete Workout Session</button>
-        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" onclick="closeSheet('plan-sheet'); openAiSheet()">Create a New Plan with AI</button>
+        <button class="btn btn-secondary" onclick="copyCurrentPlan()">Copy Plan to Edit with AI</button>
+        <button class="btn btn-plain" id="restore-plan-btn" onclick="restoreDefaultPlan()" hidden>Restore Default Plan</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Guided AI plan: details, copy the prompt, paste the reply, preview -->
+  <div class="sheet-overlay" id="ai-sheet">
+    <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="ai-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="ai-title">Create a Plan with AI</div>
+        <div class="sheet-sub">Any chatbot works. Your profile is included in the prompt.</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span>Your training</div>
+        <div class="form-grid">
+          <label>Days per week
+            <select id="ai-days"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select>
+          </label>
+          <label>Experience
+            <select id="ai-level"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select>
+          </label>
+          <label class="full">Equipment available<input type="text" id="ai-equipment" placeholder="e.g. full gym, or DBs up to 12.5 kg + barbell"></label>
+          <label class="full">Focus / notes<input type="text" id="ai-notes" placeholder="e.g. bigger arms, sore left knee, 60 min max"></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span>Copy the prompt and send it</div>
+        <button class="btn btn-primary" id="ai-copy-btn" onclick="copyAiPrompt()">Copy Prompt</button>
+        <div class="chatbot-links">
+          <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+          <a class="chip" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+          <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">3</span>Paste the whole reply</div>
+        <textarea id="ai-reply" rows="6" placeholder="Paste the chatbot's reply here" oninput="validatePlanPaste()"></textarea>
+        <div class="plan-status" id="ai-status" role="status"></div>
+        <button class="btn btn-plain btn-sm" onclick="document.getElementById('plan-file').click()">Or upload a .json / .txt file</button>
+        <div class="plan-days" id="ai-preview"></div>
+      </div>
+
+      <div class="sheet-actions">
+        <button class="btn btn-positive" id="ai-use-btn" onclick="useAiPlan()" disabled>Use This Plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup options -->
+  <div class="sheet-overlay" id="backup-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="backup-sheet-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="backup-sheet-title">Backup</div>
+        <div class="sheet-sub">Everything is saved on this phone only. Back up regularly, and always before deleting or re-adding the app.</div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="exportData()">Export Backup File</button>
+        <button class="btn btn-secondary" onclick="copyBackup()">Copy Backup as Text</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Backup File</button>
+        <button class="btn btn-secondary" onclick="openBackupModal()">Paste Backup Text</button>
+      </div>
+      <div class="sheet-sub sheet-foot">If export doesn't work on your phone, copy the backup as text and keep it in a note.</div>
     </div>
   </div>
 
@@ -1591,6 +1730,7 @@
 
     /* Confirm and text-input dialogs, shown as a bottom sheet. Both return a Promise. */
     let dialogResolve = null;
+    let dialogMatch = null;
 
     function openDialog({ title, message = '', confirmLabel = 'OK', destructive = false, input = null, choices = null }) {
       if (dialogResolve) dialogResolve(null);
@@ -1604,6 +1744,8 @@
       const field = document.getElementById('dialog-input');
       field.hidden = !input;
       field.value = '';
+      dialogMatch = input && input.match ? input.match : null;
+      field.autocapitalize = dialogMatch ? 'characters' : 'sentences';
       field.placeholder = input ? input.placeholder || '' : '';
       field.classList.remove('invalid');
       const list = document.getElementById('dialog-choices');
@@ -1637,11 +1779,11 @@
       const field = document.getElementById('dialog-input');
       if (!field.hidden) {
         const value = field.value.trim();
-        if (!value) {
+        if (!value || (dialogMatch && value.toUpperCase() !== dialogMatch)) {
           fieldError(field);
           return;
         }
-        finishDialog(value);
+        finishDialog(dialogMatch ? value.toUpperCase() : value);
       } else {
         finishDialog(true);
       }
@@ -1698,6 +1840,7 @@
     function saveHistory(historyArr) {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(historyArr));
       updateStats();
+      if (typeof renderBackupBadge === 'function') renderBackupBadge();
     }
 
     function getBodyweight() {
@@ -1736,7 +1879,7 @@
       const hero = document.getElementById('hero');
       if (!hero) return;
       const history = getHistory();
-      const profileLink = getProfile() ? '' : `<button class="hero-link" onclick="switchView('settings')">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`;
+      const profileLink = getProfile() ? '' : `<button class="hero-link" onclick="openProfileSheet()">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`;
 
       if (!history.length) {
         const first = programData[currentDayIdx] || programData[0];
@@ -3094,7 +3237,10 @@
       updateHeader();
       ['workout', 'history', 'progress', 'settings'].forEach(name => {
         document.getElementById(`view-${name}`).hidden = viewName !== name;
-        document.getElementById(`tab-nav-${name}`).classList.toggle('active', viewName === name);
+        const tab = document.getElementById(`tab-nav-${name}`);
+        tab.classList.toggle('active', viewName === name);
+        if (viewName === name) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
       });
 
       if (viewName === 'history') {
@@ -3479,6 +3625,7 @@
         raw: avg.filter(p => p.x >= start).map(p => ({ x: p.x, y: p.raw })),
         target: goalKg,
         targetLabel: `Goal ${fmtNum(goalKg)} kg`,
+        label: trend != null ? `Bodyweight, 7-day average ${fmtNum(trend)} kg${rate != null ? `, changing ${fmtNum(rate)} kg per week` : ''}` : 'Bodyweight',
         emptyText: entries.length ? 'No weigh-ins in this range.' : 'Log your weight to see your trend.',
         key: entries.length ? '<span class="key-line"></span>7-day average<span class="key-dot"></span>Weigh-ins' : '',
         tip: p => `${shortDate(p.x)} · avg <strong>${fmtNum(p.y)} kg</strong> · weighed ${fmtNum(p.raw)}`
@@ -3587,6 +3734,7 @@
       const shown = points.filter(p => p.x >= start);
       renderLineChart('ex-chart', shown, {
         emptyText: rows.length ? 'No sessions in this range.' : 'Finish a workout to start tracking progress.',
+        label: shown.length ? `${progressExercise} ${metric.label}: latest ${fmtNum(shown[shown.length - 1].y)} ${metric.unit}, best ${fmtNum(Math.max(...shown.map(p => p.y)))} ${metric.unit}` : '',
         key: shown.some(p => p.record) ? '<span class="key-dot gold"></span>PR session or all-time best' : '',
         tip: p => `${shortDate(p.x)} · ${escapeHtml(p.day)} · <strong>${fmtNum(p.y)} ${metric.unit}</strong>${p.best ? ' · <span class="tip-pr">Best</span>' : p.pr ? ' · <span class="tip-pr">PR</span>' : ''}`
       });
@@ -3716,7 +3864,7 @@
 
       box.innerHTML = `
         <div class="chart-wrap">
-          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart">${svg}</svg>
+          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(opts.label || 'Line chart')}">${svg}</svg>
           <div class="chart-tip"></div>
         </div>
         ${opts.key ? `<div class="chart-key">${opts.key}</div>` : ''}`;
@@ -3780,6 +3928,8 @@
           if (!navigator.canShare({ files: [file] })) continue;
           try {
             await navigator.share({ files: [file], title: 'Recomp backup' });
+            markBackedUp();
+            showToast('Backup saved');
             return;
           } catch (e) {
             if (e.name === 'AbortError') return;
@@ -3790,6 +3940,7 @@
       // Home Screen apps on iPhone can't download files, so show the text to copy instead.
       if (navigator.standalone) {
         openTextModal({ title: 'Your Backup', help: 'Tap Select All, then Copy, and paste it into a note in the Notes app.', text: json, readOnly: true });
+        markBackedUp();
         return;
       }
 
@@ -3801,9 +3952,12 @@
       downloadAnchor.click();
       downloadAnchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      markBackedUp();
+      showToast('Backup downloaded');
     }
 
     function copyBackup() {
+      markBackedUp();
       copyText(buildBackupJson(),
         `Backup copied (${getHistory().length} workouts). Paste it into a note in Notes.`,
         'Your Backup');
@@ -3925,19 +4079,29 @@
       return true;
     }
 
+    // Type RESET to confirm; nothing else on this screen can delete everything.
     async function clearAllData() {
-      if (await confirmSheet('Reset all data?',
-        'This deletes every saved workout, weight entry, your profile and your custom plan from this phone. Export a backup first if you want to keep them.',
-        'Delete Everything', true)) {
-        localStorage.clear();
-        loadActivePlan();
-        initNav();
-        updateHeader();
-        updateStats();
-        renderCalendarAndHistory();
-        renderWorkout();
-        showToast('All local data has been reset', { type: 'info' });
-      }
+      const count = getHistory().length;
+      const value = await openDialog({
+        title: 'Reset all data?',
+        message: `This permanently deletes ${count} workout${count === 1 ? '' : 's'}, every weight entry, your profile and your custom plan from this phone.${count ? ' Back up first if you want to keep them.' : ''}\n\nType RESET to confirm.`,
+        confirmLabel: 'Delete Everything',
+        destructive: true,
+        input: { placeholder: 'Type RESET', match: 'RESET' }
+      });
+      if (value !== 'RESET') return;
+      localStorage.clear();
+      closeSheet('backup-sheet');
+      loadActivePlan();
+      currentDayIdx = 0;
+      initNav();
+      updateHeader();
+      updateStats();
+      renderCalendarAndHistory();
+      renderWorkout();
+      renderSettings();
+      renderBackupBadge();
+      showToast('All local data has been reset', { type: 'info' });
     }
 
     /* Generic text modal (show text to copy, or paste text in) */
@@ -3968,8 +4132,10 @@
         await navigator.clipboard.writeText(text);
         haptic('success');
         showToast(successMsg, { duration: 4000 });
+        return true;
       } catch (e) {
         openTextModal({ title: fallbackTitle, help: 'Tap Select All, then Copy.', text, readOnly: true });
+        return false;
       }
     }
 
@@ -4037,7 +4203,7 @@
       document.getElementById('pf-goaltype').value = p.goalType || 'recomp';
     }
 
-    function saveProfileForm() {
+    function saveProfileForm(silent = false) {
       const num = id => {
         const v = parseFloat(document.getElementById(id).value);
         return isNaN(v) ? null : Math.round(v * 10) / 10;
@@ -4054,20 +4220,24 @@
       };
       if (profile.heightCm && (profile.heightCm < 100 || profile.heightCm > 250)) {
         fieldError(document.getElementById('pf-height'), 'Height should be 100–250 cm.');
-        return;
+        return false;
       }
       for (const [field, id] of [['weightKg', 'pf-weight'], ['goalKg', 'pf-goal']]) {
         if (profile[field] && (profile[field] < 25 || profile[field] > 300)) {
           fieldError(document.getElementById(id), 'Weight should be 25–300 kg.');
-          return;
+          return false;
         }
       }
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       updateHeader();
       updateStats();
       renderProfileTargets();
-      haptic('success');
-      showToast('Profile saved');
+      if (!document.getElementById('view-settings').hidden) renderSettings();
+      if (!silent) {
+        haptic('success');
+        showToast('Profile saved');
+      }
+      return true;
     }
 
     function renderProfileTargets() {
@@ -4205,33 +4375,6 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 }`;
     }
 
-    function copyAiPrompt() {
-      copyText(buildAiPrompt(), 'Prompt copied. Paste it into ChatGPT, Gemini or Claude.', 'AI Prompt');
-    }
-
-    function copyCurrentPlan() {
-      copyText(`Here is my current workout plan. Please adjust it as I describe below and reply with ONLY the updated JSON in the same format.\n\nMy changes: \n\n${planToJson()}`,
-        'Plan copied. Paste it into a chatbot with your changes.', 'Current Plan');
-    }
-
-    function openPlanPaste() {
-      openTextModal({
-        title: 'Paste Plan',
-        help: "Paste the chatbot's whole reply, then tap Use This Plan.",
-        submitLabel: 'Use This Plan',
-        onSubmit: applyPlanText
-      });
-    }
-
-    function importPlanFile(inputEl) {
-      const file = inputEl.files[0];
-      inputEl.value = '';
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => applyPlanText(reader.result);
-      reader.readAsText(file);
-    }
-
     // Chatbots often wrap JSON in ``` fences or add a sentence around it; pull out the JSON object.
     function extractJson(text) {
       let t = String(text).replace(/```(?:json)?/gi, '').trim();
@@ -4311,42 +4454,234 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       renderPlanSummary();
     }
 
-    async function applyPlanText(text) {
-      let plan;
-      try {
-        plan = normalizePlan(extractJson(text));
-      } catch (e) {
-        reportTextError(e.message);
-        return false;
-      }
-      const summary = plan.days.map(d => `${d.day}: ${d.title} (${d.exercises.length})`).join('\n');
-      const warning = anyUnsavedSets() ? '\n\nUnsaved sets in your current plan will be cleared.' : '';
-      if (!await confirmSheet(`Use “${plan.planName}”?`, `${summary}${warning}\n\nYour saved workout history is kept.`, 'Use This Plan')) return false;
-      setActivePlan(plan);
-      haptic('success');
-      showToast(`“${plan.planName}” is now your plan`);
-      return true;
-    }
-
     async function restoreDefaultPlan() {
       const warning = anyUnsavedSets() ? ' Unsaved sets will be cleared.' : '';
       if (!await confirmSheet('Restore the default plan?', `Switch back to “${DEFAULT_PLAN_NAME}”.${warning} Your saved history is kept.`, 'Restore')) return;
       setActivePlan(null);
+      closeSheet('plan-sheet');
+      renderSettings();
       showToast(`Switched to “${DEFAULT_PLAN_NAME}”`);
+    }
+
+    function planDaysHtml(days) {
+      return days.map(d => `
+        <div class="plan-day">
+          <span class="day-dot" style="background:${dayColor(d.day)}"></span>
+          <div class="plan-day-main">
+            <div class="plan-day-title">${escapeHtml(d.day)} · ${escapeHtml(d.title)}</div>
+            <div class="plan-day-sub">${d.exercises.map(e => escapeHtml(e.name)).join(' · ')}</div>
+          </div>
+        </div>`).join('');
     }
 
     function renderPlanSummary() {
       const total = programData.reduce((n, d) => n + d.exercises.length, 0);
       document.getElementById('plan-summary').innerHTML =
-        `Current: <strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises<br>` +
-        programData.map(d => `${d.day}: ${escapeHtml(d.title)}`).join('<br>');
+        `<strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises`;
+      document.getElementById('plan-days').innerHTML = planDaysHtml(programData);
       document.getElementById('restore-plan-btn').hidden = !getCustomPlan();
     }
 
-    function renderSettings() {
+    function openPlanSheet() {
+      renderPlanSummary();
+      openSheet('plan-sheet');
+    }
+
+    /* Guided AI plan: the reply is checked as it is pasted and previewed before it replaces anything */
+    let pendingPlan = null;
+
+    function openAiSheet(text = '') {
+      document.getElementById('ai-reply').value = text;
+      document.getElementById('ai-copy-btn').innerHTML = 'Copy Prompt';
+      validatePlanPaste();
+      openSheet('ai-sheet');
+    }
+
+    function validatePlanPaste() {
+      const text = document.getElementById('ai-reply').value.trim();
+      const status = document.getElementById('ai-status');
+      const preview = document.getElementById('ai-preview');
+      const useBtn = document.getElementById('ai-use-btn');
+      pendingPlan = null;
+      preview.innerHTML = '';
+      status.className = 'plan-status';
+      if (!text) {
+        status.textContent = '';
+      } else {
+        try {
+          pendingPlan = normalizePlan(extractJson(text));
+          const total = pendingPlan.days.reduce((n, d) => n + d.exercises.length, 0);
+          status.className = 'plan-status ok';
+          status.innerHTML = `${icon('check', 3)}<span><strong>${escapeHtml(pendingPlan.planName)}</strong> · ${pendingPlan.days.length} days · ${total} exercises</span>`;
+          preview.innerHTML = planDaysHtml(pendingPlan.days) +
+            (anyUnsavedSets() ? '<div class="plan-warning">Unsaved sets in your current plan will be cleared. Saved history is kept.</div>' : '');
+        } catch (e) {
+          status.className = 'plan-status error';
+          status.textContent = e.message;
+        }
+      }
+      useBtn.disabled = !pendingPlan;
+    }
+
+    function useAiPlan() {
+      if (!pendingPlan) return;
+      const plan = pendingPlan;
+      setActivePlan(plan);
+      closeSheet('ai-sheet');
+      haptic('success');
+      showToast(`“${plan.planName}” is now your plan`);
+      renderSettings();
+    }
+
+    function copyAiPrompt() {
+      copyText(buildAiPrompt(), 'Prompt copied. Paste it into your chatbot.', 'AI Prompt').then(ok => {
+        if (ok) document.getElementById('ai-copy-btn').innerHTML = `${icon('check', 3)}Copied`;
+      });
+    }
+
+    function copyCurrentPlan() {
+      copyText(`Here is my current workout plan. Please adjust it as I describe below and reply with ONLY the updated JSON in the same format.\n\nMy changes: \n\n${planToJson()}`,
+        'Plan copied. Paste it into a chatbot with your changes, then paste the reply in Create a Plan with AI.', 'Current Plan');
+    }
+
+    function importPlanFile(inputEl) {
+      const file = inputEl.files[0];
+      inputEl.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (openSheets.includes(document.getElementById('ai-sheet'))) {
+          document.getElementById('ai-reply').value = reader.result;
+          validatePlanPaste();
+        } else {
+          openAiSheet(String(reader.result));
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /* Profile sheet: every change saves on its own */
+    function openProfileSheet() {
       fillProfileForm();
       renderProfileTargets();
-      renderPlanSummary();
+      document.getElementById('profile-saved').hidden = true;
+      openSheet('profile-sheet');
+    }
+
+    let savedTickTimer = null;
+    document.querySelectorAll('#profile-sheet input, #profile-sheet select').forEach(el => {
+      el.addEventListener('change', () => {
+        if (!saveProfileForm(true)) return;
+        const tick = document.getElementById('profile-saved');
+        tick.hidden = false;
+        tick.classList.remove('pop');
+        void tick.offsetWidth;
+        tick.classList.add('pop');
+        clearTimeout(savedTickTimer);
+        savedTickTimer = setTimeout(() => { tick.hidden = true; }, 1800);
+      });
+    });
+
+    /* Backups: remember when the last one was made and nudge after two weeks */
+    const LAST_BACKUP_KEY = 'recomp_last_backup';
+    const BACKUP_NUDGE_DAYS = 14;
+
+    function markBackedUp() {
+      localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
+      renderBackupBadge();
+      if (!document.getElementById('view-settings').hidden) renderSettings();
+    }
+
+    function backupAgeDays() {
+      const t = parseInt(localStorage.getItem(LAST_BACKUP_KEY), 10);
+      return t > 0 ? Math.floor((Date.now() - t) / 864e5) : null;
+    }
+
+    function backupOverdue() {
+      if (getHistory().length < 3) return false;
+      const age = backupAgeDays();
+      return age === null || age >= BACKUP_NUDGE_DAYS;
+    }
+
+    function renderBackupBadge() {
+      document.getElementById('tab-nav-settings').classList.toggle('badged', backupOverdue());
+    }
+
+    /* Settings: an iOS-style grouped list; each row opens its own sheet */
+    function settingsRow({ iconName, color, title, sub = '', value = '', onclick, danger = false, warn = false, label }) {
+      return `
+        <button class="row ${danger ? 'danger' : ''}" onclick="${onclick}" ${label ? `aria-label="${escapeHtml(label)}"` : ''}>
+          <span class="row-icon" style="background:${color}">${iconName}</span>
+          <span class="row-main">
+            <span class="row-title">${title}</span>
+            ${sub ? `<span class="row-sub ${warn ? 'warn' : ''}">${sub}</span>` : ''}
+          </span>
+          ${value ? `<span class="row-value">${value}</span>` : ''}
+          ${danger ? '' : `<span class="chevron">${icon('chevron')}</span>`}
+        </button>`;
+    }
+
+    const ROW_ICONS = {
+      plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8 6.5h11M8 12h11M8 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01"/></svg>',
+      ai: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 3.5l1.6 4.4L17 9.5l-4.4 1.6L11 15.5 9.4 11.1 5 9.5l4.4-1.6zM18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"/></svg>',
+      backup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 14v4.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>',
+      more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+      reset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/></svg>'
+    };
+
+    function renderSettings() {
+      const profile = getProfile();
+      const goal = getGoalKg();
+      const name = profile && profile.name ? profile.name : '';
+      const t = profile && nutritionTargets(profile);
+      const totalEx = programData.reduce((n, d) => n + d.exercises.length, 0);
+      const age = backupAgeDays();
+      const overdue = backupOverdue();
+      const backupSub = age === null ? (getHistory().length ? 'Never backed up' : 'Nothing to back up yet')
+        : age === 0 ? 'Last backup today' : `Last backup ${age} day${age === 1 ? '' : 's'} ago`;
+
+      document.getElementById('settings-list').innerHTML = `
+        <div class="group">
+          <button class="row profile-row" onclick="openProfileSheet()">
+            <span class="profile-avatar">${name ? escapeHtml(name[0].toUpperCase()) : document.getElementById('header-avatar').innerHTML}</span>
+            <span class="row-main">
+              <span class="row-title">${name ? escapeHtml(name) : 'Set up your profile'}</span>
+              <span class="row-sub">${profile ? [goal ? `Goal ${fmtNum(goal)} kg` : '', (GOAL_TYPES[profile.goalType] || GOAL_TYPES.recomp).label].filter(Boolean).join(' · ') : 'Goal, body stats and nutrition targets'}</span>
+            </span>
+            <span class="chevron">${icon('chevron')}</span>
+          </button>
+        </div>
+
+        <div class="group-label">Daily targets</div>
+        ${t ? `
+          <div class="group targets-group" onclick="openProfileSheet()" role="button" aria-label="Daily nutrition targets">
+            <div class="targets-grid">
+              <div class="target-tile"><div class="target-val">${t.calories.toLocaleString('en-US')}</div><div class="target-lbl">kcal</div></div>
+              <div class="target-tile"><div class="target-val">${t.protein} g</div><div class="target-lbl">Protein</div></div>
+              <div class="target-tile"><div class="target-val">${t.fat} g</div><div class="target-lbl">Fat</div></div>
+              <div class="target-tile"><div class="target-val">${t.carbs} g</div><div class="target-lbl">Carbs</div></div>
+            </div>
+          </div>` : `
+          <div class="group">${settingsRow({ iconName: icon('info', 2.6), color: '#636366', title: 'See your calorie and protein targets', sub: 'Add sex, birth date, height and weight', onclick: 'openProfileSheet()' })}</div>`}
+
+        <div class="group-label">Training</div>
+        <div class="group">
+          ${settingsRow({ iconName: ROW_ICONS.plan, color: '#3987e5', title: 'Workout plan', sub: `${escapeHtml(getPlanName())} · ${programData.length} days · ${totalEx} exercises`, onclick: 'openPlanSheet()' })}
+          ${settingsRow({ iconName: ROW_ICONS.ai, color: '#9085e9', title: 'Create a plan with AI', sub: 'ChatGPT, Claude or Gemini', onclick: 'openAiSheet()' })}
+        </div>
+
+        <div class="group-label">Data</div>
+        <div class="group">
+          ${settingsRow({ iconName: ROW_ICONS.backup, color: '#199e70', title: 'Back up now', sub: backupSub, warn: overdue, onclick: 'exportData()' })}
+          ${settingsRow({ iconName: ROW_ICONS.more, color: '#636366', title: 'More backup options', sub: 'Copy as text, import or restore', onclick: "openSheet('backup-sheet')" })}
+        </div>
+
+        <div class="group-label">Danger zone</div>
+        <div class="group">
+          ${settingsRow({ iconName: ROW_ICONS.reset, color: 'var(--danger)', title: 'Reset all data', danger: true, onclick: 'clearAllData()' })}
+        </div>
+
+        <div class="settings-foot">Recomp keeps everything on this phone. Nothing is uploaded.</div>`;
     }
 
     let resizeTimer = null;
@@ -4366,6 +4701,18 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     scrollActiveTab();
     restoreRestTimer();
     updateStats();
+    renderBackupBadge();
+    // Home-screen shortcuts: ?action=log-weight opens the weight log, ?view=history|progress|settings a tab
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const view = params.get('view');
+      if (params.get('action') === 'log-weight') {
+        switchView('progress');
+        setTimeout(() => document.getElementById('bw-input').focus(), 300);
+      } else if (['history', 'progress', 'settings'].includes(view)) {
+        switchView(view);
+      }
+    })();
     setInterval(() => { if (currentView === 'workout') updateHeader(); }, 60000);
     updateHeader();
 
