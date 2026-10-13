@@ -1180,6 +1180,17 @@
     .muscle-chips::-webkit-scrollbar { display: none; }
     .muscle-chips .chip.on { background: var(--text); color: #000; }
 
+    /* Weekly schedule and custom workouts */
+    .tab-btn.custom { background: none; border: 1px dashed var(--surface-3); color: var(--text-2); }
+    .tab-btn.custom.active { background: var(--text); border-color: var(--text); color: #000; }
+    .plan-day-when { font-size: var(--t-caption); font-weight: 700; color: var(--accent); margin-left: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .sched-row { cursor: default; min-height: 50px; }
+    .sched-row select { width: auto; max-width: 62%; height: 36px; background: var(--surface-3); }
+    .ed-hint { font-size: var(--t-footnote); color: var(--text-2); margin: 0 4px 10px; line-height: 1.4; }
+    .rest-card { background: var(--surface); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px; }
+    .rest-card-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 4px; }
+    .rest-card-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; margin-bottom: 10px; }
+
     /* Plan editor */
     .ed-head-row { display: flex; align-items: center; gap: 6px; }
     .ed-head-row .icon-btn { margin-left: -8px; }
@@ -2110,7 +2121,8 @@
 
       const weekStart = startOfWeek(new Date()).getTime();
       const thisWeek = history.filter(s => s.id >= weekStart).length;
-      const target = programData.length;
+      const schedule = getSchedule();
+      const target = schedule ? schedule.filter((_, w) => scheduledDay(w, schedule) !== null).length : programData.length;
       const streak = calcWeekStreak(history);
       const C = 207.35; // circumference of r=33
 
@@ -2209,7 +2221,7 @@
     async function discardDraft() {
       const dayIdx = currentDayIdx;
       if (!await confirmSheet('Clear unsaved sets?',
-        `All unsaved sets, drop sets and extra exercises for ${programData[dayIdx].day} will be removed. Saved workouts are not affected.`,
+        `All unsaved sets, drop sets and extra exercises for ${dayAt(dayIdx).day === 'Custom' ? 'your custom workout' : dayAt(dayIdx).day} will be removed. Saved workouts are not affected.`,
         'Clear Sets', true)) return;
       clearDayDraft(dayIdx);
       initNav();
@@ -2461,12 +2473,13 @@
     }
 
     async function openDayMenu() {
-      const actions = [{ label: 'Add exercise for today', value: 'add' }, { label: 'Edit this day in the plan', value: 'edit' }];
+      const actions = [{ label: 'Add exercise for today', value: 'add' }];
+      if (!isCustomDay()) actions.push({ label: 'Edit this day in the plan', value: 'edit' });
       if (dayHasDraft(currentDayIdx)) {
         actions.push({ label: 'Save to today\'s log', value: 'log' });
         actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
       }
-      const choice = await actionSheet(programData[currentDayIdx].day, programData[currentDayIdx].title, actions);
+      const choice = await actionSheet(dayAt(currentDayIdx).day, dayAt(currentDayIdx).title, actions);
       if (choice === 'add') addCustomExercise();
       else if (choice === 'edit') openPlanEditor({ dayIdx: currentDayIdx });
       else if (choice === 'log') saveToTodaysLog();
@@ -2487,7 +2500,7 @@
       }
 
       const customs = getCustomExercises(currentDayIdx);
-      customs.splice(exIdx - programData[currentDayIdx].exercises.length, 1);
+      customs.splice(exIdx - dayAt(currentDayIdx).exercises.length, 1);
       localStorage.setItem(`custom_ex_d${currentDayIdx}`, JSON.stringify(customs));
       renderWorkout();
     }
@@ -2518,7 +2531,7 @@
           ? { ...alt, ...extra, swapped: true, otherName: ex.name }
           : { ...ex, ...extra, swapped: false, otherName: alt ? alt.name : null };
       };
-      const base = programData[dayIdx].exercises.map((ex, exIdx) => withSwap(ex, exIdx, {}));
+      const base = dayAt(dayIdx).exercises.map((ex, exIdx) => withSwap(ex, exIdx, {}));
       const customs = getCustomExercises(dayIdx).map((ex, j) =>
         withSwap(ex, base.length + j, { isCustom: true, ...(ex.fromDay ? { fromDay: ex.fromDay } : {}) }));
       return [...base, ...customs];
@@ -2712,7 +2725,7 @@
 
     // Collect the logged sets on a day tab, as saved-history exercises
     function collectDaySets(dayIdx) {
-      const dayData = programData[dayIdx];
+      const dayData = dayAt(dayIdx);
       const logged = [];
       getAllExercisesForDay(dayIdx).forEach((ex, exIdx) => {
         const performedSets = [];
@@ -2730,7 +2743,8 @@
             performedSets.push(setObj);
           }
         }
-        if (performedSets.length) logged.push({ name: ex.name, day: ex.fromDay || dayData.day, sets: performedSets });
+        // A custom workout stays custom: its exercises never count toward a plan day or the rotation
+        if (performedSets.length) logged.push({ name: ex.name, day: isCustomDay(dayIdx) ? dayData.day : (ex.fromDay || dayData.day), sets: performedSets });
       });
       return logged;
     }
@@ -2768,8 +2782,8 @@
           id: startedAt,
           dateStr: workoutDate,
           displayDate: new Date(startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-          day: programData[dayIdx].day,
-          title: programData[dayIdx].title,
+          day: dayAt(dayIdx).day,
+          title: dayAt(dayIdx).title,
           exercises: loggedExercises,
           ...(durationSec ? { durationSec } : {})
         };
@@ -2838,24 +2852,110 @@
       return done;
     }
 
+    /* Weekly schedule: a plan can pin its days to weekdays (Mon = 0 … Sun = 6); the others are rest days.
+       Without a schedule the plan rotates through its days in order. */
+    const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const DEFAULT_WEEKDAYS = { 1: [0], 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 3, 4], 6: [0, 1, 2, 3, 4, 5], 7: [0, 1, 2, 3, 4, 5, 6] };
+
+    function defaultSchedule(dayCount) {
+      const schedule = Array(7).fill(null);
+      (DEFAULT_WEEKDAYS[dayCount] || []).forEach((w, i) => { schedule[w] = i; });
+      return schedule;
+    }
+
+    function weekdayIdx(date = new Date()) {
+      return (date.getDay() + 6) % 7;
+    }
+
+    function getSchedule() {
+      const plan = getCustomPlan();
+      const s = plan && plan.schedule;
+      return Array.isArray(s) && s.length === 7 && s.some(v => Number.isInteger(v) && v < programData.length) ? s : null;
+    }
+
+    function scheduledDay(w, schedule = getSchedule()) {
+      const v = schedule ? schedule[w] : null;
+      return Number.isInteger(v) && v < programData.length ? v : null;
+    }
+
+    function weekdaysFor(dayIdx, schedule = getSchedule()) {
+      return schedule ? WEEKDAYS.filter((_, w) => scheduledDay(w, schedule) === dayIdx) : [];
+    }
+
+    function isRestDayToday() {
+      const schedule = getSchedule();
+      return !!schedule && scheduledDay(weekdayIdx(), schedule) === null;
+    }
+
+    // The next scheduled training weekday after today: { w, dayIdx }
+    function nextScheduled() {
+      const schedule = getSchedule();
+      if (!schedule) return null;
+      for (let k = 1; k <= 7; k++) {
+        const w = (weekdayIdx() + k) % 7;
+        const d = scheduledDay(w, schedule);
+        if (d !== null) return { w, dayIdx: d };
+      }
+      return null;
+    }
+
+    /* Custom workout: a one-off day after the plan's days, built from scratch and saved to history
+       without touching the plan */
+    const CUSTOM_DAY = { day: 'Custom', title: 'Custom workout', exercises: [] };
+
+    function isCustomDay(i = currentDayIdx) {
+      return i === programData.length;
+    }
+
+    function dayAt(i) {
+      return isCustomDay(i) ? CUSTOM_DAY : programData[i];
+    }
+
+    function startCustomWorkout() {
+      selectDay(programData.length);
+      if (!getAllExercisesForDay(programData.length).length) setTimeout(addCustomExercise, 150);
+    }
+
     function upNextDayIdx() {
-      const last = getHistory()[0];
+      const schedule = getSchedule();
+      if (schedule) {
+        // Today's planned day until today's workout is saved, then the next scheduled one
+        const start = todaysSession() ? 1 : 0;
+        for (let k = start; k < start + 7; k++) {
+          const d = scheduledDay((weekdayIdx() + k) % 7, schedule);
+          if (d !== null) return d;
+        }
+      }
+      // Rotation: the day after the one most recently trained (custom workouts don't move it)
+      const last = getHistory().find(s => programData.some(d => d.day === mainDayLabel(s)));
       if (!last) return 0;
       const idx = programData.findIndex(d => d.day === mainDayLabel(last));
-      return idx === -1 ? 0 : (idx + 1) % programData.length;
+      return (idx + 1) % programData.length;
     }
 
     function initNav() {
       const navContainer = document.getElementById('day-nav-tabs');
       const done = daysDoneThisWeek();
       const next = upNextDayIdx();
-      navContainer.innerHTML = programData.map((d, i) => `
+      const schedule = getSchedule();
+      const today = scheduledDay(weekdayIdx(), schedule);
+      const customIdx = programData.length;
+      navContainer.innerHTML = programData.map((d, i) => {
+        const wd = weekdaysFor(i, schedule);
+        const badge = dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>'
+          : i === today && !todaysSession() ? '<span class="tab-next">Today</span>'
+          : i === next && !done.has(d.day) ? '<span class="tab-next">Next</span>' : '';
+        return `
         <button class="tab-btn ${i === currentDayIdx ? 'active' : ''}" onclick="selectDay(${i})">
           ${done.has(d.day) ? `<span class="tab-check">${icon('check', 3)}</span>` : ''}
-          <span>D${i + 1}</span><span class="tab-title">${escapeHtml(shortDayTitle(d.title))}</span>
-          ${dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>' : (i === next && !done.has(d.day) ? '<span class="tab-next">Next</span>' : '')}
-        </button>
-      `).join('');
+          <span>${wd.length ? wd.join('/') : `D${i + 1}`}</span><span class="tab-title">${escapeHtml(shortDayTitle(d.title))}</span>
+          ${badge}
+        </button>`;
+      }).join('') + `
+        <button class="tab-btn custom ${currentDayIdx === customIdx ? 'active' : ''}" onclick="selectDay(${customIdx})">
+          ${dayHasDraft(customIdx) ? '<span class="tab-dot" aria-label="unsaved sets"></span>' : ''}<span>+ Custom</span>
+        </button>`;
     }
 
     // Scroll the day tabs sideways (only) so the selected one is fully visible
@@ -2879,8 +2979,8 @@
 
     // Open on the day with unsaved sets, otherwise the next one in the rotation.
     function initialDayIdx() {
-      const withDraft = programData.findIndex((_, i) => dayHasDraft(i));
-      return withDraft !== -1 ? withDraft : upNextDayIdx();
+      for (let i = 0; i <= programData.length; i++) if (dayHasDraft(i)) return i;
+      return upNextDayIdx();
     }
 
     /* Workout progress across the selected day */
@@ -2953,7 +3053,7 @@
 
     function renderWorkout() {
       const main = document.getElementById('workout-content');
-      const data = programData[currentDayIdx];
+      const data = dayAt(currentDayIdx);
       const allExercises = getAllExercisesForDay(currentDayIdx);
       const history = getHistory();
       const progress = dayProgress(currentDayIdx);
@@ -2977,9 +3077,10 @@
       }
 
       html += `
+        ${restDayCardHtml()}
         <div class="day-header">
           <div>
-            <div class="day-kicker">${data.day}${currentDayIdx === upNextDayIdx() ? ' · Up next' : ''}</div>
+            <div class="day-kicker">${dayKicker()}</div>
             <div class="day-title">${escapeHtml(data.title)}</div>
           </div>
           <button class="icon-btn" onclick="openDayMenu()" aria-label="Workout options">${icon('more', 2)}</button>
@@ -3006,6 +3107,14 @@
       }
 
       html += loggingTipHtml();
+      if (isCustomDay() && !allExercises.length) {
+        html += `
+          <div class="empty-card">
+            <div class="empty-title">Build today's workout</div>
+            <div class="empty-text">Add exercises from your plan, the library or your history. It saves to your history like any workout and doesn't change your plan.</div>
+            <button class="btn btn-primary btn-sm" onclick="addCustomExercise()">+ Add Exercise</button>
+          </div>`;
+      }
 
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
@@ -3162,6 +3271,27 @@
       `;
       main.innerHTML = html;
       syncWakeLock();
+    }
+
+    function dayKicker() {
+      if (isCustomDay()) return 'One-off workout · not part of your plan';
+      const schedule = getSchedule();
+      const wd = weekdaysFor(currentDayIdx, schedule).map(w => WEEKDAY_NAMES[WEEKDAYS.indexOf(w)]);
+      const isToday = schedule && scheduledDay(weekdayIdx(), schedule) === currentDayIdx;
+      const tag = isToday ? ' · Today' : currentDayIdx === upNextDayIdx() ? ' · Up next' : '';
+      return `${wd.length ? wd.join(' & ') : dayAt(currentDayIdx).day}${tag}`;
+    }
+
+    // On a scheduled rest day, say so and point to the next session (training anyway is still one tap away)
+    function restDayCardHtml() {
+      if (!isRestDayToday() || todaysSession() || dayHasDraft(currentDayIdx) || isCustomDay()) return '';
+      const next = nextScheduled();
+      return `
+        <div class="rest-card">
+          <div class="rest-card-title">Rest day</div>
+          <div class="rest-card-text">Recovery is when muscle is built.${next ? ` Next up: <strong>${WEEKDAY_NAMES[next.w]} · ${escapeHtml(programData[next.dayIdx].title)}</strong>.` : ''} Training anyway? Pick any day above or start a custom workout.</div>
+          <button class="btn btn-secondary btn-sm" onclick="startCustomWorkout()">Start Custom Workout</button>
+        </div>`;
     }
 
     function saveVal(key, value) {
@@ -4783,7 +4913,7 @@
     function loadActivePlan() {
       const plan = getCustomPlan();
       programData = plan ? plan.days : templatePlan(TEMPLATES[0]).days;
-      if (currentDayIdx >= programData.length) currentDayIdx = 0;
+      if (currentDayIdx > programData.length) currentDayIdx = 0;
     }
 
     function planExerciseOut(ex) {
@@ -4919,11 +5049,15 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           })
         };
       });
-      return { planName: text(data.planName || data.name) || 'Custom Plan', days };
+      const plan = { planName: text(data.planName || data.name) || 'Custom Plan', days };
+      if (Array.isArray(data.schedule) && data.schedule.length === 7) {
+        plan.schedule = data.schedule.map(v => (Number.isInteger(v) && v >= 0 && v < days.length ? v : null));
+      }
+      return plan;
     }
 
     function anyUnsavedSets() {
-      return programData.some((_, i) => dayHasDraft(i));
+      return programData.some((_, i) => dayHasDraft(i)) || dayHasDraft(programData.length);
     }
 
     // Unsaved sets, swaps and set counts are tied to exercise positions, so they reset with a new plan.
@@ -4936,6 +5070,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       else localStorage.removeItem(PLAN_KEY);
       currentDayIdx = 0;
       loadActivePlan();
+      currentDayIdx = initialDayIdx();
       initNav();
       renderWorkout();
       updateHeader();
@@ -4943,12 +5078,12 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     }
 
 
-    function planDaysHtml(days) {
-      return days.map(d => `
+    function planDaysHtml(days, schedule = null) {
+      return days.map((d, i) => `
         <div class="plan-day">
           <span class="day-dot" style="background:${dayColor(d.day)}"></span>
           <div class="plan-day-main">
-            <div class="plan-day-title">${escapeHtml(d.day)} · ${escapeHtml(d.title)}</div>
+            <div class="plan-day-title">${escapeHtml(d.day)} · ${escapeHtml(d.title)}${schedule && weekdaysFor(i, schedule).length ? ` <span class="plan-day-when">${weekdaysFor(i, schedule).join(', ')}</span>` : ''}</div>
             <div class="plan-day-sub">${d.exercises.map(e => escapeHtml(e.name)).join(' · ')}</div>
           </div>
         </div>`).join('');
@@ -4957,8 +5092,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     function renderPlanSummary() {
       const total = programData.reduce((n, d) => n + d.exercises.length, 0);
       document.getElementById('plan-summary').innerHTML =
-        `<strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises`;
-      document.getElementById('plan-days').innerHTML = planDaysHtml(programData);
+        `<strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises · ${getSchedule() ? 'weekly schedule' : 'rotates in order'}`;
+      document.getElementById('plan-days').innerHTML = planDaysHtml(programData, getSchedule());
     }
 
     function openPlanSheet() {
@@ -5351,7 +5486,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       const days = t.build
         ? t.build().map(([title, list], i) => ({ day: `Day ${i + 1}`, title, exercises: list.map(([name, o]) => libExercise(name, o, EQUIPMENT_ALLOWED[t.equipment])) }))
         : JSON.parse(JSON.stringify(DEFAULT_PLAN));
-      return { planName: t.name.replace(/ \d×$/, ''), templateId: t.id, days };
+      return { planName: t.name.replace(/ \d×$/, ''), templateId: t.id, days, schedule: defaultSchedule(days.length) };
     }
 
     // Recommended template for the setup answers
@@ -5446,7 +5581,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           <div class="tpl-name">${escapeHtml(t.name)}</div>
           <div class="tpl-meta">${t.days} days a week · ~${t.minutes} min · ${escapeHtml(t.level)}</div>
           <div class="tpl-blurb">${escapeHtml(t.blurb)}</div>
-          ${featured ? `<div class="plan-days">${planDaysHtml(plan.days)}</div>` : ''}
+          ${featured ? `<div class="plan-days">${planDaysHtml(plan.days, plan.schedule)}</div>` : ''}
         </div>`;
     }
 
@@ -5548,7 +5683,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
         document.getElementById('ai-equipment').value = { gym: 'Full commercial gym', dumbbells: 'A pair of adjustable dumbbells and a bench', bodyweight: 'No equipment, bodyweight at home' }[setup.equipment] || '';
         setTimeout(() => openAiSheet(), 350);
       } else {
-        showToast(mode === 'skip' ? `Starting you on ${choice.name}. Change it in Settings.` : `${name ? `${name}, y` : 'Y'}our plan is ready. Start Day 1 whenever you are.`, { duration: 4000 });
+        showToast(mode === 'skip' ? `Starting you on ${choice.name}. Change it in Settings.` : `${name ? `${name}, y` : 'Y'}our plan is ready. ${dayAt(currentDayIdx).title} is up first.`, { duration: 4000 });
       }
     }
 
@@ -5644,6 +5779,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     function openPlanEditor({ plan = null, dayIdx = null } = {}) {
       const source = plan || getCustomPlan() || { planName: getPlanName(), days: programData };
       const copy = JSON.parse(JSON.stringify({ planName: source.planName, days: source.days }));
+      copy.schedule = Array.isArray(source.schedule) && source.schedule.length === 7 ? [...source.schedule] : Array(7).fill(null);
       editor = { plan: copy, view: dayIdx === null ? 'plan' : 'day', dayIdx: dayIdx || 0, exIdx: 0, dirty: !!plan };
       closeSheet('plan-sheet');
       renderEditor();
@@ -5708,12 +5844,24 @@ Reply with ONLY valid JSON in exactly this format, no other text:
             ${plan.days.map((d, i) => `
               <div class="ed-row" onclick="editorGo('day', ${i})" role="button">
                 <span class="day-dot" style="background:${dayColor(`Day ${i + 1}`)}"></span>
-                <span class="row-main"><span class="ed-row-title">Day ${i + 1} · ${escapeHtml(d.title || 'Untitled')}</span><span class="row-sub">${d.exercises.length} exercise${d.exercises.length === 1 ? '' : 's'}</span></span>
-                ${moveButtons(`editorChange(() => editorMove(editor.plan.days, ${i}, -1))`, `editorChange(() => editorMove(editor.plan.days, ${i}, 1))`, i === 0, i === plan.days.length - 1)}
+                <span class="row-main"><span class="ed-row-title">Day ${i + 1} · ${escapeHtml(d.title || 'Untitled')}</span><span class="row-sub">${d.exercises.length} exercise${d.exercises.length === 1 ? '' : 's'}${plan.schedule.some(v => v === i) ? ` · ${WEEKDAYS.filter((_, w) => plan.schedule[w] === i).join(', ')}` : ''}</span></span>
+                ${moveButtons(`editorChange(() => editorMoveDay(${i}, -1))`, `editorChange(() => editorMoveDay(${i}, 1))`, i === 0, i === plan.days.length - 1)}
                 <span class="chevron">${icon('chevron')}</span>
               </div>`).join('')}
           </div>
-          ${plan.days.length < 7 ? '<button class="btn btn-secondary" onclick="editorAddDay()">+ Add Day</button>' : ''}`;
+          ${plan.days.length < 7 ? '<button class="btn btn-secondary" onclick="editorAddDay()">+ Add Day</button>' : ''}
+          <div class="ed-label">Weekly schedule</div>
+          <div class="ed-list">
+            ${WEEKDAY_NAMES.map((name, w) => `
+              <label class="ed-row sched-row">
+                <span class="row-main"><span class="ed-row-title">${name}</span></span>
+                <select onchange="editorSetWeekday(${w}, this.value)" aria-label="${name}">
+                  <option value="" ${plan.schedule[w] === null ? 'selected' : ''}>Rest</option>
+                  ${plan.days.map((d, i) => `<option value="${i}" ${plan.schedule[w] === i ? 'selected' : ''}>Day ${i + 1} · ${escapeHtml(d.title || 'Untitled')}</option>`).join('')}
+                </select>
+              </label>`).join('')}
+          </div>
+          <div class="ed-hint">The app opens on today's day. Set every day to Rest to rotate through the days in order instead.</div>`;
         foot.innerHTML = `
           <button class="btn btn-positive" onclick="saveEditedPlan()">Save Plan</button>
           <button class="btn btn-plain" onclick="editor.saved = true; closeSheet('editor-sheet')">Cancel</button>`;
@@ -5776,6 +5924,20 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       }
     }
 
+    function editorSetWeekday(w, value) {
+      editor.plan.schedule[w] = value === '' ? null : Number(value);
+      editor.dirty = true;
+      renderEditor();
+    }
+
+    // Swap two days and keep each weekday pointing at the same workout
+    function editorMoveDay(i, delta) {
+      const j = i + delta;
+      if (j < 0 || j >= editor.plan.days.length) return;
+      editorMove(editor.plan.days, i, delta);
+      editor.plan.schedule = editor.plan.schedule.map(v => (v === i ? j : v === j ? i : v));
+    }
+
     function normalizeReps(v) {
       const t = String(v).trim().replace(/(\d)\s*-\s*(\d)/, '$1–$2');
       if (!t) return '8–12 reps';
@@ -5795,7 +5957,9 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       const d = editor.plan.days[editor.dayIdx];
       if (d.exercises.length && !await confirmSheet(`Delete ${d.title || `Day ${editor.dayIdx + 1}`}?`, `Its ${d.exercises.length} exercises will be removed from the plan. Saved workouts are not affected.`, 'Delete Day', true)) return;
       // Leave the day view before removing it, so nothing renders a day that's gone
-      editor.plan.days.splice(editor.dayIdx, 1);
+      const gone = editor.dayIdx;
+      editor.plan.days.splice(gone, 1);
+      editor.plan.schedule = editor.plan.schedule.map(v => (v === gone ? null : v !== null && v > gone ? v - 1 : v));
       editor.dirty = true;
       editorGo('plan');
     }
@@ -5854,7 +6018,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       if (anyUnsavedSets() && !await confirmSheet('Save plan changes?', 'Unsaved sets in your current workout will be cleared. Saved history is kept.', 'Save Plan')) return;
       const days = plan.days.map((d, i) => ({ day: `Day ${i + 1}`, title: (d.title || '').trim() || `Day ${i + 1}`, exercises: d.exercises }));
       editor.saved = true;
-      setActivePlan({ planName: plan.planName, days });
+      const schedule = plan.schedule.some(v => Number.isInteger(v)) ? plan.schedule : undefined;
+      setActivePlan({ planName: plan.planName, days, ...(schedule ? { schedule } : {}) });
       closeSheet('editor-sheet');
       editor = null;
       renderSettings();
@@ -5865,7 +6030,9 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 
     // "Build my own": start from empty days, keeping the current plan until it's saved
     function buildOwnPlan(days = 3) {
-      openPlanEditor({ plan: { planName: 'My Plan', days: Array.from({ length: days }, (_, i) => ({ day: `Day ${i + 1}`, title: `Day ${i + 1}`, exercises: [] })) } });
+      const n = Math.min(7, Math.max(1, days));
+      const weekdays = DEFAULT_WEEKDAYS[n];
+      openPlanEditor({ plan: { planName: 'My Plan', schedule: defaultSchedule(n), days: weekdays.map((w, i) => ({ day: `Day ${i + 1}`, title: WEEKDAY_NAMES[w], exercises: [] })) } });
       setTimeout(() => editorGo('day', 0), 80);
     }
 
