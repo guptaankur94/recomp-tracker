@@ -381,7 +381,7 @@
 
 
     .add-set-btn { margin-top: 4px; min-height: 40px; font-size: var(--t-body); color: var(--text-2); }
-    .add-custom-ex-btn { margin: 10px 0 12px; color: var(--text-2); }
+    .add-custom-ex-btn { margin: 10px 0 14px; color: var(--text-2); }
     .finish-workout-btn { margin: 4px 0 8px; }
     .finish-workout-btn { margin-bottom: 20px; }
 
@@ -930,7 +930,18 @@
     .choice-main { display: block; }
     .choice-sub { display: block; font-size: var(--t-footnote); color: var(--text-2); font-weight: 400; margin-top: 2px; }
     .choice.add-new { color: var(--accent); font-weight: 600; }
-    #add-ex-list .choice { padding-top: 10px; padding-bottom: 10px; }
+    .add-ex-list { display: flex; flex-direction: column; }
+    .add-ex-list .choice { padding-top: 10px; padding-bottom: 10px; background: var(--surface-2); }
+    .add-ex-list > .choice:first-child { border-radius: var(--r-md); }
+    .add-ex-list .choice + .choice { border-top: 0.5px solid var(--separator); }
+    .add-ex-list .choice-section + .choice { border-radius: var(--r-md) var(--r-md) 0 0; }
+    .add-ex-list .choice:has(+ .choice-section), .add-ex-list .choice:last-child { border-radius: 0 0 var(--r-md) var(--r-md); }
+    .add-ex-list .choice-section + .choice:has(+ .choice-section), .add-ex-list .choice-section + .choice:last-child { border-radius: var(--r-md); }
+    .choice-section { display: flex; align-items: center; gap: 8px; font-size: var(--t-footnote); font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 18px 4px 8px; }
+    .day-dots { display: inline-flex; gap: 3px; flex-shrink: 0; }
+    .day-dots .day-dot { margin-right: 0; }
+    .save-log-btn { margin-top: 4px; }
+    .save-log-hint { font-size: var(--t-footnote); color: var(--text-2); text-align: center; margin: 6px 12px 14px; line-height: 1.35; }
     .empty-list { padding: 24px 16px; text-align: center; color: var(--text-2); font-size: var(--t-body); }
 
     /* Personal records */
@@ -1344,12 +1355,29 @@
       <div class="sheet-head">
         <div class="sheet-grabber"></div>
         <div class="sheet-title" id="add-ex-title">Add Exercise</div>
+      </div>
+      <div id="add-ex-browse">
         <div class="search-field">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-          <input type="text" id="add-ex-search" placeholder="Search, or type a new exercise" autocomplete="off" oninput="renderAddExerciseList()">
+          <input type="text" id="add-ex-search" placeholder="Search your plan and history" autocomplete="off" oninput="renderAddExerciseList()">
+        </div>
+        <div class="add-ex-list" id="add-ex-list"></div>
+      </div>
+      <div id="add-ex-form" hidden>
+        <div class="form-grid">
+          <label class="full">Name<input type="text" id="cx-name" placeholder="e.g. Cable Crunch" autocomplete="off"></label>
+          <label>Sets
+            <select id="cx-sets"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+          </label>
+          <label>Reps<input type="text" id="cx-reps" placeholder="8–12" value="8–12"></label>
+          <label>Weight target<input type="text" id="cx-weight" placeholder="e.g. 20 kg"></label>
+          <label>Rest<select id="cx-rest"></select></label>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" onclick="submitCustomExercise()">Add Exercise</button>
+          <button class="btn btn-secondary" onclick="showAddExerciseForm(false)">Back</button>
         </div>
       </div>
-      <div class="choice-list" id="add-ex-list"></div>
     </div>
   </div>
 
@@ -2054,72 +2082,117 @@
       return readJSON(`custom_ex_d${dayIdx}`, []);
     }
 
-    /* Add exercise sheet: every exercise from the plan (and its alternatives) and history, recent ones first */
-    function exerciseCatalog() {
-      const map = new Map();
-      const add = (ex, source) => {
-        if (!ex || !ex.name) return;
-        const k = ex.name.toLowerCase();
-        if (!map.has(k)) map.set(k, { name: ex.name, template: ex, source, lastUsed: 0, count: 0 });
-      };
-      programData.forEach(d => d.exercises.forEach(ex => {
-        add(ex, d.day);
-        if (ex.alt) add(ex.alt, `${d.day} alternative`);
-      }));
-      getHistory().forEach(s => s.exercises.forEach(e => {
-        const k = e.name.toLowerCase();
-        if (!map.has(k)) map.set(k, { name: e.name, template: null, source: '', lastUsed: 0, count: 0 });
-        const item = map.get(k);
-        item.count++;
-        item.lastUsed = Math.max(item.lastUsed, s.id);
-      }));
-      return [...map.values()].sort((a, b) => b.lastUsed - a.lastUsed || a.name.localeCompare(b.name));
-    }
-
+    /* Add exercise sheet: your plan grouped by day (an exercise brings its sets, reps, weight, rest, cue and
+       alternative with it), then other exercises you've logged, or a custom one */
     function addCustomExercise() {
-      const search = document.getElementById('add-ex-search');
-      search.value = '';
+      document.getElementById('add-ex-search').value = '';
+      showAddExerciseForm(false);
       renderAddExerciseList();
       openSheet('add-ex-sheet');
+    }
+
+    function planExerciseSub(ex) {
+      return `${ex.sets} × ${ex.repTarget} · ${ex.weightTarget} · rest ${fmtClock(ex.rest)}`;
     }
 
     function renderAddExerciseList() {
       const query = document.getElementById('add-ex-search').value.trim();
       const q = query.toLowerCase();
       const inDay = new Set(getAllExercisesForDay(currentDayIdx).map(e => e.name.toLowerCase()));
-      const items = exerciseCatalog().filter(it => !inDay.has(it.name.toLowerCase()) && (!q || it.name.toLowerCase().includes(q)));
-      const exact = items.some(it => it.name.toLowerCase() === q);
-      const list = document.getElementById('add-ex-list');
-      const rows = [];
-      if (query && !exact) {
-        rows.push(`<button class="choice add-new" data-new="1"><span class="choice-main">+ Add “${escapeHtml(query)}”</span></button>`);
-      }
-      items.slice(0, 60).forEach((it, i) => {
-        const t = it.template;
-        const sub = [
-          t ? `${t.sets} × ${t.repTarget}` : '',
-          it.count ? `done ${it.count}×` : (it.source || '')
-        ].filter(Boolean).join(' · ');
-        rows.push(`<button class="choice" data-idx="${i}"><span><span class="choice-main">${escapeHtml(it.name)}</span>${sub ? `<span class="choice-sub">${escapeHtml(sub)}</span>` : ''}</span></button>`);
+      const matches = name => !inDay.has(name.toLowerCase()) && (!q || name.toLowerCase().includes(q));
+      const picks = [];
+      const row = (pick, main, sub, alt) => {
+        picks.push(pick);
+        return `<button class="choice" data-idx="${picks.length - 1}"><span><span class="choice-main">${escapeHtml(main)}</span>${sub ? `<span class="choice-sub">${escapeHtml(sub)}</span>` : ''}${alt ? `<span class="choice-sub">Alt: ${escapeHtml(alt)}</span>` : ''}</span></button>`;
+      };
+
+      let html = `<button class="choice add-new" data-custom="1"><span class="choice-main">+ ${query ? `Create “${escapeHtml(query)}”` : 'Custom exercise'}</span></button>`;
+      let found = 0;
+
+      // From the plan, grouped by day; the current day's own exercises are already on screen
+      const planNames = new Set();
+      programData.forEach((d, i) => {
+        const rows = [];
+        d.exercises.forEach(ex => {
+          planNames.add(ex.name.toLowerCase());
+          if (ex.alt) planNames.add(ex.alt.name.toLowerCase());
+          if (i === currentDayIdx) return;
+          if (matches(ex.name)) rows.push(row({ template: ex, fromDay: d.day }, ex.name, planExerciseSub(ex), ex.alt && ex.alt.name));
+          else if (q && ex.alt && matches(ex.alt.name)) rows.push(row({ template: { ...ex.alt, alt: { ...ex, alt: undefined } }, fromDay: d.day }, ex.alt.name, planExerciseSub(ex.alt), ex.name));
+        });
+        if (rows.length) {
+          found += rows.length;
+          html += `<div class="choice-section"><span class="day-dot" style="background:${dayColor(d.day)}"></span>${escapeHtml(d.day)} · ${escapeHtml(d.title)}</div>${rows.join('')}`;
+        }
       });
-      list.innerHTML = rows.length ? rows.join('') : '<div class="empty-list">Type a name to add a new exercise.</div>';
-      list.hidden = false;
+
+      // Logged before but not in the current plan, most recent first
+      const recent = new Map();
+      getHistory().forEach(s => s.exercises.forEach(e => {
+        const k = e.name.toLowerCase();
+        if (planNames.has(k) || !matches(e.name)) return;
+        const item = recent.get(k) || { name: e.name, count: 0 };
+        item.count++;
+        recent.set(k, item);
+      }));
+      if (recent.size) {
+        found += recent.size;
+        html += '<div class="choice-section">Other exercises you\'ve logged</div>' +
+          [...recent.values()].slice(0, 30).map(it => row({ template: { name: it.name } }, it.name, `done ${it.count}×`)).join('');
+      }
+      if (q && !found) html += '<div class="empty-list">Nothing in your plan or history matches. Create it as a custom exercise.</div>';
+
+      const list = document.getElementById('add-ex-list');
+      list.innerHTML = html;
       list.querySelectorAll('.choice').forEach(btn => btn.addEventListener('click', () => {
-        if (btn.dataset.new) addExerciseToDay({ name: query, template: null });
-        else addExerciseToDay(items[Number(btn.dataset.idx)]);
+        if (btn.dataset.custom) {
+          document.getElementById('cx-name').value = query;
+          showAddExerciseForm(true);
+        } else {
+          addExerciseToDay(picks[Number(btn.dataset.idx)]);
+        }
       }));
     }
 
     document.getElementById('add-ex-search').addEventListener('keydown', e => {
       if (e.key !== 'Enter') return;
-      const first = document.querySelector('#add-ex-list .choice');
+      const first = document.querySelector('#add-ex-list .choice:not(.add-new)') || document.querySelector('#add-ex-list .choice');
       if (first) first.click();
     });
 
-    function addExerciseToDay(item) {
-      const name = String(item.name).trim();
+    function showAddExerciseForm(show) {
+      document.getElementById('add-ex-browse').hidden = show;
+      document.getElementById('add-ex-form').hidden = !show;
+      document.getElementById('add-ex-title').textContent = show ? 'Custom Exercise' : 'Add Exercise';
+      if (show) {
+        document.getElementById('cx-rest').innerHTML = REST_CHOICES.map(sec => `<option value="${sec}" ${sec === 90 ? 'selected' : ''}>${fmtClock(sec)}</option>`).join('');
+        setTimeout(() => document.getElementById('cx-name').focus(), 50);
+      }
+    }
+
+    function submitCustomExercise() {
+      const nameEl = document.getElementById('cx-name');
+      const name = nameEl.value.trim();
+      if (!name) {
+        fieldError(nameEl, 'Give the exercise a name.');
+        return;
+      }
+      const reps = document.getElementById('cx-reps').value.trim() || '8–12';
+      addExerciseToDay({
+        template: {
+          name,
+          sets: parseInt(document.getElementById('cx-sets').value, 10) || 3,
+          repTarget: /reps|s\b|hold|failure/i.test(reps) ? reps : `${reps.replace('-', '–')} reps`,
+          weightTarget: document.getElementById('cx-weight').value.trim() || 'Custom',
+          rest: parseInt(document.getElementById('cx-rest').value, 10) || 90
+        }
+      });
+    }
+
+    function addExerciseToDay({ template, fromDay = null }) {
+      const t = template || {};
+      const name = String(t.name || '').trim();
       if (!name) return;
-      const t = item.template || {};
       const custom = {
         name,
         repTarget: t.repTarget || '8–12 reps',
@@ -2129,14 +2202,19 @@
         isCustom: true
       };
       if (t.cue) custom.cue = t.cue;
+      if (t.alt && typeof t.alt === 'object' && t.alt.name) {
+        custom.alt = { name: t.alt.name, repTarget: t.alt.repTarget, weightTarget: t.alt.weightTarget, rest: t.alt.rest, sets: t.alt.sets };
+        if (t.alt.cue) custom.alt.cue = t.alt.cue;
+      }
+      if (fromDay) custom.fromDay = fromDay;
       const customs = getCustomExercises(currentDayIdx);
       customs.push(custom);
       localStorage.setItem(`custom_ex_d${currentDayIdx}`, JSON.stringify(customs));
       closeSheet('add-ex-sheet');
-      document.getElementById('add-ex-search').blur();
+      document.activeElement && document.activeElement.blur();
       renderWorkout();
       haptic('success');
-      showToast(`${name} added`);
+      showToast(`${name} added${fromDay ? ` from ${fromDay}` : ''}`);
       // Bring the new card into view
       setTimeout(() => {
         const cards = document.querySelectorAll('#workout-content .ex-card');
@@ -2147,9 +2225,13 @@
 
     async function openDayMenu() {
       const actions = [{ label: 'Add exercise', value: 'add' }];
-      if (dayHasDraft(currentDayIdx)) actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
+      if (dayHasDraft(currentDayIdx)) {
+        actions.push({ label: 'Save to today\'s log', value: 'log' });
+        actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
+      }
       const choice = await actionSheet(programData[currentDayIdx].day, programData[currentDayIdx].title, actions);
       if (choice === 'add') addCustomExercise();
+      else if (choice === 'log') saveToTodaysLog();
       else if (choice === 'clear') discardDraft();
     }
 
@@ -2159,8 +2241,9 @@
       if (!ex || !ex.isCustom) return;
       if (!await confirmSheet(`Remove ${ex.name}?`, 'Any sets entered for it will be removed too.', 'Remove', true)) return;
 
-      // Set data is keyed by exercise position, so later extras shift down one slot.
+      // Set data and swap choices are keyed by exercise position, so later extras shift down one slot.
       removeKeysMatching(new RegExp(`^(active_)?d${currentDayIdx}_e${exIdx}_`));
+      localStorage.removeItem(swapKey(currentDayIdx, exIdx));
       for (let e = exIdx + 1; e < allExercises.length; e++) {
         moveExerciseKeys(currentDayIdx, e, e - 1);
       }
@@ -2179,20 +2262,27 @@
         localStorage.setItem(`${m[1] || ''}d${dayIdx}_e${toIdx}_${m[2]}`, localStorage.getItem(key));
         localStorage.removeItem(key);
       });
+      const swap = localStorage.getItem(swapKey(dayIdx, fromIdx));
+      localStorage.removeItem(swapKey(dayIdx, fromIdx));
+      if (swap !== null) localStorage.setItem(swapKey(dayIdx, toIdx), swap);
     }
 
     function swapKey(dayIdx, exIdx) {
       return `swap_d${dayIdx}_e${exIdx}`;
     }
 
+    // Plan exercises plus ones added for today; any exercise with an alternative can be swapped.
     function getAllExercisesForDay(dayIdx) {
-      const base = programData[dayIdx].exercises.map((ex, exIdx) => {
-        const swapped = localStorage.getItem(swapKey(dayIdx, exIdx)) === 'true';
-        return swapped && ex.alt
-          ? { ...ex.alt, swapped: true, otherName: ex.name }
-          : { ...ex, swapped: false, otherName: ex.alt ? ex.alt.name : null };
-      });
-      const customs = getCustomExercises(dayIdx);
+      const withSwap = (ex, exIdx, extra) => {
+        const alt = ex.alt && typeof ex.alt === 'object' && ex.alt.name ? ex.alt : null;
+        const swapped = alt && localStorage.getItem(swapKey(dayIdx, exIdx)) === 'true';
+        return swapped
+          ? { ...alt, ...extra, swapped: true, otherName: ex.name }
+          : { ...ex, ...extra, swapped: false, otherName: alt ? alt.name : null };
+      };
+      const base = programData[dayIdx].exercises.map((ex, exIdx) => withSwap(ex, exIdx, {}));
+      const customs = getCustomExercises(dayIdx).map((ex, j) =>
+        withSwap(ex, base.length + j, { isCustom: true, ...(ex.fromDay ? { fromDay: ex.fromDay } : {}) }));
       return [...base, ...customs];
     }
 
@@ -2279,15 +2369,171 @@
       return t.length > 16 ? `${t.slice(0, 15)}…` : t;
     }
 
+    /* One workout per date. Everything saved on a date goes into that date's session, whichever day tab it
+       came from; each exercise remembers its plan day, and the session is named after those days. */
+    function dayNumber(label) {
+      const m = String(label).match(/(\d+)/);
+      return m ? parseInt(m[1], 10) : 99;
+    }
+
+    function sessionDayLabels(s) {
+      return s.days && s.days.length ? s.days : [s.day];
+    }
+
+    // The plan day this session mostly trained (by sets); drives "Up next"
+    function mainDayLabel(s) {
+      const counts = {};
+      s.exercises.forEach(e => { const d = e.day || s.day; counts[d] = (counts[d] || 0) + e.sets.length; });
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1] || dayNumber(a[0]) - dayNumber(b[0]))[0];
+      return top ? top[0] : s.day;
+    }
+
+    function applySessionDays(session) {
+      session.exercises.forEach(e => { if (!e.day) e.day = sessionDayLabels(session)[0]; });
+      const days = [...new Set(session.exercises.map(e => e.day))].sort((a, b) => dayNumber(a) - dayNumber(b));
+      const titleOf = label => (programData.find(d => d.day === label) || {}).title || '';
+      session.days = days;
+      if (days.length === 1) {
+        session.day = days[0];
+        session.title = titleOf(days[0]) || session.title;
+      } else {
+        session.day = days.join(' + ');
+        session.title = days.map(d => shortDayTitle(titleOf(d) || d)).join(' + ');
+      }
+    }
+
+    // Collect the logged sets on a day tab, as saved-history exercises
+    function collectDaySets(dayIdx) {
+      const dayData = programData[dayIdx];
+      const logged = [];
+      getAllExercisesForDay(dayIdx).forEach((ex, exIdx) => {
+        const performedSets = [];
+        for (let s = 1; s <= getSetCount(dayIdx, exIdx, ex.sets); s++) {
+          const weightVal = parseFloat(localStorage.getItem(setKey(dayIdx, exIdx, s, 'w')) || '0');
+          const repsVal = parseInt(localStorage.getItem(setKey(dayIdx, exIdx, s, 'r')) || '0', 10);
+          const drops = getDrops(dayIdx, exIdx, s)
+            .map(d => ({ weight: parseFloat(d.w) || 0, reps: parseInt(d.r, 10) || 0 }))
+            .filter(d => d.reps > 0);
+          if (repsVal > 0 || weightVal > 0 || drops.length > 0) {
+            const setObj = { set: s, weight: weightVal, reps: repsVal, restSec: getSetRest(dayIdx, exIdx, s, ex) };
+            if (drops.length) setObj.drops = drops;
+            const pr = localStorage.getItem(setKey(dayIdx, exIdx, s, 'pr'));
+            if (pr && localStorage.getItem(setKey(dayIdx, exIdx, s, 'done')) === 'true') setObj.pr = pr;
+            performedSets.push(setObj);
+          }
+        }
+        if (performedSets.length) logged.push({ name: ex.name, day: ex.fromDay || dayData.day, sets: performedSets });
+      });
+      return logged;
+    }
+
+    // Save a day tab's sets into the session for the date they were started on. Returns that session, or null.
+    function saveDayToLog(dayIdx) {
+      const loggedExercises = collectDaySets(dayIdx);
+      if (!loggedExercises.length) return null;
+
+      // Date the workout by when logging started, so late sessions and next-morning saves land on the right day.
+      const nowMs = Date.now();
+      const meta = readJSON(draftMetaKey(dayIdx), null);
+      const startedAt = meta && meta.startedAt <= nowMs ? meta.startedAt : nowMs;
+      const workoutDate = localDateStr(new Date(startedAt));
+      // Time from the first logged set to now, when it was logged in one sitting today; parts add up
+      const elapsedSec = Math.round((nowMs - startedAt) / 1000);
+      const durationSec = meta && workoutDate === localDateStr(new Date(nowMs)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
+
+      const history = getHistory();
+      let session = history.find(s => sessionDateStr(s) === workoutDate);
+      if (session) {
+        loggedExercises.forEach(ex => {
+          const target = session.exercises.find(e => e.name === ex.name);
+          if (target) {
+            const offset = Math.max(0, ...target.sets.map(s => s.set));
+            ex.sets.forEach((s, i) => target.sets.push({ ...s, set: offset + i + 1 }));
+          } else {
+            session.exercises.push(ex);
+          }
+        });
+        session.updatedAt = nowMs;
+        if (durationSec) session.durationSec = (session.durationSec || 0) + durationSec;
+      } else {
+        session = {
+          id: startedAt,
+          dateStr: workoutDate,
+          displayDate: new Date(startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          day: programData[dayIdx].day,
+          title: programData[dayIdx].title,
+          exercises: loggedExercises,
+          ...(durationSec ? { durationSec } : {})
+        };
+        history.unshift(session);
+      }
+      applySessionDays(session);
+      saveHistory(history);
+      clearDayDraft(dayIdx);
+      return session;
+    }
+
+    function todaysSession() {
+      const today = localDateStr(new Date());
+      return getHistory().find(s => sessionDateStr(s) === today) || null;
+    }
+
+    // Save this tab's sets and keep going: the rest timer and today's workout carry on.
+    function saveToTodaysLog() {
+      const session = saveDayToLog(currentDayIdx);
+      if (!session) {
+        haptic('error');
+        showToast('Log at least one set first', { type: 'error' });
+        return;
+      }
+      haptic('success');
+      expandedDone.clear();
+      initNav();
+      renderWorkout();
+      const n = session.exercises.length;
+      showToast(`Saved. Today: ${n} exercise${n === 1 ? '' : 's'} logged`, { actionLabel: 'Finish', onAction: finishAndSaveWorkout });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Save whatever is on this tab, then show the summary for the whole day's workout.
+    function finishAndSaveWorkout() {
+      const hadDraft = dayHasDraft(currentDayIdx);
+      const saved = saveDayToLog(currentDayIdx);
+      const session = saved || todaysSession();
+      if (!session) {
+        haptic('error');
+        showToast('Log at least one set before saving', { type: 'error' });
+        return;
+      }
+      if (hadDraft && !saved) clearDayDraft(currentDayIdx);
+      haptic('success');
+      stopRestTimer();
+      expandedDone.clear();
+      initNav();
+      renderWorkout();
+      const previous = getHistory().find(s => s.day === session.day && s.id < session.id) || null;
+      showSummary({ session, previous });
+    }
+
+    // A plan day counts as done this week once at least half of its exercises have been logged.
     function daysDoneThisWeek() {
       const weekStart = startOfWeek(new Date()).getTime();
-      return new Set(getHistory().filter(s => s.id >= weekStart).map(s => s.day));
+      const logged = {};
+      getHistory().filter(s => s.id >= weekStart).forEach(s => s.exercises.forEach(e => {
+        const d = e.day || sessionDayLabels(s)[0];
+        (logged[d] = logged[d] || new Set()).add(e.name);
+      }));
+      const done = new Set();
+      programData.forEach(d => {
+        if (logged[d.day] && logged[d.day].size >= Math.ceil(d.exercises.length / 2)) done.add(d.day);
+      });
+      return done;
     }
 
     function upNextDayIdx() {
       const last = getHistory()[0];
       if (!last) return 0;
-      const idx = programData.findIndex(d => d.day === last.day);
+      const idx = programData.findIndex(d => d.day === mainDayLabel(last));
       return idx === -1 ? 0 : (idx + 1) % programData.length;
     }
 
@@ -2348,11 +2594,16 @@
       return meta && localDateStr(new Date(meta.startedAt)) === localDateStr(new Date()) ? meta : null;
     }
 
+    // Time already saved to today's workout plus time on the current tab
+    function sessionElapsedSec() {
+      const today = todaysSession();
+      const meta = sessionStartedToday(currentDayIdx);
+      return (today && today.durationSec || 0) + (meta ? (Date.now() - meta.startedAt) / 1000 : 0);
+    }
+
     function updateSessionBar() {
       const el = document.getElementById('session-elapsed');
-      if (!el) return;
-      const meta = readJSON(draftMetaKey(currentDayIdx), null);
-      if (meta) el.textContent = fmtClock((Date.now() - meta.startedAt) / 1000);
+      if (el) el.textContent = fmtClock(sessionElapsedSec());
     }
     setInterval(updateSessionBar, 1000);
 
@@ -2399,15 +2650,17 @@
       const history = getHistory();
       const progress = dayProgress(currentDayIdx);
 
-      // Sticky bar while a workout is under way today
+      // Sticky bar while a workout is under way today (this tab, or parts already saved to today's log)
       const todayMeta = sessionStartedToday(currentDayIdx);
+      const today = todaysSession();
+      const loggedSets = today ? sessionStats(today).sets : 0;
       let html = '';
-      if (todayMeta && progress.done > 0) {
+      if ((todayMeta && progress.done > 0) || today) {
         html += `
           <div class="session-bar">
             <div class="session-stat">
-              <span class="session-time" id="session-elapsed">${fmtClock((Date.now() - todayMeta.startedAt) / 1000)}</span>
-              <span class="session-sets">${progress.done}/${progress.total} sets</span>
+              <span class="session-time" id="session-elapsed">${fmtClock(sessionElapsedSec())}</span>
+              <span class="session-sets">${progress.done}/${progress.total} sets${loggedSets ? ` · ${loggedSets} saved` : ''}</span>
             </div>
             <div class="session-track"><div class="session-fill" style="width: ${Math.round(progress.done / Math.max(1, progress.total) * 100)}%"></div></div>
             <button class="btn btn-positive btn-sm" onclick="finishAndSaveWorkout()">Finish</button>
@@ -2477,7 +2730,7 @@
         html += `
           <div class="card ex-card">
             <div class="ex-header">
-              <div class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? '<span class="ex-tag">Extra</span>' : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
+              <div class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? `<span class="ex-tag">${ex.fromDay && ex.fromDay !== data.day ? `From ${escapeHtml(ex.fromDay.replace('Day ', 'D'))}` : 'Extra'}</span>` : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
               <span class="ex-progress ${allDone ? 'all-done' : ''}">${doneSets}/${totalSets}</span>
               ${allDone ? `<button class="icon-btn plain" onclick="collapseExercise(${exIdx})" aria-label="Collapse">${icon('chevronUp')}</button>` : ''}
               <button class="icon-btn plain ${showInfo ? 'on' : ''}" onclick="toggleExInfo(${exIdx})" aria-label="Exercise details" aria-expanded="${showInfo}">${icon('infoCircle', 1.8)}</button>
@@ -2584,7 +2837,9 @@
 
       html += `
         <button class="btn btn-secondary add-custom-ex-btn" onclick="addCustomExercise()">+ Add Exercise</button>
-        <button class="btn btn-positive finish-workout-btn" onclick="finishAndSaveWorkout()">Finish & Save ${data.day} Workout</button>
+        ${hasDraft ? `<button class="btn btn-secondary save-log-btn" onclick="saveToTodaysLog()">Save to Today's Log</button>
+        <div class="save-log-hint">Saves these sets and keeps your workout going, so you can add exercises from another day.</div>` : ''}
+        <button class="btn btn-positive finish-workout-btn" onclick="finishAndSaveWorkout()">Finish Workout</button>
       `;
       main.innerHTML = html;
       syncWakeLock();
@@ -3047,14 +3302,16 @@
     }
 
     /* Workout summary: shown after Finish */
-    function showSummary({ dayData, startedAt, durationSec, exercises, previous }) {
+    function showSummary({ session, previous }) {
+      const exercises = session.exercises;
+      const durationSec = session.durationSec || 0;
       const sets = exercises.reduce((n, e) => n + e.sets.length, 0);
       const volume = exercises.reduce((sum, e) => sum + e.sets.reduce((v, s) => v + setVolume(s), 0), 0);
       const prs = [];
       exercises.forEach(e => e.sets.forEach(s => { if (s.pr) prs.push({ name: e.name, set: s }); }));
 
-      document.getElementById('summary-title').textContent = `${dayData.day} · ${dayData.title}`;
-      document.getElementById('summary-date').textContent = new Date(startedAt).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      document.getElementById('summary-title').textContent = `${session.day} · ${session.title}`;
+      document.getElementById('summary-date').textContent = new Date(session.id).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
       const tile = (val, lbl, cls = '') => `<div class="summary-tile ${cls}"><div class="summary-tile-val">${val}</div><div class="summary-tile-lbl">${lbl}</div></div>`;
       document.getElementById('summary-grid').innerHTML =
         tile(durationSec ? `${Math.max(1, Math.round(durationSec / 60))}<small>min</small>` : '—', 'Duration') +
@@ -3068,8 +3325,8 @@
         if (prevVolume > 0) {
           const pct = Math.round((volume - prevVolume) / prevVolume * 100);
           compare = pct === 0
-            ? `Same volume as your last ${escapeHtml(dayData.day)} on ${shortDate(previous.id)}`
-            : `<strong class="${pct > 0 ? 'up' : ''}">${pct > 0 ? '+' : ''}${pct}% volume</strong> vs your last ${escapeHtml(dayData.day)} on ${shortDate(previous.id)}`;
+            ? `Same volume as your last ${escapeHtml(session.day)} on ${shortDate(previous.id)}`
+            : `<strong class="${pct > 0 ? 'up' : ''}">${pct > 0 ? '+' : ''}${pct}% volume</strong> vs your last ${escapeHtml(session.day)} on ${shortDate(previous.id)}`;
         }
       }
       document.getElementById('summary-compare').innerHTML = compare;
@@ -3131,105 +3388,6 @@
       }).join('');
     }
 
-    function finishAndSaveWorkout() {
-      const dayData = programData[currentDayIdx];
-      const allExercises = getAllExercisesForDay(currentDayIdx);
-
-      const loggedExercises = [];
-
-      allExercises.forEach((ex, exIdx) => {
-        const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
-        const performedSets = [];
-
-        for (let s = 1; s <= totalSets; s++) {
-          const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
-          const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
-
-          const weightVal = parseFloat(localStorage.getItem(wKey) || '0');
-          const repsVal = parseInt(localStorage.getItem(rKey) || '0', 10);
-          const restVal = getSetRest(currentDayIdx, exIdx, s, ex);
-          const drops = getDrops(currentDayIdx, exIdx, s)
-            .map(d => ({ weight: parseFloat(d.w) || 0, reps: parseInt(d.r, 10) || 0 }))
-            .filter(d => d.reps > 0);
-
-          if (repsVal > 0 || weightVal > 0 || drops.length > 0) {
-            const setObj = {
-              set: s,
-              weight: weightVal,
-              reps: repsVal,
-              restSec: restVal
-            };
-            if (drops.length) setObj.drops = drops;
-            const pr = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr'));
-            if (pr && localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true') setObj.pr = pr;
-            performedSets.push(setObj);
-          }
-        }
-
-        if (performedSets.length > 0) {
-          loggedExercises.push({
-            name: ex.name,
-            sets: performedSets
-          });
-        }
-      });
-
-      if (loggedExercises.length === 0) {
-        haptic('error');
-        showToast('Log at least one set before saving', { type: 'error' });
-        return;
-      }
-
-      // Date the workout by when logging started, so late sessions and next-morning saves land on the right day.
-      const nowMs = Date.now();
-      const meta = readJSON(draftMetaKey(currentDayIdx), null);
-      const startedAt = meta && meta.startedAt <= nowMs ? meta.startedAt : nowMs;
-      const workoutDate = localDateStr(new Date(startedAt));
-      const dateLabel = new Date(startedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-      const history = getHistory();
-      // Saving the same program day again on the same date adds to that session instead of duplicating it.
-      const existing = history.find(s => s.day === dayData.day && sessionDateStr(s) === workoutDate);
-      const previous = history.find(s => s.day === dayData.day && sessionDateStr(s) !== workoutDate && s.id < startedAt);
-      // Time from the first logged set to now, when the workout was logged in one sitting today
-      const elapsedSec = Math.round((nowMs - startedAt) / 1000);
-      const durationSec = meta && workoutDate === localDateStr(new Date(nowMs)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
-
-      if (existing) {
-        loggedExercises.forEach(ex => {
-          const target = existing.exercises.find(e => e.name === ex.name);
-          if (target) {
-            const offset = Math.max(0, ...target.sets.map(s => s.set));
-            ex.sets.forEach((s, i) => target.sets.push({ ...s, set: offset + i + 1 }));
-          } else {
-            existing.exercises.push(ex);
-          }
-        });
-        existing.updatedAt = nowMs;
-        if (durationSec) existing.durationSec = (existing.durationSec || 0) + durationSec;
-      } else {
-        history.unshift({
-          id: startedAt,
-          dateStr: workoutDate,
-          displayDate: new Date(startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-          day: dayData.day,
-          title: dayData.title,
-          exercises: loggedExercises,
-          ...(durationSec ? { durationSec } : {})
-        });
-      }
-      saveHistory(history);
-      haptic('success');
-
-      // Reset this day's set inputs, drop sets, added/removed set counts and custom exercises
-      clearDayDraft(currentDayIdx);
-      stopRestTimer();
-      expandedDone.clear();
-      initNav();
-      renderWorkout();
-      showSummary({ dayData, startedAt, durationSec, exercises: loggedExercises, previous });
-      if (existing) showToast(`Added to your ${dayData.day} session from ${dateLabel}`, { type: 'info' });
-    }
 
     function switchView(viewName) {
       if (viewName !== currentView) window.scrollTo(0, 0);
@@ -3320,7 +3478,7 @@
         calHtml += `
           <div class="cal-date ${sessions ? 'active-logged' : ''} ${dStr === todayStr ? 'today' : ''}" ${sessions ? `onclick="openDateSessions('${dStr}')" role="button" aria-label="${escapeHtml(label)}"` : ''}>
             <span>${d}</span>
-            ${sessions ? `<span class="cal-dots">${sessions.slice(0, 3).map(s => `<i style="background:${dayColor(s.day)}"></i>`).join('')}</span>` : ''}
+            ${sessions ? `<span class="cal-dots">${sessions.flatMap(sessionDayLabels).slice(0, 3).map(d => `<i style="background:${dayColor(d)}"></i>`).join('')}</span>` : ''}
           </div>`;
       }
       document.getElementById('calendar-grid').innerHTML = calHtml;
@@ -3363,7 +3521,7 @@
               ].filter(Boolean).join(' · ');
               return `
                 <div class="history-card" onclick="openSessionModal(${item.id})">
-                  <span class="day-dot" style="background:${dayColor(item.day)}"></span>
+                  <span class="day-dots">${sessionDayLabels(item).map(d => `<span class="day-dot" style="background:${dayColor(d)}"></span>`).join('')}</span>
                   <div class="history-main">
                     <div class="history-info-title">${escapeHtml(item.day)} · ${escapeHtml(item.title)}</div>
                     <div class="history-info-date">${meta}</div>
