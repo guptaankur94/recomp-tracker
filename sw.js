@@ -1,39 +1,60 @@
-// Offline support: network-first so pushed updates show up on the next open,
-// falling back to the cached copy when there's no signal (e.g. in the gym).
-const CACHE = 'recomp-v1';
+// Offline support: cache-first so the app opens instantly even on weak gym signal.
+// Each request also refreshes the cache in the background; when a newer index.html
+// arrives, open pages are told so they can offer a reload.
+const CACHE = 'recomp-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
-const NETWORK_TIMEOUT_MS = 3000;
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' }))))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const stale = (await caches.keys()).filter(k => k !== CACHE);
+    await Promise.all(stale.map(k => caches.delete(k)));
+    await self.clients.claim();
+    // An older version was installed, so pages still showing it should offer a reload.
+    if (stale.length) notifyUpdate();
+  })());
 });
 
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  event.respondWith(networkFirst(req));
+  event.respondWith(cacheFirst(event));
 });
 
-async function networkFirst(req) {
+async function cacheFirst(event) {
+  const req = event.request;
   const cache = await caches.open(CACHE);
-  const network = fetch(req).then(res => {
-    if (res.ok) cache.put(req, res.clone());
+  const cached = (await cache.match(req, { ignoreSearch: true })) ||
+    (req.mode === 'navigate' ? await cache.match('./index.html') : undefined);
+  // The cached body is handed to the page, so compare against a copy.
+  const cachedCopy = cached && req.mode === 'navigate' ? cached.clone() : null;
+
+  const refresh = fetch(req, { cache: 'no-cache' }).then(async res => {
+    if (!res.ok) return res;
+    if (cachedCopy) {
+      const [oldText, newText] = await Promise.all([cachedCopy.text(), res.clone().text()]);
+      if (oldText !== newText) {
+        await cache.put(req, res.clone());
+        notifyUpdate();
+        return res;
+      }
+    }
+    await cache.put(req, res.clone());
     return res;
   });
 
-  const cached = (await cache.match(req, { ignoreSearch: true })) ||
-    (req.mode === 'navigate' ? await cache.match('./index.html') : undefined);
-  if (!cached) return network;
+  if (!cached) return refresh;
+  event.waitUntil(refresh.catch(() => {}));
+  return cached;
+}
 
-  const timeout = new Promise(resolve => setTimeout(() => resolve(cached), NETWORK_TIMEOUT_MS));
-  return Promise.race([network.catch(() => cached), timeout]);
+async function notifyUpdate() {
+  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  windows.forEach(client => client.postMessage({ type: 'update-available' }));
 }
