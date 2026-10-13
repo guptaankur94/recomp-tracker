@@ -60,6 +60,7 @@
       padding: env(safe-area-inset-top) 16px calc(110px + env(safe-area-inset-bottom)) 16px;
       touch-action: manipulation;
     }
+    body.resting { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
     button { font-family: inherit; cursor: pointer; }
     strong { font-weight: 600; color: var(--text); }
 
@@ -110,24 +111,30 @@
     }
     .nav-tabs::-webkit-scrollbar { display: none; }
     .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: var(--surface);
       border: none;
       color: var(--text-2);
-      padding: 9px 16px;
+      padding: 9px 14px;
       border-radius: 999px;
       font-weight: 600;
       font-size: var(--t-body);
       white-space: nowrap;
     }
     .tab-btn.active { background: var(--text); color: #000; }
+    .tab-title { font-weight: 500; }
+    .tab-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #000; display: inline-flex; align-items: center; justify-content: center; }
+    .tab-check svg { width: 10px; height: 10px; }
+    .tab-next { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+    .tab-btn.active .tab-next { color: #1E8E3E; }
     .tab-dot {
       display: inline-block;
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: var(--orange);
-      margin-left: 5px;
-      vertical-align: middle;
     }
 
     /* Buttons: four types (primary, secondary, plain, danger) plus a positive "finish" variant */
@@ -181,6 +188,7 @@
 
     /* Exercise cards */
     .day-header { margin: 4px 0 14px; }
+    .day-kicker { font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); margin-bottom: 2px; }
     .day-title { font-size: var(--t-title); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
     .card {
       background: var(--surface);
@@ -190,26 +198,52 @@
     }
     .ex-header {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 4px;
+      align-items: center;
+      gap: 6px;
+      margin: -4px -6px 2px 0;
     }
+    .ex-header .ex-name { flex: 1; min-width: 0; }
     .ex-name { font-size: var(--t-headline); font-weight: 600; line-height: 1.3; }
-    .ex-tag { font-size: var(--t-caption); font-weight: 600; color: var(--text-2); background: var(--surface-2); border-radius: 6px; padding: 2px 6px; margin-left: 4px; vertical-align: middle; }
-    .ex-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .ex-last { font-size: var(--t-footnote); color: var(--text-2); margin-bottom: 2px; }
-    .cue-text {
-      font-size: var(--t-footnote);
-      color: var(--text-2);
-      margin: 8px 0 4px;
-      padding: 8px 10px;
+    .ex-meta { font-size: var(--t-footnote); color: var(--text-2); }
+    .ex-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 11px;
+      border: none;
+      border-radius: 999px;
       background: var(--surface-2);
-      border-radius: var(--r-sm);
-      line-height: 1.35;
+      color: var(--text);
+      font-size: var(--t-footnote);
+      font-weight: 600;
     }
-    .cue-text strong { color: var(--orange); font-weight: 600; }
-
+    .chip svg { width: 14px; height: 14px; color: var(--text-2); }
+    .chip.tip { background: var(--accent-soft); color: var(--accent); }
+    .chip.tip svg { color: var(--accent); }
+    .icon-btn.on { color: var(--text); }
+    .ex-info {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+      font-size: var(--t-footnote);
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .ex-info-row { display: flex; gap: 10px; color: var(--text); }
+    .ex-info-label { color: var(--text-2); min-width: 72px; flex-shrink: 0; }
+    .ex-info .btn-sm { background: var(--surface-3); }
+    .ex-info .btn-danger { background: var(--danger-soft); }
+    .ex-card.collapsed { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+    .ex-card.collapsed .collapsed-text { flex: 1; min-width: 0; }
+    .ex-card.collapsed .ex-name { font-size: var(--t-body); }
+    .just-collapsed { animation: setPop 0.35s ease-out; }
+    .ex-tag { font-size: var(--t-caption); font-weight: 600; color: var(--text-2); background: var(--surface-2); border-radius: 6px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
     /* Sets */
     .set-container { margin-top: 12px; }
     .set-block {
@@ -220,12 +254,13 @@
       border: 1px solid transparent;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
-    .set-row { display: flex; align-items: center; gap: 5px; }
-    .input-group { display: flex; align-items: center; gap: 4px; }
+    .set-row { display: flex; align-items: center; gap: 6px; }
+    .input-group { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+    .input-group input[type="number"] { flex: 1; min-width: 0; width: auto; }
 
     input[type="number"] {
-      width: 48px;
-      height: 38px;
+      width: 56px;
+      height: 48px;
       border-radius: var(--r-sm);
       border: 1px solid transparent;
       background: var(--surface-3);
@@ -238,7 +273,6 @@
       -moz-appearance: textfield;
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type="number"].rest-input { width: 42px; color: var(--text-2); font-size: var(--t-body); }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-2); }
     input::placeholder, textarea::placeholder { color: var(--text-3); }
     .unit-label { font-size: var(--t-caption); color: var(--text-2); }
@@ -254,17 +288,45 @@
     }
     .delete-set-btn svg { width: 16px; height: 16px; }
 
-    .set-hint {
-      font-size: var(--t-footnote);
-      color: var(--text-2);
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--separator);
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
+    .set-more-btn {
+      width: 32px;
+      height: 40px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      color: var(--text-3);
+      padding: 0;
     }
-    .set-tip { font-size: var(--t-footnote); color: var(--accent); margin-top: 4px; font-weight: 600; }
+    .set-more-btn svg { width: 20px; height: 20px; }
+    .locked-row .set-more-btn { margin-left: auto; height: 30px; }
+
+    /* Swipe a set left to delete */
+    .set-swipe { position: relative; margin-bottom: 8px; border-radius: var(--r-md); overflow: hidden; touch-action: pan-y; }
+    .set-swipe .set-block { margin-bottom: 0; position: relative; z-index: 1; transition: transform 0.25s var(--ease-out), background-color 0.2s ease, border-color 0.2s ease; }
+    .set-swipe .set-block.dragging { transition: none; }
+    .set-block:not(.completed) { background: var(--surface-2); }
+    .swipe-delete {
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 20px;
+      border: none;
+      background: var(--danger);
+      color: #FFF;
+      font-size: var(--t-body);
+      font-weight: 600;
+    }
+    .set-swipe:not(.open):not(:active) .swipe-delete { visibility: hidden; }
+    .set-swipe:has(.dragging) .swipe-delete { visibility: visible; }
+    .set-swipe.armed .swipe-delete { padding-right: 28px; }
+    .swipe-delete:active { transform: none; opacity: 1; }
+
 
     .add-set-btn { margin-top: 4px; min-height: 40px; font-size: var(--t-body); color: var(--text-2); }
     .add-custom-ex-btn { margin: 10px 0 12px; color: var(--text-2); }
@@ -274,7 +336,7 @@
     /* Set commit feel */
     .set-num {
       min-width: 20px;
-      height: 38px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -284,10 +346,9 @@
       font-size: var(--t-body);
     }
     .check-btn {
-      width: 40px;
+      width: 52px;
       flex-shrink: 0;
-      height: 38px;
-      margin-left: auto;
+      height: 48px;
       border-radius: var(--r-sm);
       border: none;
       background: var(--surface-3);
@@ -300,7 +361,7 @@
     .check-btn svg { width: 20px; height: 20px; }
     .check-btn:active { background: var(--accent); color: #000; }
     .set-block.completed {
-      background: var(--accent-soft);
+      background: #1F3526; /* opaque mix of surface and green, so the swipe action can't show through */
       border-color: rgba(48, 209, 88, 0.35);
       cursor: pointer;
     }
@@ -321,9 +382,6 @@
     .locked-val { font-size: var(--t-headline); font-weight: 700; }
     .locked-unit { font-size: var(--t-caption); font-weight: 600; color: var(--text-2); margin-left: 2px; }
     .locked-x { color: var(--text-2); font-weight: 600; }
-    .locked-rest { margin-left: auto; font-size: var(--t-footnote); color: var(--text-2); }
-    .edit-hint { color: var(--text-3); display: inline-flex; }
-    .edit-hint svg { width: 14px; height: 14px; }
     .locked-drop { font-size: var(--t-footnote); color: var(--orange); margin: 6px 0 0 34px; }
     .ex-progress {
       font-size: var(--t-caption);
@@ -347,15 +405,27 @@
       border-left: 2px solid var(--orange);
     }
     .drop-label { font-size: var(--t-footnote); font-weight: 600; color: var(--orange); min-width: 54px; }
-    .add-drop-btn {
-      background: none;
-      border: none;
-      color: var(--orange);
-      font-size: var(--t-footnote);
-      font-weight: 600;
-      padding: 8px 0 0 0;
+    .drop-row input[type="number"] { height: 40px; }
+    /* Sticky bar while a workout is in progress */
+    .session-bar {
+      position: sticky;
+      top: env(safe-area-inset-top);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 -16px 12px;
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.92);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--separator);
     }
-    .set-block.completed .add-drop-btn { margin-left: 34px; padding-top: 4px; }
+    .session-stat { display: flex; flex-direction: column; line-height: 1.15; min-width: 64px; }
+    .session-time { font-size: var(--t-headline); font-weight: 700; }
+    .session-sets { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; }
+    .session-track { flex: 1; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+    .session-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s var(--ease-out); }
 
     /* Unsaved workout banner */
     .draft-banner {
@@ -578,34 +648,81 @@
     .nav-item.active { color: var(--text); }
     .nav-item.active .fill-active { fill: currentColor; }
 
-    /* Rest timer banner */
-    #timer-banner {
+    /* Rest timer: floating pill + full-screen view */
+    .rest-pill {
       position: fixed;
-      bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom) + 8px);
+      bottom: calc(var(--tab-bar-h) + env(safe-area-inset-bottom) + 10px);
       left: 12px; right: 12px;
-      background: var(--surface-2);
-      color: var(--text);
-      padding: 10px 10px 10px 16px;
-      border-radius: var(--r-lg);
-      display: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(44, 44, 46, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      padding: 8px 8px 8px 10px;
+      border-radius: 999px;
       z-index: 850;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      animation: pillIn 0.35s var(--ease-out);
     }
-    .timer-flex { display: flex; justify-content: space-between; align-items: center; }
-    .timer-text { font-size: var(--t-headline); font-weight: 700; }
-    .timer-label { font-size: var(--t-caption); color: var(--accent); font-weight: 700; letter-spacing: 0.06em; margin-right: 6px; }
-    .timer-btn-group { display: flex; gap: 6px; }
+    .rest-ring { width: 44px; height: 44px; flex-shrink: 0; transform: rotate(-90deg); }
+    .rest-ring-bg { fill: none; stroke: var(--surface-3); stroke-width: 4; }
+    .rest-ring-fg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s ease; }
+    .rest-pill.ending .rest-ring-fg { stroke: var(--orange); }
+    .rest-pill-text { flex: 1; min-width: 0; }
+    .rest-pill-time { font-size: var(--t-title); font-weight: 700; line-height: 1.1; }
+    .rest-pill-next { font-size: var(--t-footnote); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .timer-ctrl-btn {
       background: var(--surface-3);
       color: var(--text);
       border: none;
-      min-width: 48px;
-      height: 34px;
-      padding: 0 10px;
+      min-width: 52px;
+      height: 40px;
+      padding: 0 12px;
       border-radius: 999px;
-      font-size: var(--t-footnote);
+      font-size: var(--t-body);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    @keyframes pillIn { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    .rest-full {
+      position: fixed;
+      inset: 0;
+      z-index: 950;
+      background: rgba(0, 0, 0, 0.94);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 24px);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.25s ease, transform 0.3s var(--ease-out);
+    }
+    .rest-full.open { opacity: 1; transform: none; }
+    .rest-full-close { position: absolute; top: calc(env(safe-area-inset-top) + 14px); left: 16px; width: 40px; height: 40px; }
+    .rest-full-label { font-size: var(--t-footnote); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+    .rest-full-ring { position: relative; width: min(72vw, 280px); aspect-ratio: 1; }
+    .rest-full-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .rest-full-ring .rest-ring-bg, .rest-full-ring .rest-ring-fg { stroke-width: 10; }
+    .rest-full-time { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 700; letter-spacing: -0.02em; }
+    .rest-full-next { font-size: var(--t-headline); color: var(--text-2); margin-top: 22px; text-align: center; min-height: 22px; }
+    .rest-full-actions { display: flex; gap: 14px; margin: 28px 0 16px; }
+    .rest-adjust {
+      width: 96px;
+      height: 64px;
+      border-radius: var(--r-lg);
+      border: none;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: var(--t-headline);
       font-weight: 600;
     }
+    .rest-skip { max-width: 220px; }
 
     /* Bottom sheets (session details, text, confirm/input dialogs) */
     .sheet-overlay {
@@ -648,6 +765,25 @@
       resize: vertical;
     }
     .sheet input[type="text"] { width: 100%; height: 46px; font-size: var(--t-headline); }
+
+    .choice-list { display: flex; flex-direction: column; background: var(--surface-2); border-radius: var(--r-md); overflow: hidden; margin-top: 4px; }
+    .choice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      padding: 0 16px;
+      border: none;
+      background: none;
+      color: var(--text);
+      font-size: var(--t-headline);
+      text-align: left;
+    }
+    .choice + .choice { border-top: 0.5px solid var(--separator); }
+    .choice.selected { color: var(--accent); font-weight: 600; }
+    .choice.destructive { color: var(--danger); }
+    .choice svg { width: 18px; height: 18px; }
+    .choice:active { transform: none; background: var(--surface-3); }
 
     /* Toast */
     .toast {
@@ -694,7 +830,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
-      .sheet, .toast, .sheet-overlay { transition: none; }
+      .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
+      .rest-pill, .just-collapsed { animation: none; }
     }
   </style>
 </head>
@@ -877,6 +1014,7 @@
         <div class="sheet-sub" id="dialog-message"></div>
       </div>
       <input type="text" id="dialog-input" autocomplete="off" hidden>
+      <div class="choice-list" id="dialog-choices" hidden></div>
       <div class="sheet-actions">
         <button class="btn" id="dialog-confirm-btn"></button>
         <button class="btn btn-secondary" id="dialog-cancel-btn">Cancel</button>
@@ -890,16 +1028,38 @@
     <button class="toast-action" id="toast-action" hidden></button>
   </div>
 
-  <!-- Rest Timer Banner -->
-  <div id="timer-banner">
-    <div class="timer-flex">
-      <div class="timer-text"><span class="timer-label">REST</span><span id="timer-seconds">0</span>s</div>
-      <div class="timer-btn-group">
-        <button class="timer-ctrl-btn" onclick="adjustTimerSeconds(-10)">−10s</button>
-        <button class="timer-ctrl-btn" onclick="adjustTimerSeconds(10)">+10s</button>
-        <button class="timer-ctrl-btn" onclick="stopRestTimer(true)">Skip</button>
-      </div>
+  <!-- Rest timer: a floating pill that expands to a full-screen timer -->
+  <div class="rest-pill" id="rest-pill" hidden onclick="expandRestTimer()" role="timer" aria-live="off">
+    <svg class="rest-ring" viewBox="0 0 44 44" aria-hidden="true">
+      <circle class="rest-ring-bg" cx="22" cy="22" r="19"/>
+      <circle class="rest-ring-fg" cx="22" cy="22" r="19" data-c="119.38" stroke-dasharray="119.38"/>
+    </svg>
+    <div class="rest-pill-text">
+      <div class="rest-pill-time" id="rest-time">0:00</div>
+      <div class="rest-pill-next" id="rest-next"></div>
     </div>
+    <button class="timer-ctrl-btn" onclick="event.stopPropagation(); adjustRestTimer(15)">+15</button>
+    <button class="timer-ctrl-btn" onclick="event.stopPropagation(); stopRestTimer()">Skip</button>
+  </div>
+
+  <div class="rest-full" id="rest-full" hidden>
+    <button class="icon-btn rest-full-close" onclick="collapseRestTimer()" aria-label="Minimise timer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="rest-full-label">Rest</div>
+    <div class="rest-full-ring">
+      <svg viewBox="0 0 240 240" aria-hidden="true">
+        <circle class="rest-ring-bg" cx="120" cy="120" r="108"/>
+        <circle class="rest-ring-fg" cx="120" cy="120" r="108" data-c="678.58" stroke-dasharray="678.58"/>
+      </svg>
+      <div class="rest-full-time" id="rest-time-full">0:00</div>
+    </div>
+    <div class="rest-full-next" id="rest-next-full"></div>
+    <div class="rest-full-actions">
+      <button class="rest-adjust" onclick="adjustRestTimer(-15)">−15s</button>
+      <button class="rest-adjust" onclick="adjustRestTimer(15)">+15s</button>
+    </div>
+    <button class="btn btn-secondary rest-skip" onclick="stopRestTimer()">Skip Rest</button>
   </div>
 
   <!-- Bottom tab bar -->
@@ -1033,8 +1193,6 @@
     let programData = DEFAULT_PLAN;
 
     let currentDayIdx = 0;
-    let timerCountdown = null;
-    let timerSecondsRemaining = 0;
     let calendarMonthOffset = 0;
     let justCompletedBlock = null;
     let progressExercise = null;
@@ -1086,7 +1244,13 @@
       pencil: '<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>',
       chevron: '<path d="M9 6l6 6-6 6"/>',
       swap: '<path d="M7 4L4 7l3 3M4 7h12M17 20l3-3-3-3M20 17H8"/>',
-      info: '<path d="M12 11v6M12 7.5v.01"/>'
+      info: '<path d="M12 11v6M12 7.5v.01"/>',
+      infoCircle: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.01"/>',
+      chevronUp: '<path d="M6 15l6-6 6 6"/>',
+      chevronDown: '<path d="M6 9l6 6 6-6"/>',
+      clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+      arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+      more: '<path d="M5.5 12h.01M12 12h.01M18.5 12h.01" stroke-width="3.2"/>'
     };
 
     function icon(name, strokeWidth = 2.2) {
@@ -1198,7 +1362,7 @@
     /* Confirm and text-input dialogs, shown as a bottom sheet. Both return a Promise. */
     let dialogResolve = null;
 
-    function openDialog({ title, message = '', confirmLabel = 'OK', destructive = false, input = null }) {
+    function openDialog({ title, message = '', confirmLabel = 'OK', destructive = false, input = null, choices = null }) {
       if (dialogResolve) dialogResolve(null);
       document.getElementById('dialog-title').textContent = title;
       const msg = document.getElementById('dialog-message');
@@ -1212,6 +1376,20 @@
       field.value = '';
       field.placeholder = input ? input.placeholder || '' : '';
       field.classList.remove('invalid');
+      const list = document.getElementById('dialog-choices');
+      list.hidden = !choices;
+      confirmBtn.hidden = !!choices;
+      list.innerHTML = '';
+      (choices || []).forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = `choice ${choice.destructive ? 'destructive' : ''} ${choice.selected ? 'selected' : ''}`;
+        btn.innerHTML = `<span>${escapeHtml(choice.label)}</span>${choice.selected ? icon('check', 2.6) : ''}`;
+        btn.addEventListener('click', () => {
+          finishDialog(choice.value);
+          closeSheet('dialog-sheet');
+        });
+        list.appendChild(btn);
+      });
       const overlay = document.getElementById('dialog-sheet');
       overlay.onSheetClose = () => finishDialog(null);
       openSheet('dialog-sheet');
@@ -1246,6 +1424,11 @@
 
     function confirmSheet(title, message, confirmLabel = 'Confirm', destructive = false) {
       return openDialog({ title, message, confirmLabel, destructive }).then(v => v === true);
+    }
+
+    // Resolves to the chosen action's value, or null when dismissed
+    function actionSheet(title, message, choices) {
+      return openDialog({ title, message, choices });
     }
 
     function inputSheet(title, placeholder, confirmLabel = 'Add') {
@@ -1513,32 +1696,195 @@
       const key = swapKey(currentDayIdx, exIdx);
       if (localStorage.getItem(key) === 'true') localStorage.removeItem(key);
       else localStorage.setItem(key, 'true');
+      haptic('light');
       renderWorkout();
     }
 
-    // Double progression: once the top of the rep range is hit, add load (or reps/tempo when the DB is maxed).
+    function setKey(dayIdx, exIdx, setNum, field) {
+      return `active_d${dayIdx}_e${exIdx}_s${setNum}_${field}`;
+    }
+
+    /* Rest is chosen once per exercise. Per-set rest values from older drafts still win. */
+    function exRestKey(dayIdx, exIdx) {
+      return `active_d${dayIdx}_e${exIdx}_rest`;
+    }
+
+    function getExerciseRest(dayIdx, exIdx, ex) {
+      const v = parseInt(localStorage.getItem(exRestKey(dayIdx, exIdx)), 10);
+      return v > 0 ? v : ex.rest;
+    }
+
+    function getSetRest(dayIdx, exIdx, setNum, ex) {
+      const v = parseInt(localStorage.getItem(setKey(dayIdx, exIdx, setNum, 'rest')), 10);
+      return v > 0 ? v : getExerciseRest(dayIdx, exIdx, ex);
+    }
+
+    function fmtClock(sec) {
+      const s = Math.max(0, Math.round(sec));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    }
+
+    const REST_CHOICES = [45, 60, 90, 120, 150, 180, 240];
+
+    async function pickRest(exIdx) {
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+      const current = getExerciseRest(currentDayIdx, exIdx, ex);
+      const choice = await actionSheet('Rest between sets', ex.name,
+        REST_CHOICES.map(sec => ({ label: fmtClock(sec), value: sec, selected: sec === current })));
+      if (!choice) return;
+      localStorage.setItem(exRestKey(currentDayIdx, exIdx), String(choice));
+      removeKeysMatching(new RegExp(`^active_d${currentDayIdx}_e${exIdx}_s\\d+_rest$`));
+      renderWorkout();
+    }
+
+    /* Double progression: once the top of the rep range is hit, add load (or slow the tempo when the DB is maxed). */
+    function repRange(ex) {
+      const m = String(ex.repTarget).match(/(\d+)\s*[–-]\s*(\d+)/);
+      return m ? [parseInt(m[1], 10), parseInt(m[2], 10)] : null;
+    }
+
+    function isDumbbellExercise(ex) {
+      return /\bDBs?\b/.test(ex.name) || /\bDBs?\b/.test(ex.weightTarget);
+    }
+
+    function lastSetFor(last, setNum) {
+      return last ? (last.sets.find(x => x.set === setNum) || last.sets[setNum - 1] || null) : null;
+    }
+
+    // What to aim for in a set, based on the same set last time. Used for the placeholders and
+    // as the values a set takes when ✓ is tapped with empty fields.
+    function suggestSet(ex, lastSet) {
+      if (!lastSet) return null;
+      const range = repRange(ex);
+      if (range && lastSet.weight > 0 && lastSet.reps >= range[1] && !isDumbbellExercise(ex)) {
+        return { w: lastSet.weight + 2.5, r: range[0] };
+      }
+      return { w: lastSet.weight, r: lastSet.reps };
+    }
+
     function progressionTip(ex, lastSet) {
-      const range = String(ex.repTarget).match(/(\d+)\s*[–-]\s*(\d+)/);
-      if (!range || !lastSet || !lastSet.weight || lastSet.reps < parseInt(range[2], 10)) return '';
-      const isDumbbell = /\bDBs?\b/.test(ex.name) || /\bDBs?\b/.test(ex.weightTarget);
-      return isDumbbell
-        ? '↑ go heavier, or slow the lowering to 4s'
-        : `↑ try ${fmtNum(lastSet.weight + 2.5)} kg`;
+      const range = repRange(ex);
+      if (!range || !lastSet || !lastSet.weight || lastSet.reps < range[1]) return '';
+      return isDumbbellExercise(ex) ? 'Go heavier or slower' : `Try ${fmtNum(lastSet.weight + 2.5)} kg`;
+    }
+
+    /* Day tabs: short names, done-this-week ticks and the next day in the rotation */
+    function shortDayTitle(title) {
+      const t = String(title).replace(/\bfocus\b/i, '').split(/\s*[&,–—+/]\s*|\s+-\s+/)[0].trim();
+      return t.length > 16 ? `${t.slice(0, 15)}…` : t;
+    }
+
+    function daysDoneThisWeek() {
+      const weekStart = startOfWeek(new Date()).getTime();
+      return new Set(getHistory().filter(s => s.id >= weekStart).map(s => s.day));
+    }
+
+    function upNextDayIdx() {
+      const last = getHistory()[0];
+      if (!last) return 0;
+      const idx = programData.findIndex(d => d.day === last.day);
+      return idx === -1 ? 0 : (idx + 1) % programData.length;
     }
 
     function initNav() {
       const navContainer = document.getElementById('day-nav-tabs');
+      const done = daysDoneThisWeek();
+      const next = upNextDayIdx();
       navContainer.innerHTML = programData.map((d, i) => `
         <button class="tab-btn ${i === currentDayIdx ? 'active' : ''}" onclick="selectDay(${i})">
-          ${d.day}${dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>' : ''}
+          ${done.has(d.day) ? `<span class="tab-check">${icon('check', 3)}</span>` : ''}
+          <span>D${i + 1}</span><span class="tab-title">${escapeHtml(shortDayTitle(d.title))}</span>
+          ${dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>' : (i === next && !done.has(d.day) ? '<span class="tab-next">Next</span>' : '')}
         </button>
       `).join('');
     }
 
+    // Scroll the day tabs sideways (only) so the selected one is fully visible
+    function scrollActiveTab() {
+      const nav = document.getElementById('day-nav-tabs');
+      const active = nav.querySelector('.tab-btn.active');
+      if (!active) return;
+      const left = active.offsetLeft - nav.offsetLeft - 16;
+      const right = left + active.offsetWidth + 32;
+      if (left < nav.scrollLeft) nav.scrollLeft = left;
+      else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
+    }
+
     function selectDay(idx) {
       currentDayIdx = idx;
+      haptic('light');
       initNav();
+      scrollActiveTab();
       renderWorkout();
+    }
+
+    // Open on the day with unsaved sets, otherwise the next one in the rotation.
+    function initialDayIdx() {
+      const withDraft = programData.findIndex((_, i) => dayHasDraft(i));
+      return withDraft !== -1 ? withDraft : upNextDayIdx();
+    }
+
+    /* Workout progress across the selected day */
+    function dayProgress(dayIdx) {
+      let done = 0;
+      let total = 0;
+      getAllExercisesForDay(dayIdx).forEach((ex, exIdx) => {
+        const count = getSetCount(dayIdx, exIdx, ex.sets);
+        total += count;
+        for (let s = 1; s <= count; s++) {
+          if (localStorage.getItem(setKey(dayIdx, exIdx, s, 'done')) === 'true') done++;
+        }
+      });
+      return { done, total };
+    }
+
+    function sessionStartedToday(dayIdx) {
+      const meta = readJSON(draftMetaKey(dayIdx), null);
+      return meta && localDateStr(new Date(meta.startedAt)) === localDateStr(new Date()) ? meta : null;
+    }
+
+    function updateSessionBar() {
+      const el = document.getElementById('session-elapsed');
+      if (!el) return;
+      const meta = readJSON(draftMetaKey(currentDayIdx), null);
+      if (meta) el.textContent = fmtClock((Date.now() - meta.startedAt) / 1000);
+    }
+    setInterval(updateSessionBar, 1000);
+
+    // Finished exercises collapse to one line; these are the ones the user has opened again.
+    const expandedDone = new Set();
+    const infoOpen = new Set();
+
+    function exStateKey(exIdx) {
+      return `${currentDayIdx}:${exIdx}`;
+    }
+
+    function expandExercise(exIdx) {
+      expandedDone.add(exStateKey(exIdx));
+      haptic('light');
+      renderWorkout();
+    }
+
+    function collapseExercise(exIdx) {
+      expandedDone.delete(exStateKey(exIdx));
+      renderWorkout();
+    }
+
+    function toggleExInfo(exIdx) {
+      const key = exStateKey(exIdx);
+      if (infoOpen.has(key)) infoOpen.delete(key);
+      else infoOpen.add(key);
+      renderWorkout();
+    }
+
+    function bestDraftSet(exIdx, totalSets) {
+      let best = null;
+      for (let s = 1; s <= totalSets; s++) {
+        const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'w'))) || 0;
+        const r = parseInt(localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'r')), 10) || 0;
+        if (!best || w > best.w || (w === best.w && r > best.r)) best = { w, r };
+      }
+      return best;
     }
 
     function renderWorkout() {
@@ -1546,10 +1892,28 @@
       const data = programData[currentDayIdx];
       const allExercises = getAllExercisesForDay(currentDayIdx);
       const history = getHistory();
+      const progress = dayProgress(currentDayIdx);
 
-      let html = `
+      // Sticky bar while a workout is under way today
+      const todayMeta = sessionStartedToday(currentDayIdx);
+      let html = '';
+      if (todayMeta && progress.done > 0) {
+        html += `
+          <div class="session-bar">
+            <div class="session-stat">
+              <span class="session-time" id="session-elapsed">${fmtClock((Date.now() - todayMeta.startedAt) / 1000)}</span>
+              <span class="session-sets">${progress.done}/${progress.total} sets</span>
+            </div>
+            <div class="session-track"><div class="session-fill" style="width: ${Math.round(progress.done / Math.max(1, progress.total) * 100)}%"></div></div>
+            <button class="btn btn-positive btn-sm" onclick="finishAndSaveWorkout()">Finish</button>
+          </div>
+        `;
+      }
+
+      html += `
         <div class="day-header">
-          <div class="day-title">${data.day}: ${data.title}</div>
+          <div class="day-kicker">${data.day}${currentDayIdx === upNextDayIdx() ? ' · Up next' : ''}</div>
+          <div class="day-title">${escapeHtml(data.title)}</div>
         </div>
       `;
 
@@ -1577,112 +1941,126 @@
         const last = getLastPerformance(ex.name, history);
         let doneSets = 0;
         for (let s = 1; s <= totalSets; s++) {
-          if (localStorage.getItem(`active_d${currentDayIdx}_e${exIdx}_s${s}_done`) === 'true') doneSets++;
+          if (localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true') doneSets++;
+        }
+        const allDone = doneSets === totalSets;
+
+        // Finished exercise: one summary line, tap to open
+        if (allDone && !expandedDone.has(exStateKey(exIdx))) {
+          const best = bestDraftSet(exIdx, totalSets);
+          html += `
+            <div class="card ex-card collapsed ${justCompletedBlock && justCompletedBlock.startsWith(`block_d${currentDayIdx}_e${exIdx}_`) ? 'just-collapsed' : ''}" onclick="expandExercise(${exIdx})">
+              <span class="locked-num">${icon('check', 3)}</span>
+              <div class="collapsed-text">
+                <div class="ex-name">${escapeHtml(ex.name)}</div>
+                <div class="ex-meta">${totalSets} set${totalSets === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}</div>
+              </div>
+              <span class="chevron">${icon('chevron')}</span>
+            </div>
+          `;
+          return;
         }
 
+        const rest = getExerciseRest(currentDayIdx, exIdx, ex);
+        const tip = progressionTip(ex, lastSetFor(last, 1));
+        const lastBest = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
+        const showInfo = infoOpen.has(exStateKey(exIdx));
+
         html += `
-          <div class="card">
+          <div class="card ex-card">
             <div class="ex-header">
-              <span class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? '<span class="ex-tag">Extra</span>' : ''}<span class="ex-progress ${doneSets === totalSets ? 'all-done' : ''}">${doneSets}/${totalSets}</span></span>
-              <div class="ex-actions">
-                ${ex.isCustom
-                  ? `<button class="btn btn-danger btn-sm" onclick="removeCustomExercise(${exIdx})">Remove</button>`
-                  : (ex.otherName ? `<button class="btn btn-secondary btn-sm" onclick="toggleSwap(${exIdx})">${icon('swap')}${ex.swapped ? 'Original' : 'Swap'}</button>` : '')}
-              </div>
+              <div class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? '<span class="ex-tag">Extra</span>' : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
+              <span class="ex-progress ${allDone ? 'all-done' : ''}">${doneSets}/${totalSets}</span>
+              ${allDone ? `<button class="icon-btn plain" onclick="collapseExercise(${exIdx})" aria-label="Collapse">${icon('chevronUp')}</button>` : ''}
+              <button class="icon-btn plain ${showInfo ? 'on' : ''}" onclick="toggleExInfo(${exIdx})" aria-label="Exercise details" aria-expanded="${showInfo}">${icon('infoCircle', 1.8)}</button>
             </div>
-            ${ex.isCustom || !ex.otherName ? '' : `<div class="ex-last">${ex.swapped ? `Swapped from ${escapeHtml(ex.otherName)}` : `Alt: ${escapeHtml(ex.otherName)}`}</div>`}
-            ${ex.cue ? `<div class="cue-text"><strong>Cue</strong> · ${escapeHtml(ex.cue)}</div>` : ''}
-            ${last ? `<div class="ex-last">Last done ${shortDate(last.session.id)}</div>` : ''}
+            <div class="ex-meta">${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
+            <div class="ex-chips">
+              <button class="chip" onclick="pickRest(${exIdx})">${icon('clock', 2)}Rest ${fmtClock(rest)}</button>
+              ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}
+            </div>
+            ${showInfo ? `
+              <div class="ex-info">
+                ${ex.cue ? `<div class="ex-info-row"><span class="ex-info-label">Cue</span><span>${escapeHtml(ex.cue)}</span></div>` : ''}
+                ${last ? `<div class="ex-info-row"><span class="ex-info-label">Last</span><span>${shortDate(last.session.id)} · best ${fmtSetLine(lastBest)}</span></div>` : ''}
+                ${ex.otherName ? `
+                  <div class="ex-info-row"><span class="ex-info-label">${ex.swapped ? 'Original' : 'Alternative'}</span><span>${escapeHtml(ex.otherName)}</span></div>
+                  <button class="btn btn-secondary btn-sm" onclick="toggleSwap(${exIdx})">${icon('swap')}Swap to ${escapeHtml(ex.otherName)}</button>` : ''}
+                ${ex.isCustom ? `<button class="btn btn-danger btn-sm" onclick="removeCustomExercise(${exIdx})">Remove exercise</button>` : ''}
+                ${!ex.cue && !last && !ex.otherName && !ex.isCustom ? '<div class="ex-info-row">No details for this exercise yet.</div>' : ''}
+              </div>` : ''}
             <div class="set-container">
         `;
 
         for (let s = 1; s <= totalSets; s++) {
-          const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
-          const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
-          const restKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_rest`;
-          const doneKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_done`;
+          const wKey = setKey(currentDayIdx, exIdx, s, 'w');
+          const rKey = setKey(currentDayIdx, exIdx, s, 'r');
           const blockId = `block_d${currentDayIdx}_e${exIdx}_s${s}`;
-
           const valW = localStorage.getItem(wKey) || '';
           const valR = localStorage.getItem(rKey) || '';
-          const valRest = localStorage.getItem(restKey) || ex.rest;
-          const isDone = localStorage.getItem(doneKey) === 'true';
+          const isDone = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true';
           const drops = getDrops(currentDayIdx, exIdx, s);
-          const lastSet = last ? (last.sets.find(x => x.set === s) || last.sets[s - 1]) : null;
-          const lastDrops = lastSet && lastSet.drops ? lastSet.drops.length : 0;
-          const tip = progressionTip(ex, lastSet);
+          const suggestion = suggestSet(ex, lastSetFor(last, s));
+          const canDelete = totalSets > 1;
+          const swipe = canDelete ? `data-swipe="${exIdx},${s}"` : '';
+          const moreBtn = `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>`;
 
           if (isDone) {
             // Committed set: a solid, locked line. Tap to edit.
             const shownW = parseFloat(valW) > 0 ? fmtNum(parseFloat(valW)) : null;
             html += `
-              <div class="set-block completed ${blockId === justCompletedBlock ? 'just-completed' : ''}" id="${blockId}" onclick="editSet(${exIdx}, ${s})">
-                <div class="locked-row">
-                  <span class="locked-num">${icon('check', 3)}</span>
-                  <span class="locked-set">Set ${s}</span>
-                  <span class="locked-val">${shownW ? `${shownW}<span class="locked-unit">kg</span>` : 'BW'}</span>
-                  <span class="locked-x">×</span>
-                  <span class="locked-val">${escapeHtml(valR || '–')}<span class="locked-unit">reps</span></span>
-                  <span class="locked-rest">${escapeHtml(String(valRest))}s rest</span>
-                  <span class="edit-hint">${icon('pencil', 2)}</span>
+              <div class="set-swipe" ${swipe}>
+                <button class="swipe-delete" onclick="deleteSetWithUndo(${exIdx}, ${s})">Delete</button>
+                <div class="set-block completed ${blockId === justCompletedBlock ? 'just-completed' : ''}" id="${blockId}" onclick="editSet(${exIdx}, ${s})">
+                  <div class="locked-row">
+                    <span class="locked-num">${icon('check', 3)}</span>
+                    <span class="locked-set">Set ${s}</span>
+                    <span class="locked-val">${shownW ? `${shownW}<span class="locked-unit">kg</span>` : 'BW'}</span>
+                    <span class="locked-x">×</span>
+                    <span class="locked-val">${escapeHtml(valR || '–')}<span class="locked-unit">reps</span></span>
+                    ${moreBtn}
+                  </div>
+                  ${drops.filter(d => d.r).map((drop, i) => `
+                    <div class="locked-drop">↳ Drop ${i + 1}: <strong>${parseFloat(drop.w) > 0 ? `${fmtNum(parseFloat(drop.w))} kg` : 'BW'} × ${escapeHtml(drop.r)}</strong></div>
+                  `).join('')}
                 </div>
-                ${drops.filter(d => d.r).map((drop, i) => `
-                  <div class="locked-drop">↳ Drop ${i + 1}: <strong>${parseFloat(drop.w) > 0 ? `${fmtNum(parseFloat(drop.w))} kg` : 'BW'} × ${escapeHtml(drop.r)}</strong></div>
-                `).join('')}
-                <button class="add-drop-btn" onclick="event.stopPropagation(); addDrop(${exIdx}, ${s})">+ Drop set</button>
               </div>
             `;
             continue;
           }
 
           html += `
-            <div class="set-block" id="${blockId}">
-              <div class="set-row">
-                <span class="set-num">${s}</span>
-
-                <div class="input-group">
-                  <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${lastSet ? fmtNum(lastSet.weight) : '0'}" value="${valW}" onfocus="this.select()" onchange="saveVal('${wKey}', this.value); pulse(this)">
-                  <span class="unit-label">kg</span>
-                </div>
-
-                <div class="input-group">
-                  <input type="number" id="${rKey}" inputmode="numeric" placeholder="${lastSet ? lastSet.reps : '0'}" value="${valR}" onfocus="this.select()" onchange="saveVal('${rKey}', this.value); pulse(this)">
-                  <span class="unit-label">reps</span>
-                </div>
-
-                <div class="input-group">
-                  <input type="number" id="${restKey}" class="rest-input" inputmode="numeric" value="${valRest}" onfocus="this.select()" onchange="saveVal('${restKey}', this.value); pulse(this)">
-                  <span class="unit-label">s</span>
-                </div>
-
-                <button class="check-btn" onclick="completeSet(${exIdx}, ${s})" aria-label="Complete set ${s}">${icon('check', 2.6)}</button>
-
-                ${totalSets > 1 ? `<button class="delete-set-btn" onclick="removeSet(${exIdx},${s})" aria-label="Delete set ${s}">${icon('x')}</button>` : ''}
-              </div>
-
-              ${drops.map((drop, i) => `
-                <div class="drop-row">
-                  <span class="drop-label">↳ Drop ${i + 1}</span>
-                  <div class="input-group">
-                    <input type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(drop.w)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'w', this.value); pulse(this)">
+            <div class="set-swipe" ${swipe}>
+              <button class="swipe-delete" onclick="deleteSetWithUndo(${exIdx}, ${s})">Delete</button>
+              <div class="set-block" id="${blockId}">
+                <div class="set-row">
+                  <span class="set-num">${s}</span>
+                  <label class="input-group">
+                    <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${suggestion ? fmtNum(suggestion.w) : '0'}" value="${escapeHtml(valW)}" onfocus="this.select()" onchange="saveVal('${wKey}', this.value); pulse(this)">
                     <span class="unit-label">kg</span>
-                  </div>
-                  <div class="input-group">
-                    <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(drop.r)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'r', this.value); pulse(this)">
+                  </label>
+                  <label class="input-group">
+                    <input type="number" id="${rKey}" inputmode="numeric" placeholder="${suggestion ? suggestion.r : '0'}" value="${escapeHtml(valR)}" onfocus="this.select()" onchange="saveVal('${rKey}', this.value); pulse(this)">
                     <span class="unit-label">reps</span>
-                  </div>
-                  <button class="delete-set-btn" onclick="removeDrop(${exIdx}, ${s}, ${i})" aria-label="Delete drop set">${icon('x')}</button>
+                  </label>
+                  ${moreBtn}
+                  <button class="check-btn" onclick="completeSet(${exIdx}, ${s})" aria-label="Complete set ${s}">${icon('check', 2.6)}</button>
                 </div>
-              `).join('')}
-              <button class="add-drop-btn" onclick="addDrop(${exIdx}, ${s})">+ Drop set</button>
-
-              <div class="set-hint">
-                <span>Target <strong>${escapeHtml(ex.repTarget)} @ ${escapeHtml(ex.weightTarget)}</strong></span>
-                ${lastSet
-                  ? `<span>Last <strong>${fmtSetLine(lastSet)}</strong>${lastDrops ? ` +${lastDrops} drop` : ''}</span>`
-                  : `<span>Rest <strong>${ex.rest}s</strong></span>`}
+                ${drops.map((drop, i) => `
+                  <div class="drop-row">
+                    <span class="drop-label">↳ Drop ${i + 1}</span>
+                    <label class="input-group">
+                      <input type="number" step="0.5" inputmode="decimal" placeholder="0" value="${escapeHtml(drop.w)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'w', this.value); pulse(this)">
+                      <span class="unit-label">kg</span>
+                    </label>
+                    <label class="input-group">
+                      <input type="number" inputmode="numeric" placeholder="0" value="${escapeHtml(drop.r)}" onfocus="this.select()" onchange="saveDropVal(${exIdx}, ${s}, ${i}, 'r', this.value); pulse(this)">
+                      <span class="unit-label">reps</span>
+                    </label>
+                    <button class="delete-set-btn" onclick="removeDrop(${exIdx}, ${s}, ${i})" aria-label="Delete drop set">${icon('x')}</button>
+                  </div>
+                `).join('')}
               </div>
-              ${tip ? `<div class="set-tip">${tip}</div>` : ''}
             </div>
           `;
         }
@@ -1700,6 +2078,7 @@
         <button class="btn btn-plain" id="clear-draft-btn" onclick="discardDraft()" ${hasDraft ? '' : 'hidden'}>Clear Unsaved Sets</button>
       `;
       main.innerHTML = html;
+      syncWakeLock();
     }
 
     function saveVal(key, value) {
@@ -1715,19 +2094,18 @@
       if (clearBtn) clearBtn.hidden = !dayHasDraft(currentDayIdx);
     }
 
-    // Commit a set: fill from last time if left empty, lock the row, and start the rest timer the first time.
+    // Commit a set: fill from the suggestion if left empty, lock the row, and start the rest timer the first time.
     function completeSet(exIdx, setNum) {
-      const key = f => `active_d${currentDayIdx}_e${exIdx}_s${setNum}_${f}`;
+      const key = f => setKey(currentDayIdx, exIdx, setNum, f);
       const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
-      const last = getLastPerformance(ex.name, getHistory());
-      const lastSet = last ? (last.sets.find(x => x.set === setNum) || last.sets[setNum - 1]) : null;
+      const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), setNum));
 
       const wInput = document.getElementById(key('w'));
       const rInput = document.getElementById(key('r'));
       let w = wInput.value.trim();
       let r = rInput.value.trim();
-      if (!r && lastSet && lastSet.reps) r = String(lastSet.reps);
-      if (!w && lastSet && lastSet.weight) w = String(lastSet.weight);
+      if (!r && suggestion && suggestion.r) r = String(suggestion.r);
+      if (!w && suggestion && suggestion.w) w = String(suggestion.w);
 
       if (!(parseInt(r, 10) > 0)) {
         haptic('error');
@@ -1745,6 +2123,7 @@
       const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
       localStorage.setItem(key('rested'), 'true');
       touchDraft();
+      expandedDone.delete(exStateKey(exIdx));
 
       haptic('success');
       justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
@@ -1752,18 +2131,44 @@
       renderWorkout();
       justCompletedBlock = null;
 
-      if (firstCompletion) {
-        const rest = parseInt(localStorage.getItem(key('rest')) || ex.rest, 10);
-        startRestTimer(isNaN(rest) ? 90 : rest);
+      if (firstCompletion) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
+    }
+
+    // "Set 2 · 50 kg × 8", or the next exercise's first open set
+    function nextSetLabel(exIdx, setNum) {
+      const exercises = getAllExercisesForDay(currentDayIdx);
+      const history = getHistory();
+      for (let e = exIdx; e < exercises.length; e++) {
+        const ex = exercises[e];
+        const count = getSetCount(currentDayIdx, e, ex.sets);
+        for (let s = e === exIdx ? setNum + 1 : 1; s <= count; s++) {
+          if (localStorage.getItem(setKey(currentDayIdx, e, s, 'done')) === 'true') continue;
+          const sug = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, history), s));
+          const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, e, s, 'w'))) || (sug ? sug.w : 0);
+          const r = parseInt(localStorage.getItem(setKey(currentDayIdx, e, s, 'r')), 10) || (sug ? sug.r : 0);
+          const target = r ? ` · ${w > 0 ? `${fmtNum(w)} kg` : 'BW'} × ${r}` : '';
+          return `Next: ${e === exIdx ? '' : `${ex.name} · `}Set ${s}${target}`;
+        }
       }
+      return 'All sets done. Finish when ready.';
     }
 
     function editSet(exIdx, setNum) {
-      localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
+      localStorage.setItem(setKey(currentDayIdx, exIdx, setNum, 'done'), 'false');
       haptic('light');
       renderWorkout();
-      const input = document.getElementById(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_w`);
+      const input = document.getElementById(setKey(currentDayIdx, exIdx, setNum, 'w'));
       if (input) input.focus();
+    }
+
+    async function openSetMenu(exIdx, setNum) {
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+      const count = getSetCount(currentDayIdx, exIdx, ex.sets);
+      const actions = [{ label: 'Add drop set', value: 'drop' }];
+      if (count > 1) actions.push({ label: 'Delete set', value: 'delete', destructive: true });
+      const choice = await actionSheet(`Set ${setNum}`, ex.name, actions);
+      if (choice === 'drop') addDrop(exIdx, setNum);
+      else if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);
     }
 
     // Brief green flash so a typed value visibly "lands"
@@ -1801,6 +2206,7 @@
       const allExercises = getAllExercisesForDay(currentDayIdx);
       const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
       saveSetCount(currentDayIdx, exIdx, currentCount + 1);
+      expandedDone.add(exStateKey(exIdx));
       renderWorkout();
     }
 
@@ -1810,7 +2216,7 @@
       if (currentCount <= 1) return;
 
       const fields = ['w', 'r', 'rest', 'done', 'drops', 'rested'];
-      const key = (s, f) => `active_d${currentDayIdx}_e${exIdx}_s${s}_${f}`;
+      const key = (s, f) => setKey(currentDayIdx, exIdx, s, f);
 
       // Shift later sets up one slot
       for (let s = setNum; s < currentCount; s++) {
@@ -1827,47 +2233,274 @@
       renderWorkout();
     }
 
-    function startRestTimer(seconds) {
-      clearInterval(timerCountdown);
-      const banner = document.getElementById('timer-banner');
-      const display = document.getElementById('timer-seconds');
-
-      timerSecondsRemaining = seconds;
-      banner.style.display = 'block';
-      display.innerText = timerSecondsRemaining;
-
-      timerCountdown = setInterval(() => {
-        timerSecondsRemaining--;
-        display.innerText = timerSecondsRemaining;
-        if (timerSecondsRemaining <= 0) {
-          stopRestTimer(false);
+    // Delete straight away; Undo puts every key for that exercise back as it was.
+    function deleteSetWithUndo(exIdx, setNum) {
+      const dayIdx = currentDayIdx;
+      const pattern = new RegExp(`^(active_)?d${dayIdx}_e${exIdx}_`);
+      const snapshot = Object.keys(localStorage).filter(k => pattern.test(k)).map(k => [k, localStorage.getItem(k)]);
+      removeSet(exIdx, setNum);
+      haptic('light');
+      showToast(`Set ${setNum} deleted`, {
+        actionLabel: 'Undo',
+        onAction: () => {
+          removeKeysMatching(pattern);
+          snapshot.forEach(([k, v]) => localStorage.setItem(k, v));
+          if (currentDayIdx === dayIdx) {
+            initNav();
+            renderWorkout();
+          }
         }
-      }, 1000);
+      });
     }
 
-    function adjustTimerSeconds(delta) {
-      timerSecondsRemaining = Math.max(0, timerSecondsRemaining + delta);
-      document.getElementById('timer-seconds').innerText = timerSecondsRemaining;
-      if (timerSecondsRemaining <= 0) {
-        stopRestTimer(false);
+    /* Swipe a set left to reveal Delete; a long swipe deletes straight away */
+    const SWIPE_OPEN = 88;
+    let openSwipe = null;
+
+    function closeOpenSwipe() {
+      if (!openSwipe) return;
+      openSwipe.classList.remove('open');
+      openSwipe.querySelector('.set-block').style.transform = '';
+      openSwipe = null;
+    }
+
+    (() => {
+      const content = document.getElementById('workout-content');
+      let drag = null;
+      let suppressClickUntil = 0;
+      // The click that ends a drag must not edit or complete the set
+      content.addEventListener('click', e => {
+        if (Date.now() < suppressClickUntil) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      }, true);
+      content.addEventListener('pointerdown', e => {
+        const row = e.target.closest('.set-swipe[data-swipe]');
+        if (openSwipe && openSwipe !== row && !e.target.closest('.swipe-delete')) closeOpenSwipe();
+        if (!row || e.target.closest('.swipe-delete') || e.pointerType === 'mouse' && e.button !== 0) return;
+        drag = { row, block: row.querySelector('.set-block'), x: e.clientX, y: e.clientY, dx: 0, active: false, base: row.classList.contains('open') ? -SWIPE_OPEN : 0 };
+      });
+      content.addEventListener('pointermove', e => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x;
+        const dy = e.clientY - drag.y;
+        if (!drag.active) {
+          if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+          if (Math.abs(dx) < 10) return;
+          drag.active = true;
+          drag.block.classList.add('dragging');
+          drag.row.setPointerCapture(e.pointerId);
+          if (document.activeElement && drag.row.contains(document.activeElement)) document.activeElement.blur();
+        }
+        drag.dx = Math.min(0, drag.base + dx);
+        drag.block.style.transform = `translateX(${drag.dx}px)`;
+        drag.row.classList.toggle('armed', drag.dx < -drag.row.offsetWidth * 0.55);
+      });
+      const end = () => {
+        if (!drag) return;
+        const { row, block, dx, active } = drag;
+        drag = null;
+        if (!active) return;
+        block.classList.remove('dragging');
+        row.classList.remove('armed');
+        suppressClickUntil = Date.now() + 350;
+        if (dx < -row.offsetWidth * 0.55) {
+          const [exIdx, setNum] = row.dataset.swipe.split(',').map(Number);
+          openSwipe = null;
+          deleteSetWithUndo(exIdx, setNum);
+        } else if (dx < -SWIPE_OPEN / 2) {
+          block.style.transform = `translateX(${-SWIPE_OPEN}px)`;
+          row.classList.add('open');
+          openSwipe = row;
+        } else {
+          block.style.transform = '';
+          row.classList.remove('open');
+          if (openSwipe === row) openSwipe = null;
+        }
+      };
+      content.addEventListener('pointerup', end);
+      content.addEventListener('pointercancel', end);
+    })();
+
+    /* Rest timer: counts to an end time, so it stays right while the phone is locked or the app is in the background */
+    const REST_TIMER_KEY = 'recomp_rest_timer';
+    let restTimer = null; // { endAt, total, next }
+    let restTicker = null;
+    let lastTickSecond = null;
+
+    function startRestTimer(seconds, next = '') {
+      restTimer = { endAt: Date.now() + seconds * 1000, total: seconds, next };
+      localStorage.setItem(REST_TIMER_KEY, JSON.stringify(restTimer));
+      lastTickSecond = null;
+      document.getElementById('rest-pill').hidden = false;
+      document.body.classList.add('resting');
+      clearInterval(restTicker);
+      restTicker = setInterval(tickRestTimer, 250);
+      tickRestTimer();
+      syncWakeLock();
+    }
+
+    function restRemainingMs() {
+      return restTimer ? Math.max(0, restTimer.endAt - Date.now()) : 0;
+    }
+
+    function setRing(el, fraction) {
+      const c = parseFloat(el.getAttribute('data-c'));
+      el.style.strokeDashoffset = String(c * (1 - Math.max(0, Math.min(1, fraction))));
+    }
+
+    function tickRestTimer() {
+      if (!restTimer) return;
+      const ms = restRemainingMs();
+      const sec = Math.ceil(ms / 1000);
+      const fraction = ms / (restTimer.total * 1000);
+      document.getElementById('rest-time').textContent = fmtClock(sec);
+      document.getElementById('rest-time-full').textContent = fmtClock(sec);
+      document.getElementById('rest-next').textContent = restTimer.next;
+      document.getElementById('rest-next-full').textContent = restTimer.next;
+      document.querySelectorAll('.rest-ring-fg').forEach(el => setRing(el, fraction));
+      document.getElementById('rest-pill').classList.toggle('ending', sec <= 3);
+      if (sec <= 3 && sec > 0 && sec !== lastTickSecond && !document.hidden) {
+        lastTickSecond = sec;
+        playTick();
+      }
+      if (ms <= 0) finishRestTimer();
+    }
+
+    function adjustRestTimer(delta) {
+      if (!restTimer) return;
+      restTimer.endAt += delta * 1000;
+      const remaining = restRemainingMs() / 1000;
+      restTimer.total = Math.max(restTimer.total, remaining);
+      localStorage.setItem(REST_TIMER_KEY, JSON.stringify(restTimer));
+      haptic('light');
+      if (remaining <= 0) finishRestTimer();
+      else tickRestTimer();
+    }
+
+    function finishRestTimer() {
+      const wasVisible = !document.hidden;
+      stopRestTimer(true);
+      if (!wasVisible) return;
+      playChime();
+      haptic('success');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      showToast('Rest over. Time for your next set.', { type: 'info' });
+    }
+
+    function stopRestTimer() {
+      clearInterval(restTicker);
+      restTicker = null;
+      restTimer = null;
+      localStorage.removeItem(REST_TIMER_KEY);
+      document.getElementById('rest-pill').hidden = true;
+      document.body.classList.remove('resting');
+      collapseRestTimer();
+      syncWakeLock();
+    }
+
+    function expandRestTimer() {
+      if (!restTimer) return;
+      const full = document.getElementById('rest-full');
+      full.hidden = false;
+      void full.offsetWidth;
+      full.classList.add('open');
+      haptic('light');
+    }
+
+    function collapseRestTimer() {
+      const full = document.getElementById('rest-full');
+      full.classList.remove('open');
+      setTimeout(() => { if (!full.classList.contains('open')) full.hidden = true; }, 250);
+    }
+
+    // Pick a running timer back up after the app was closed; a timer that ran out meanwhile is dropped quietly.
+    function restoreRestTimer() {
+      const saved = readJSON(REST_TIMER_KEY, null);
+      if (saved && saved.endAt > Date.now()) {
+        restTimer = saved;
+        document.getElementById('rest-pill').hidden = false;
+        document.body.classList.add('resting');
+        restTicker = setInterval(tickRestTimer, 250);
+        tickRestTimer();
+      } else {
+        localStorage.removeItem(REST_TIMER_KEY);
       }
     }
 
-    function stopRestTimer(isSkip) {
-      clearInterval(timerCountdown);
-      document.getElementById('timer-banner').style.display = 'none';
-
-      if (!isSkip) {
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          osc.frequency.setValueAtTime(880, ctx.currentTime);
-          osc.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.4);
-        } catch(e){}
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      if (restTimer) {
+        if (restRemainingMs() <= 0) stopRestTimer(); // ran out while away; the phone already showed nothing, so stay quiet
+        else tickRestTimer();
       }
+      syncWakeLock();
+      updateSessionBar();
+    });
+
+    /* Sound: one audio context, unlocked by the first tap (iOS only plays audio started from a gesture) */
+    let audioCtx = null;
+
+    function unlockAudio() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const silent = audioCtx.createBufferSource();
+          silent.buffer = audioCtx.createBuffer(1, 1, 22050);
+          silent.connect(audioCtx.destination);
+          silent.start(0);
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (e) {}
+    }
+    document.addEventListener('pointerdown', unlockAudio, { passive: true });
+
+    function tone(freq, startIn, duration, volume) {
+      if (!audioCtx) return;
+      try {
+        const t = audioCtx.currentTime + startIn;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(volume, t + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + duration + 0.05);
+      } catch (e) {}
+    }
+
+    function playTick() {
+      tone(1046.5, 0, 0.08, 0.12);
+    }
+
+    function playChime() {
+      tone(880, 0, 0.45, 0.3);
+      tone(1318.5, 0.16, 0.7, 0.3);
+    }
+
+    /* Keep the screen on while a workout is in progress (Safari 16.4+, Chrome) */
+    let wakeLock = null;
+
+    function workoutInProgress() {
+      return !!restTimer || !!sessionStartedToday(currentDayIdx) && dayHasDraft(currentDayIdx);
+    }
+
+    async function syncWakeLock() {
+      if (!('wakeLock' in navigator) || document.hidden) return;
+      try {
+        if (workoutInProgress() && !wakeLock) {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => { wakeLock = null; });
+        } else if (!workoutInProgress() && wakeLock) {
+          const lock = wakeLock;
+          wakeLock = null;
+          await lock.release();
+        }
+      } catch (e) {}
     }
 
     function finishAndSaveWorkout() {
@@ -1883,11 +2516,10 @@
         for (let s = 1; s <= totalSets; s++) {
           const wKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_w`;
           const rKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_r`;
-          const restKey = `active_d${currentDayIdx}_e${exIdx}_s${s}_rest`;
 
           const weightVal = parseFloat(localStorage.getItem(wKey) || '0');
           const repsVal = parseInt(localStorage.getItem(rKey) || '0', 10);
-          const restVal = parseInt(localStorage.getItem(restKey) || ex.rest.toString(), 10);
+          const restVal = getSetRest(currentDayIdx, exIdx, s, ex);
           const drops = getDrops(currentDayIdx, exIdx, s)
             .map(d => ({ weight: parseFloat(d.w) || 0, reps: parseInt(d.r, 10) || 0 }))
             .filter(d => d.reps > 0);
@@ -1955,7 +2587,8 @@
 
       // Reset this day's set inputs, drop sets, added/removed set counts and custom exercises
       clearDayDraft(currentDayIdx);
-
+      stopRestTimer();
+      expandedDone.clear();
       initNav();
       renderWorkout();
       calendarMonthOffset = 0;
@@ -2976,8 +3609,11 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 
     // Init App
     loadActivePlan();
+    currentDayIdx = initialDayIdx();
     initNav();
     renderWorkout();
+    scrollActiveTab();
+    restoreRestTimer();
     updateStats();
     updateHeader();
 
