@@ -1180,6 +1180,26 @@
     .muscle-chips::-webkit-scrollbar { display: none; }
     .muscle-chips .chip.on { background: var(--text); color: #000; }
 
+    /* Plan editor */
+    .ed-head-row { display: flex; align-items: center; gap: 6px; }
+    .ed-head-row .icon-btn { margin-left: -8px; }
+    .ed-field { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); margin-bottom: 14px; }
+    .ed-field input { width: 100%; height: 46px; font-size: var(--t-headline); }
+    .ed-label { font-size: var(--t-footnote); font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 18px 4px 8px; }
+    .ed-list { background: var(--surface-2); border-radius: var(--r-md); overflow: hidden; margin-bottom: 10px; }
+    .ed-row { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 10px 8px 14px; cursor: pointer; }
+    .ed-row + .ed-row { border-top: 0.5px solid var(--separator); }
+    .ed-row:active { background: var(--surface-3); }
+    .ed-row-title { font-size: var(--t-body); font-weight: 600; }
+    .ed-row .row-sub { white-space: normal; }
+    .move-btns { display: flex; gap: 2px; flex-shrink: 0; }
+    .move-btns .icon-btn { width: 32px; height: 32px; background: var(--surface-3); }
+    .move-btns .icon-btn:disabled { opacity: 0.25; }
+    .move-btns .icon-btn svg { width: 16px; height: 16px; }
+    .ed-danger { color: var(--danger); margin-top: 6px; }
+    #editor-sheet .form-grid { margin-top: 0; }
+    #editor-foot { position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); margin: 12px -20px 0; padding: 12px 20px calc(20px + env(safe-area-inset-bottom)); background: var(--surface); box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.35); }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -1369,9 +1389,11 @@
       </div>
       <div class="plan-days" id="plan-days"></div>
       <div class="sheet-actions">
-        <button class="btn btn-primary" onclick="closeSheet('plan-sheet'); openAiSheet()">Create a New Plan with AI</button>
-        <button class="btn btn-secondary" onclick="copyCurrentPlan()">Copy Plan to Edit with AI</button>
+        <button class="btn btn-primary" onclick="openPlanEditor()">Edit This Plan</button>
         <button class="btn btn-secondary" onclick="openTemplatesSheet()">Browse Starter Plans</button>
+        <button class="btn btn-secondary" onclick="closeSheet('plan-sheet'); buildOwnPlan(Math.max(1, programData.length))">Build My Own From Scratch</button>
+        <button class="btn btn-secondary" onclick="closeSheet('plan-sheet'); openAiSheet()">Create a New Plan with AI</button>
+        <button class="btn btn-plain" onclick="copyCurrentPlan()">Copy Plan to Edit with AI</button>
       </div>
     </div>
   </div>
@@ -1456,6 +1478,21 @@
         <button class="btn btn-primary" id="backup-restore-btn" onclick="submitTextModal()">Restore</button>
         <button class="btn btn-secondary" onclick="closeBackupModal()">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Plan editor -->
+  <div class="sheet-overlay" id="editor-sheet">
+    <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="ed-head-row">
+          <button class="icon-btn plain" id="editor-back" onclick="editorBack()" aria-label="Back" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="sheet-title" id="editor-title">Edit Plan</div>
+        </div>
+      </div>
+      <div id="editor-body"></div>
+      <div id="editor-foot"></div>
     </div>
   </div>
 
@@ -2245,6 +2282,8 @@
     }
 
     function addCustomExercise() {
+      pickCallback = null;
+      document.getElementById('add-ex-sheet').onSheetClose = null;
       addExMuscle = null;
       document.getElementById('add-ex-search').value = '';
       showAddExerciseForm(false);
@@ -2259,7 +2298,7 @@
     function renderAddExerciseList() {
       const query = document.getElementById('add-ex-search').value.trim();
       const q = query.toLowerCase();
-      const inDay = new Set(getAllExercisesForDay(currentDayIdx).map(e => e.name.toLowerCase()));
+      const inDay = new Set((pickCallback ? pickCallback.existing : getAllExercisesForDay(currentDayIdx)).map(e => e.name.toLowerCase()));
       const matches = name => !inDay.has(name.toLowerCase()) && (!q || name.toLowerCase().includes(q));
       const picks = [];
       const row = (pick, main, sub, alt) => {
@@ -2294,7 +2333,7 @@
         d.exercises.forEach(ex => {
           planNames.add(ex.name.toLowerCase());
           if (ex.alt) planNames.add(ex.alt.name.toLowerCase());
-          if (i === currentDayIdx) return;
+          if (!pickCallback && i === currentDayIdx) return;
           if (matches(ex.name)) rows.push(row({ template: ex, fromDay: d.day }, ex.name, planExerciseSub(ex), ex.alt && ex.alt.name));
           else if (q && ex.alt && matches(ex.alt.name)) rows.push(row({ template: { ...ex.alt, alt: { ...ex, alt: undefined } }, fromDay: d.day }, ex.alt.name, planExerciseSub(ex.alt), ex.name));
         });
@@ -2380,6 +2419,15 @@
       const t = template || {};
       const name = String(t.name || '').trim();
       if (!name) return;
+      // Picking for the plan editor
+      if (pickCallback) {
+        const cb = pickCallback;
+        closeSheet('add-ex-sheet');
+        document.activeElement && document.activeElement.blur();
+        haptic('success');
+        cb.onPick({ ...t, name });
+        return;
+      }
       const custom = {
         name,
         repTarget: t.repTarget || '8–12 reps',
@@ -2413,13 +2461,14 @@
     }
 
     async function openDayMenu() {
-      const actions = [{ label: 'Add exercise', value: 'add' }];
+      const actions = [{ label: 'Add exercise for today', value: 'add' }, { label: 'Edit this day in the plan', value: 'edit' }];
       if (dayHasDraft(currentDayIdx)) {
         actions.push({ label: 'Save to today\'s log', value: 'log' });
         actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
       }
       const choice = await actionSheet(programData[currentDayIdx].day, programData[currentDayIdx].title, actions);
       if (choice === 'add') addCustomExercise();
+      else if (choice === 'edit') openPlanEditor({ dayIdx: currentDayIdx });
       else if (choice === 'log') saveToTodaysLog();
       else if (choice === 'clear') discardDraft();
     }
@@ -5459,6 +5508,10 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           ${templateCardHtml(picked, { featured: true, recommended: picked.id === rec })}
           <div class="onb-q">Other options</div>
           ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `onbSet('picked', '${t.id}')` })).join('')}
+          <div class="tpl-card ai" onclick="finishOnboarding('build')" role="button">
+            <div class="tpl-name">${ROW_ICONS.plan} Build my own</div>
+            <div class="tpl-blurb">Pick your days and exercises from a library of 70+ moves. Sets, reps, rest and warm-ups are filled in for you.</div>
+          </div>
           <div class="tpl-card ai" onclick="finishOnboarding('ai')" role="button">
             <div class="tpl-name">${ROW_ICONS.ai} Create one with AI</div>
             <div class="tpl-blurb">Answer a few details and paste a ChatGPT, Claude or Gemini reply. Built around your equipment and goals.</div>
@@ -5480,12 +5533,15 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       setActivePlan(templatePlan(choice));
       localStorage.setItem(ONBOARDED_KEY, '1');
       const name = onb.name.trim();
+      const days = onb.days;
       closeOnboarding();
       switchView('workout');
       updateHeader();
       updateStats();
       window.scrollTo(0, 0);
-      if (mode === 'ai') {
+      if (mode === 'build') {
+        setTimeout(() => buildOwnPlan(days), 350);
+      } else if (mode === 'ai') {
         const setup = readJSON(SETUP_KEY, {});
         document.getElementById('ai-days').value = String(Math.min(7, Math.max(3, setup.days || 3)));
         document.getElementById('ai-level').value = setup.level || 'Intermediate';
@@ -5560,6 +5616,257 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       localStorage.setItem(TIP_KEY, '1');
       haptic('light');
       renderWorkout();
+    }
+
+    /* Plan editor: a working copy of the plan, edited across three views (plan, day, exercise) and saved
+       in one go. Exercise and alternative pickers reuse the Add Exercise sheet. */
+    let editor = null; // { plan, view, dayIdx, exIdx, dirty }
+    let pickCallback = null; // set while the Add Exercise sheet picks for the editor
+
+    function exerciseFromTemplate(t) {
+      const ex = {
+        name: String(t.name).trim(),
+        repTarget: t.repTarget || '8–12 reps',
+        weightTarget: t.weightTarget || '2 reps in reserve',
+        rest: t.rest || 90,
+        sets: t.sets || 3
+      };
+      if (t.cue) ex.cue = t.cue;
+      if (t.warmup !== undefined) ex.warmup = t.warmup;
+      if (t.alt && typeof t.alt === 'object' && t.alt.name) {
+        ex.alt = { name: t.alt.name, repTarget: t.alt.repTarget, weightTarget: t.alt.weightTarget, rest: t.alt.rest, sets: t.alt.sets };
+        if (t.alt.warmup !== undefined) ex.alt.warmup = t.alt.warmup;
+        if (t.alt.cue) ex.alt.cue = t.alt.cue;
+      }
+      return ex;
+    }
+
+    function openPlanEditor({ plan = null, dayIdx = null } = {}) {
+      const source = plan || getCustomPlan() || { planName: getPlanName(), days: programData };
+      const copy = JSON.parse(JSON.stringify({ planName: source.planName, days: source.days }));
+      editor = { plan: copy, view: dayIdx === null ? 'plan' : 'day', dayIdx: dayIdx || 0, exIdx: 0, dirty: !!plan };
+      closeSheet('plan-sheet');
+      renderEditor();
+      const overlay = document.getElementById('editor-sheet');
+      overlay.onSheetClose = () => {
+        // Closed by swipe or backdrop with unsaved edits: offer to reopen them
+        if (editor && editor.dirty && !editor.saved) {
+          const kept = editor;
+          showToast('Plan changes not saved', { type: 'info', actionLabel: 'Reopen', onAction: () => { editor = kept; renderEditor(); openSheet('editor-sheet'); } });
+        }
+      };
+      setTimeout(() => openSheet('editor-sheet'), 50);
+    }
+
+    function editorGo(view, idx) {
+      if (view === 'day' && idx !== undefined) editor.dayIdx = idx;
+      if (view === 'exercise' && idx !== undefined) editor.exIdx = idx;
+      editor.view = view;
+      renderEditor();
+      document.querySelector('#editor-sheet .sheet').scrollTop = 0;
+    }
+
+    function editorChange(fn) {
+      fn();
+      editor.dirty = true;
+      renderEditor();
+    }
+
+    function editorMove(list, i, delta) {
+      const j = i + delta;
+      if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+      haptic('light');
+    }
+
+    function exerciseSummary(ex) {
+      return `${ex.warmup ? `${ex.warmup} warm-up + ` : ''}${ex.sets} × ${ex.repTarget} · rest ${fmtClock(ex.rest)}${ex.alt ? ` · alt ${ex.alt.name}` : ''}`;
+    }
+
+    function moveButtons(onUp, onDown, first, last) {
+      return `
+        <span class="move-btns">
+          <button class="icon-btn" onclick="event.stopPropagation(); ${onUp}" ${first ? 'disabled' : ''} aria-label="Move up">${icon('chevronUp')}</button>
+          <button class="icon-btn" onclick="event.stopPropagation(); ${onDown}" ${last ? 'disabled' : ''} aria-label="Move down">${icon('chevronDown')}</button>
+        </span>`;
+    }
+
+    function renderEditor() {
+      const body = document.getElementById('editor-body');
+      const foot = document.getElementById('editor-foot');
+      const title = document.getElementById('editor-title');
+      const back = document.getElementById('editor-back');
+      const plan = editor.plan;
+
+      if (editor.view === 'plan') {
+        title.textContent = 'Edit Plan';
+        back.hidden = true;
+        body.innerHTML = `
+          <label class="ed-field">Plan name<input type="text" value="${escapeHtml(plan.planName)}" oninput="editor.plan.planName = this.value; editor.dirty = true"></label>
+          <div class="ed-label">Days · in the order you train them</div>
+          <div class="ed-list">
+            ${plan.days.map((d, i) => `
+              <div class="ed-row" onclick="editorGo('day', ${i})" role="button">
+                <span class="day-dot" style="background:${dayColor(`Day ${i + 1}`)}"></span>
+                <span class="row-main"><span class="ed-row-title">Day ${i + 1} · ${escapeHtml(d.title || 'Untitled')}</span><span class="row-sub">${d.exercises.length} exercise${d.exercises.length === 1 ? '' : 's'}</span></span>
+                ${moveButtons(`editorChange(() => editorMove(editor.plan.days, ${i}, -1))`, `editorChange(() => editorMove(editor.plan.days, ${i}, 1))`, i === 0, i === plan.days.length - 1)}
+                <span class="chevron">${icon('chevron')}</span>
+              </div>`).join('')}
+          </div>
+          ${plan.days.length < 7 ? '<button class="btn btn-secondary" onclick="editorAddDay()">+ Add Day</button>' : ''}`;
+        foot.innerHTML = `
+          <button class="btn btn-positive" onclick="saveEditedPlan()">Save Plan</button>
+          <button class="btn btn-plain" onclick="editor.saved = true; closeSheet('editor-sheet')">Cancel</button>`;
+      } else if (editor.view === 'day') {
+        const d = plan.days[editor.dayIdx];
+        title.textContent = `Day ${editor.dayIdx + 1}`;
+        back.hidden = false;
+        body.innerHTML = `
+          <label class="ed-field">Day name<input type="text" value="${escapeHtml(d.title)}" placeholder="e.g. Push, Upper A, Legs" oninput="editor.plan.days[${editor.dayIdx}].title = this.value; editor.dirty = true"></label>
+          <div class="ed-label">Exercises · in order</div>
+          ${d.exercises.length ? `<div class="ed-list">
+            ${d.exercises.map((ex, i) => `
+              <div class="ed-row" onclick="editorGo('exercise', ${i})" role="button">
+                <span class="row-main"><span class="ed-row-title">${escapeHtml(ex.name)}</span><span class="row-sub">${escapeHtml(exerciseSummary(ex))}</span></span>
+                ${moveButtons(`editorChange(() => editorMove(editor.plan.days[${editor.dayIdx}].exercises, ${i}, -1))`, `editorChange(() => editorMove(editor.plan.days[${editor.dayIdx}].exercises, ${i}, 1))`, i === 0, i === d.exercises.length - 1)}
+                <span class="chevron">${icon('chevron')}</span>
+              </div>`).join('')}
+          </div>` : '<div class="empty-list">No exercises yet. Add the first one.</div>'}
+          <button class="btn btn-secondary" onclick="editorPickExercise()">+ Add Exercise</button>
+          ${plan.days.length > 1 ? '<button class="btn btn-plain ed-danger" onclick="editorDeleteDay()">Delete This Day</button>' : ''}`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="editorGo('plan')">Done</button>`;
+      } else {
+        const d = plan.days[editor.dayIdx];
+        const ex = d.exercises[editor.exIdx];
+        const path = `editor.plan.days[${editor.dayIdx}].exercises[${editor.exIdx}]`;
+        const restOpts = [...new Set([...REST_CHOICES, 30, ex.rest])].sort((a, b) => a - b);
+        title.textContent = 'Exercise';
+        back.hidden = false;
+        body.innerHTML = `
+          <label class="ed-field">Name<input type="text" value="${escapeHtml(ex.name)}" oninput="${path}.name = this.value; editor.dirty = true"></label>
+          <div class="form-grid">
+            <label>Working sets
+              <select onchange="${path}.sets = +this.value; editor.dirty = true">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<option ${n === ex.sets ? 'selected' : ''}>${n}</option>`).join('')}</select>
+            </label>
+            <label>Reps<input type="text" value="${escapeHtml(ex.repTarget)}" onchange="${path}.repTarget = normalizeReps(this.value); editor.dirty = true"></label>
+            <label>Weight target<input type="text" value="${escapeHtml(ex.weightTarget)}" placeholder="e.g. 40 kg" onchange="${path}.weightTarget = this.value.trim() || '2 reps in reserve'; editor.dirty = true"></label>
+            <label>Rest
+              <select onchange="${path}.rest = +this.value; editor.dirty = true">${restOpts.map(sec => `<option value="${sec}" ${sec === ex.rest ? 'selected' : ''}>${fmtClock(sec)}</option>`).join('')}</select>
+            </label>
+            <label class="full">Warm-up sets
+              <select onchange="${path}.warmup = +this.value; editor.dirty = true">${[[0, 'None'], [1, '1 (light set)'], [2, '2 (ramp up)'], [3, '3 (heavy lift)']].map(([v, l]) => `<option value="${v}" ${v === warmupCount(ex, editor.exIdx) ? 'selected' : ''}>${l}</option>`).join('')}</select>
+            </label>
+            <label class="full">Technique cue<input type="text" value="${escapeHtml(ex.cue || '')}" placeholder="Optional, e.g. 3s lowering" onchange="${path}.cue = this.value.trim(); editor.dirty = true"></label>
+          </div>
+          <div class="ed-label">Alternative · used when you tap Swap</div>
+          <div class="ed-list">
+            ${ex.alt ? `
+              <div class="ed-row" onclick="editorPickAlt()" role="button">
+                <span class="row-main"><span class="ed-row-title">${escapeHtml(ex.alt.name)}</span><span class="row-sub">${escapeHtml(exerciseSummary(ex.alt))}</span></span>
+                <span class="row-value">Change</span>
+              </div>` : `
+              <div class="ed-row" onclick="editorPickAlt()" role="button">
+                <span class="row-main"><span class="ed-row-title">No alternative</span><span class="row-sub">Pick one for when equipment is busy</span></span>
+                <span class="row-value">Add</span>
+              </div>`}
+          </div>
+          ${ex.alt ? '<button class="btn btn-plain btn-sm" onclick="editorChange(() => { delete editor.plan.days[editor.dayIdx].exercises[editor.exIdx].alt; })">Remove alternative</button>' : ''}
+          <button class="btn btn-plain ed-danger" onclick="editorDeleteExercise()">Delete Exercise</button>`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="editorGo('day')">Done</button>`;
+      }
+    }
+
+    function normalizeReps(v) {
+      const t = String(v).trim().replace(/(\d)\s*-\s*(\d)/, '$1–$2');
+      if (!t) return '8–12 reps';
+      return /reps|hold|walk|failure|s\b|\/ /i.test(t) ? t : `${t} reps`;
+    }
+
+    function editorBack() {
+      editorGo(editor.view === 'exercise' ? 'day' : 'plan');
+    }
+
+    function editorAddDay() {
+      editorChange(() => editor.plan.days.push({ day: '', title: `Day ${editor.plan.days.length + 1}`, exercises: [] }));
+      editorGo('day', editor.plan.days.length - 1);
+    }
+
+    async function editorDeleteDay() {
+      const d = editor.plan.days[editor.dayIdx];
+      if (d.exercises.length && !await confirmSheet(`Delete ${d.title || `Day ${editor.dayIdx + 1}`}?`, `Its ${d.exercises.length} exercises will be removed from the plan. Saved workouts are not affected.`, 'Delete Day', true)) return;
+      // Leave the day view before removing it, so nothing renders a day that's gone
+      editor.plan.days.splice(editor.dayIdx, 1);
+      editor.dirty = true;
+      editorGo('plan');
+    }
+
+    function editorDeleteExercise() {
+      const d = editor.plan.days[editor.dayIdx];
+      const removed = d.exercises[editor.exIdx];
+      const at = editor.exIdx;
+      d.exercises.splice(at, 1);
+      editor.dirty = true;
+      editorGo('day');
+      showToast(`${removed.name} removed`, { actionLabel: 'Undo', onAction: () => editorChange(() => d.exercises.splice(at, 0, removed)) });
+    }
+
+    // Open the Add Exercise sheet to pick for the editor
+    function openPicker(existing, onPick) {
+      pickCallback = { existing, onPick };
+      addExMuscle = null;
+      document.getElementById('add-ex-search').value = '';
+      showAddExerciseForm(false);
+      renderAddExerciseList();
+      const overlay = document.getElementById('add-ex-sheet');
+      overlay.onSheetClose = () => { pickCallback = null; };
+      openSheet('add-ex-sheet');
+    }
+
+    function editorPickExercise() {
+      const d = editor.plan.days[editor.dayIdx];
+      openPicker(d.exercises, t => {
+        editorChange(() => d.exercises.push(exerciseFromTemplate(t)));
+        showToast(`${t.name} added to Day ${editor.dayIdx + 1}`);
+      });
+    }
+
+    function editorPickAlt() {
+      const ex = editor.plan.days[editor.dayIdx].exercises[editor.exIdx];
+      openPicker([ex], t => {
+        const alt = exerciseFromTemplate(t);
+        delete alt.alt;
+        editorChange(() => { ex.alt = alt; });
+      });
+    }
+
+    async function saveEditedPlan() {
+      const plan = editor.plan;
+      plan.planName = (plan.planName || '').trim() || 'My Plan';
+      const emptyDay = plan.days.findIndex(d => !d.exercises.length);
+      if (!plan.days.length) return showToast('Add at least one day', { type: 'error' });
+      if (emptyDay !== -1) {
+        editorGo('day', emptyDay);
+        haptic('error');
+        return showToast(`Day ${emptyDay + 1} needs at least one exercise`, { type: 'error' });
+      }
+      const nameless = plan.days.flatMap(d => d.exercises).some(e => !String(e.name).trim());
+      if (nameless) return showToast('Every exercise needs a name', { type: 'error' });
+      if (anyUnsavedSets() && !await confirmSheet('Save plan changes?', 'Unsaved sets in your current workout will be cleared. Saved history is kept.', 'Save Plan')) return;
+      const days = plan.days.map((d, i) => ({ day: `Day ${i + 1}`, title: (d.title || '').trim() || `Day ${i + 1}`, exercises: d.exercises }));
+      editor.saved = true;
+      setActivePlan({ planName: plan.planName, days });
+      closeSheet('editor-sheet');
+      editor = null;
+      renderSettings();
+      updateStats();
+      haptic('success');
+      showToast('Plan saved');
+    }
+
+    // "Build my own": start from empty days, keeping the current plan until it's saved
+    function buildOwnPlan(days = 3) {
+      openPlanEditor({ plan: { planName: 'My Plan', days: Array.from({ length: days }, (_, i) => ({ day: `Day ${i + 1}`, title: `Day ${i + 1}`, exercises: [] })) } });
+      setTimeout(() => editorGo('day', 0), 80);
     }
 
     // Init App
