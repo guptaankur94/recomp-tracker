@@ -1087,6 +1087,99 @@
     :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
     input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--blue); }
 
+    /* First-launch setup */
+    .onboarding {
+      position: fixed;
+      inset: 0;
+      z-index: 1060;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .onboarding.open { opacity: 1; }
+    .onb-top { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 10px) 12px 6px; }
+    .onb-spacer { width: 36px; }
+    .onb-dots { display: flex; gap: 6px; }
+    .onb-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-3); transition: width 0.25s var(--ease-out), background-color 0.2s ease; }
+    .onb-dots i.on { width: 22px; border-radius: 4px; background: var(--text); }
+    .onb-dots i.done { background: var(--text-2); }
+    .onb-scroll { flex: 1; overflow-y: auto; }
+    .onb-body { padding: 8px 20px 24px; max-width: 520px; margin: 0 auto; }
+    .onb-foot { padding: 12px 20px calc(env(safe-area-inset-bottom) + 16px); max-width: 520px; width: 100%; margin: 0 auto; }
+    .onb-logo { display: block; width: 88px; height: 88px; border-radius: 22px; margin: 24px auto 20px; }
+    .onb-title { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 8px 0 8px; }
+    .onb-body > .onb-logo + .onb-title, .onb-body > .onb-logo ~ .onb-text { text-align: center; }
+    .onb-text { font-size: var(--t-body); color: var(--text-2); line-height: 1.45; margin: 0 0 18px; }
+    .onb-points { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+    .onb-point { display: flex; gap: 14px; align-items: flex-start; font-size: var(--t-body); color: var(--text-2); line-height: 1.4; }
+    .onb-point strong { color: var(--text); }
+    .onb-point-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-2); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .onb-point-icon svg { width: 20px; height: 20px; }
+    .onb-q { font-size: var(--t-headline); font-weight: 600; margin: 22px 0 10px; }
+    .onb-field { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); }
+    .onb-field input { width: 100%; height: 48px; font-size: var(--t-headline); }
+    .opt-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .opt-grid.two { grid-template-columns: 1fr 1fr; }
+    .opt-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .opt-grid.five { grid-template-columns: repeat(5, 1fr); }
+    .opt {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: 1.5px solid transparent;
+      border-radius: var(--r-md);
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+    }
+    .opt-grid.five .opt, .opt-grid.three .opt { align-items: center; text-align: center; padding: 12px 6px; }
+    .opt-grid.five .opt-label { font-size: var(--t-title); }
+    .opt.on { border-color: var(--text); background: var(--surface-2); }
+    .opt-label { font-size: var(--t-headline); font-weight: 600; }
+    .opt-sub { font-size: var(--t-footnote); color: var(--text-2); font-weight: 400; line-height: 1.3; }
+
+    /* Plan cards (setup and Starter Plans) */
+    .tpl-card { position: relative; background: var(--surface); border: 1.5px solid transparent; border-radius: var(--r-lg); padding: 16px; margin-bottom: 10px; cursor: pointer; }
+    .tpl-card.featured { border-color: var(--accent); cursor: default; }
+    .tpl-card.ai .tpl-name { display: flex; align-items: center; gap: 8px; }
+    .tpl-card.ai .tpl-name svg { width: 18px; height: 18px; color: #9085e9; }
+    .tpl-badge { display: inline-block; font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #000; background: var(--accent); border-radius: 999px; padding: 3px 8px; margin-bottom: 8px; }
+    .tpl-name { font-size: var(--t-headline); font-weight: 700; }
+    .tpl-meta { font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
+    .tpl-blurb { font-size: var(--t-footnote); color: var(--text-2); margin-top: 6px; line-height: 1.4; }
+    .tpl-card.featured .plan-days { margin-top: 12px; }
+    #tpl-list { margin-top: 4px; }
+    #templates-sheet .sheet-actions { position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); margin: 8px -20px 0; padding: 12px 20px calc(20px + env(safe-area-inset-bottom)); background: var(--surface); box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.35); }
+
+    /* Get-started checklist on the home card */
+    .start-steps { display: flex; flex-direction: column; margin-top: 10px; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); }
+    .start-step { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 12px; border: none; background: none; color: var(--text); text-align: left; }
+    .start-step + .start-step { border-top: 0.5px solid var(--separator); }
+    .start-step:active:not(:disabled) { transform: none; background: var(--surface-3); }
+    .start-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface-3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #000; }
+    .start-step.done .start-check { background: var(--accent); border-color: var(--accent); }
+    .start-check svg { width: 13px; height: 13px; }
+    .start-title { font-size: var(--t-body); font-weight: 600; }
+    .start-step.done .start-title { color: var(--text-2); }
+
+    /* First-workout guide and empty states */
+    .tip-card { background: var(--surface); border: 1px solid rgba(10, 132, 255, 0.45); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px; }
+    .tip-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 6px; }
+    .tip-steps { margin: 0 0 12px; padding-left: 20px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; }
+    .tip-steps strong { color: var(--text); }
+    .empty-card { background: var(--surface); border-radius: var(--r-lg); padding: 22px 18px; text-align: center; }
+    .empty-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 6px; }
+    .empty-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; margin-bottom: 14px; }
+    .empty-card .btn-sm { display: inline-flex; }
+    .muscle-chips { display: flex; gap: 6px; overflow-x: auto; margin: 0 -20px 6px; padding: 0 20px 4px; scrollbar-width: none; }
+    .muscle-chips::-webkit-scrollbar { display: none; }
+    .muscle-chips .chip.on { background: var(--text); color: #000; }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -1278,7 +1371,7 @@
       <div class="sheet-actions">
         <button class="btn btn-primary" onclick="closeSheet('plan-sheet'); openAiSheet()">Create a New Plan with AI</button>
         <button class="btn btn-secondary" onclick="copyCurrentPlan()">Copy Plan to Edit with AI</button>
-        <button class="btn btn-plain" id="restore-plan-btn" onclick="restoreDefaultPlan()" hidden>Restore Default Plan</button>
+        <button class="btn btn-secondary" onclick="openTemplatesSheet()">Browse Starter Plans</button>
       </div>
     </div>
   </div>
@@ -1376,8 +1469,9 @@
       <div id="add-ex-browse">
         <div class="search-field">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-          <input type="text" id="add-ex-search" placeholder="Search your plan and history" autocomplete="off" oninput="renderAddExerciseList()">
+          <input type="text" id="add-ex-search" placeholder="Search exercises" autocomplete="off" oninput="renderAddExerciseList()">
         </div>
+        <div class="muscle-chips" id="add-ex-muscles" role="group" aria-label="Filter by muscle"></div>
         <div class="add-ex-list" id="add-ex-list"></div>
       </div>
       <div id="add-ex-form" hidden>
@@ -1397,6 +1491,32 @@
           <button class="btn btn-primary" onclick="submitCustomExercise()">Add Exercise</button>
           <button class="btn btn-secondary" onclick="showAddExerciseForm(false)">Back</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-launch setup -->
+  <div class="onboarding" id="onboarding" hidden role="dialog" aria-modal="true" aria-label="Set up Recomp">
+    <div class="onb-top">
+      <button class="icon-btn plain" id="onb-back" onclick="onbBack()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="onb-dots" id="onb-dots"></div>
+      <span class="onb-spacer"></span>
+    </div>
+    <div class="onb-scroll"><div class="onb-body" id="onb-body"></div></div>
+    <div class="onb-foot" id="onb-foot"></div>
+  </div>
+
+  <!-- Starter plans -->
+  <div class="sheet-overlay" id="templates-sheet">
+    <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="tpl-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="tpl-title">Starter Plans</div>
+        <div class="sheet-sub">Proven programmes with warm-ups, rest times and a swap for every exercise. Your history is kept when you switch.</div>
+      </div>
+      <div id="tpl-list"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-positive" id="tpl-use" onclick="useTemplate()">Use This Plan</button>
       </div>
     </div>
   </div>
@@ -1930,12 +2050,23 @@
       const profileLink = getProfile() ? '' : `<button class="hero-link" onclick="openProfileSheet()">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`;
 
       if (!history.length) {
+        // New users: a short checklist instead of empty numbers
         const first = programData[currentDayIdx] || programData[0];
+        const step = (done, title, sub, onclick) => `
+          <button class="start-step ${done ? 'done' : ''}" onclick="${onclick}">
+            <span class="start-check">${done ? icon('check', 3) : ''}</span>
+            <span class="row-main"><span class="start-title">${title}</span><span class="row-sub">${sub}</span></span>
+            <span class="chevron">${icon('chevron')}</span>
+          </button>`;
+        const profile = getProfile();
         hero.innerHTML = `
           <div class="hero welcome">
-            <div class="hero-title">Ready for your first workout?</div>
-            <div class="hero-text">Start with ${escapeHtml(first.day)}: ${escapeHtml(first.title)}. Tap ✓ after each set and the rest timer starts on its own.</div>
-            ${profileLink}
+            <div class="hero-title">Get started</div>
+            <div class="start-steps">
+              ${step(true, `Plan: ${escapeHtml(getPlanName())}`, `${programData.length} days a week · tap to view or change`, 'openPlanSheet()')}
+              ${step(!!(profile && profile.heightCm && profile.weightKg), 'Add your body stats', 'Optional · unlocks calorie and protein targets', 'openProfileSheet()')}
+              ${step(false, `Start ${escapeHtml(first.day)}: ${escapeHtml(first.title)}`, 'Scroll down and log your first set', "document.querySelector('#workout-content .ex-card').scrollIntoView({ behavior: 'smooth', block: 'start' })")}
+            </div>
           </div>`;
         return;
       }
@@ -2104,7 +2235,17 @@
 
     /* Add exercise sheet: your plan grouped by day (an exercise brings its sets, reps, weight, rest, cue and
        alternative with it), then other exercises you've logged, or a custom one */
+    let addExMuscle = null;
+
+    function filterAddMuscle(m) {
+      addExMuscle = addExMuscle === m ? null : m;
+      haptic('light');
+      renderAddExerciseList();
+      document.querySelector('#add-ex-sheet .sheet').scrollTop = 0;
+    }
+
     function addCustomExercise() {
+      addExMuscle = null;
       document.getElementById('add-ex-search').value = '';
       showAddExerciseForm(false);
       renderAddExerciseList();
@@ -2126,8 +2267,25 @@
         return `<button class="choice" data-idx="${picks.length - 1}"><span><span class="choice-main">${escapeHtml(main)}</span>${sub ? `<span class="choice-sub">${escapeHtml(sub)}</span>` : ''}${alt ? `<span class="choice-sub">Alt: ${escapeHtml(alt)}</span>` : ''}</span></button>`;
       };
 
+      document.getElementById('add-ex-muscles').innerHTML = MUSCLES.map(m =>
+        `<button class="chip ${m === addExMuscle ? 'on' : ''}" onclick="filterAddMuscle('${m}')" aria-pressed="${m === addExMuscle}">${m}</button>`).join('');
+
       let html = `<button class="choice add-new" data-custom="1"><span class="choice-main">+ ${query ? `Create “${escapeHtml(query)}”` : 'Custom exercise'}</span></button>`;
       let found = 0;
+      const libSection = names => {
+        const rows = names.map(e => row({ template: libExercise(e.name) }, e.name, `${e.equipment} · ${repLabel(e.reps)} · rest ${fmtClock(e.rest)}`, e.alt));
+        found += rows.length;
+        return rows.join('');
+      };
+
+      // A muscle filter shows just the library for that muscle
+      if (addExMuscle) {
+        const list = [...LIBRARY.values()].filter(e => e.muscle === addExMuscle && matches(e.name));
+        html += `<div class="choice-section">${addExMuscle} · exercise library</div>` + libSection(list);
+        if (!list.length) html += '<div class="empty-list">Nothing here matches your search.</div>';
+        renderAddList(html, picks, query);
+        return;
+      }
 
       // From the plan, grouped by day; the current day's own exercises are already on screen
       const planNames = new Set();
@@ -2160,8 +2318,16 @@
         html += '<div class="choice-section">Other exercises you\'ve logged</div>' +
           [...recent.values()].slice(0, 30).map(it => row({ template: { name: it.name } }, it.name, `done ${it.count}×`)).join('');
       }
-      if (q && !found) html += '<div class="empty-list">Nothing in your plan or history matches. Create it as a custom exercise.</div>';
+      // The rest of the library, by muscle
+      MUSCLES.forEach(m => {
+        const list = [...LIBRARY.values()].filter(e => e.muscle === m && !planNames.has(e.name.toLowerCase()) && !recent.has(e.name.toLowerCase()) && matches(e.name));
+        if (list.length) html += `<div class="choice-section">${m} · exercise library</div>` + libSection(list);
+      });
+      if (q && !found) html += '<div class="empty-list">Nothing matches. Create it as a custom exercise.</div>';
+      renderAddList(html, picks, query);
+    }
 
+    function renderAddList(html, picks, query) {
       const list = document.getElementById('add-ex-list');
       list.innerHTML = html;
       list.querySelectorAll('.choice').forEach(btn => btn.addEventListener('click', () => {
@@ -2340,7 +2506,8 @@
       if (typed > 0) return typed;
       if (suggestion && suggestion.w > 0) return suggestion.w;
       if (/\bBW\b|bodyweight/i.test(ex.weightTarget)) return 0;
-      const m = String(ex.weightTarget).match(/(\d+(?:\.\d+)?)/);
+      // Only a target with a weight in it counts ("40–55 kg", "12.5 kg DBs"), not "2 reps in reserve"
+      const m = String(ex.weightTarget).match(/(\d+(?:\.\d+)?)\s*(?:[–-]\s*\d+(?:\.\d+)?\s*)?kg/i);
       return m ? parseFloat(m[1]) : 0;
     }
 
@@ -2788,6 +2955,8 @@
           </div>
         `;
       }
+
+      html += loggingTipHtml();
 
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
@@ -3590,7 +3759,12 @@
       // Session list, grouped by week (Monday to Sunday), newest first
       const container = document.getElementById('history-list-container');
       if (!history.length) {
-        container.innerHTML = `<div class="empty-state">No workouts logged yet. Finish a workout to see it here.</div>`;
+        container.innerHTML = `
+          <div class="empty-card">
+            <div class="empty-title">Your workouts will appear here</div>
+            <div class="empty-text">When you finish a workout it lands on the calendar with its sets, volume, duration and personal records.</div>
+            <button class="btn btn-primary btn-sm" onclick="switchView('workout')">Go to Today's Workout</button>
+          </div>`;
         return;
       }
       const thisWeek = startOfWeek(now).getTime();
@@ -3885,7 +4059,7 @@
         target: goalKg,
         targetLabel: `Goal ${fmtNum(goalKg)} kg`,
         label: trend != null ? `Bodyweight, 7-day average ${fmtNum(trend)} kg${rate != null ? `, changing ${fmtNum(rate)} kg per week` : ''}` : 'Bodyweight',
-        emptyText: entries.length ? 'No weigh-ins in this range.' : 'Log your weight to see your trend.',
+        emptyText: entries.length ? 'No weigh-ins in this range.' : 'Log your weight a few times a week. The app averages it, so day-to-day swings don\'t mislead you.',
         key: entries.length ? '<span class="key-line"></span>7-day average<span class="key-dot"></span>Weigh-ins' : '',
         tip: p => `${shortDate(p.x)} · avg <strong>${fmtNum(p.y)} kg</strong> · weighed ${fmtNum(p.raw)}`
       });
@@ -3992,7 +4166,7 @@
       const start = rangeStartMs();
       const shown = points.filter(p => p.x >= start);
       renderLineChart('ex-chart', shown, {
-        emptyText: rows.length ? 'No sessions in this range.' : 'Finish a workout to start tracking progress.',
+        emptyText: rows.length ? 'No sessions in this range.' : 'Finish your first workout and your lifts will be charted here, with personal records marked.',
         label: shown.length ? `${progressExercise} ${metric.label}: latest ${fmtNum(shown[shown.length - 1].y)} ${metric.unit}, best ${fmtNum(Math.max(...shown.map(p => p.y)))} ${metric.unit}` : '',
         key: shown.some(p => p.record) ? '<span class="key-dot gold"></span>PR session or all-time best' : '',
         tip: p => `${shortDate(p.x)} · ${escapeHtml(p.day)} · <strong>${fmtNum(p.y)} ${metric.unit}</strong>${p.best ? ' · <span class="tip-pr">Best</span>' : p.pr ? ' · <span class="tip-pr">PR</span>' : ''}`
@@ -4360,7 +4534,8 @@
       renderWorkout();
       renderSettings();
       renderBackupBadge();
-      showToast('All local data has been reset', { type: 'info' });
+      if (needsOnboarding()) openOnboarding();
+      else showToast('All local data has been reset', { type: 'info' });
     }
 
     /* Generic text modal (show text to copy, or paste text in) */
@@ -4553,12 +4728,12 @@
 
     function getPlanName() {
       const plan = getCustomPlan();
-      return plan ? plan.planName : DEFAULT_PLAN_NAME;
+      return plan ? plan.planName : templatePlan(TEMPLATES[0]).planName;
     }
 
     function loadActivePlan() {
       const plan = getCustomPlan();
-      programData = plan ? plan.days : DEFAULT_PLAN;
+      programData = plan ? plan.days : templatePlan(TEMPLATES[0]).days;
       if (currentDayIdx >= programData.length) currentDayIdx = 0;
     }
 
@@ -4718,14 +4893,6 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       renderPlanSummary();
     }
 
-    async function restoreDefaultPlan() {
-      const warning = anyUnsavedSets() ? ' Unsaved sets will be cleared.' : '';
-      if (!await confirmSheet('Restore the default plan?', `Switch back to “${DEFAULT_PLAN_NAME}”.${warning} Your saved history is kept.`, 'Restore')) return;
-      setActivePlan(null);
-      closeSheet('plan-sheet');
-      renderSettings();
-      showToast(`Switched to “${DEFAULT_PLAN_NAME}”`);
-    }
 
     function planDaysHtml(days) {
       return days.map(d => `
@@ -4743,7 +4910,6 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       document.getElementById('plan-summary').innerHTML =
         `<strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises`;
       document.getElementById('plan-days').innerHTML = planDaysHtml(programData);
-      document.getElementById('restore-plan-btn').hidden = !getCustomPlan();
     }
 
     function openPlanSheet() {
@@ -4957,7 +5123,447 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       }, 200);
     });
 
+    /* Exercise library: [name, muscle, equipment, warm-up sets, alternative, reps, rest (s), cue].
+       Templates, the plan editor and Add Exercise build on it. Loads are effort-based: the first session
+       asks for a weight and suggestions take over from there. */
+    const LIBRARY_ROWS = [
+      ['Barbell Bench Press', 'Chest', 'Barbell', 2, 'Dumbbell Bench Press', '6–10', 150, 'Shoulder blades pinched, bar to the lower chest'],
+      ['Dumbbell Bench Press', 'Chest', 'Dumbbell', 2, 'Push-ups', '8–12', 120, 'Full stretch at the bottom, press in a slight arc'],
+      ['Incline Barbell Bench Press', 'Chest', 'Barbell', 2, 'Incline Dumbbell Press', '6–10', 150, 'Bench at 30°, bar to the upper chest'],
+      ['Incline Dumbbell Press', 'Chest', 'Dumbbell', 1, 'Incline Barbell Bench Press', '8–12', 120, 'Bench at 30°, elbows about 45° from the body'],
+      ['Machine Chest Press', 'Chest', 'Machine', 1, 'Dumbbell Bench Press', '8–12', 120, 'Handles at mid-chest, control the return'],
+      ['Pec Deck Machine Flyes', 'Chest', 'Machine', 0, 'Cable Fly', '10–15', 90, 'Soft elbows, squeeze for a second'],
+      ['Cable Fly', 'Chest', 'Cable', 0, 'Pec Deck Machine Flyes', '10–15', 90, 'Slight forward lean, hug a big tree'],
+      ['Dumbbell Fly', 'Chest', 'Dumbbell', 0, 'Cable Fly', '10–15', 90, 'Deep stretch, stop before the shoulders strain'],
+      ['Push-ups', 'Chest', 'Bodyweight', 0, 'Knee Push-ups', '8–15', 90, 'Body straight, chest to the floor'],
+      ['Knee Push-ups', 'Chest', 'Bodyweight', 0, 'Push-ups', '10–20', 60, 'Hips in line with the shoulders'],
+      ['Decline Push-ups', 'Chest', 'Bodyweight', 0, 'Push-ups', '8–15', 90, 'Feet on a chair, slow on the way down'],
+      ['Dips', 'Chest', 'Bar', 1, 'Bench Dips', '6–12', 120, 'Slight forward lean, stop at 90° at the elbow'],
+
+      ['Lat Pulldown', 'Back', 'Machine', 2, 'Assisted Pull-ups', '8–12', 120, 'Pull elbows down to the ribs, chest up'],
+      ['Pull-ups', 'Back', 'Bar', 1, 'Lat Pulldown', '5–10', 150, 'Full hang at the bottom, chin over the bar'],
+      ['Chin-ups', 'Back', 'Bar', 1, 'Assisted Pull-ups', '5–10', 150, 'Palms facing you, chest to the bar'],
+      ['Assisted Pull-ups', 'Back', 'Machine', 1, 'Lat Pulldown', '6–10', 120, 'Use the least assistance you can control'],
+      ['Seated Cable Row', 'Back', 'Cable', 1, 'Chest-Supported Dumbbell Row', '8–12', 120, 'Tall chest, pull to the belly button'],
+      ['Barbell Bent-Over Row', 'Back', 'Barbell', 1, 'Single-Arm Dumbbell Row', '6–10', 150, 'Hinge to 45°, bar to the lower ribs'],
+      ['Single-Arm Dumbbell Row', 'Back', 'Dumbbell', 0, 'Seated Cable Row', '8–12 / arm', 90, 'Pull to the hip, pause at the top'],
+      ['Chest-Supported Dumbbell Row', 'Back', 'Dumbbell', 0, 'Seated Cable Row', '10–12', 90, 'Chest on an incline bench, squeeze the shoulder blades'],
+      ['Inverted Row', 'Back', 'Bodyweight', 0, 'Towel Door Row', '6–12', 90, 'Under a sturdy table or bar, body straight'],
+      ['Towel Door Row', 'Back', 'Bodyweight', 0, 'Inverted Row', '10–15', 60, 'Towel around a door handle, lean back and row'],
+      ['Face Pull', 'Back', 'Cable', 0, 'Rear Delt Dumbbell Fly', '12–15', 60, 'Rope to the forehead, elbows high'],
+      ['Rear Delt Dumbbell Fly', 'Shoulders', 'Dumbbell', 0, 'Face Pull', '12–15', 60, 'Hinged over, lead with the elbows'],
+
+      ['Barbell Overhead Press', 'Shoulders', 'Barbell', 2, 'Seated Dumbbell Shoulder Press', '6–10', 150, 'Squeeze glutes, head through at the top'],
+      ['Seated Dumbbell Shoulder Press', 'Shoulders', 'Dumbbell', 2, 'Machine Shoulder Press', '8–12', 120, 'Lower to ear level, press straight up'],
+      ['Machine Shoulder Press', 'Shoulders', 'Machine', 1, 'Seated Dumbbell Shoulder Press', '8–12', 120, 'Handles at shoulder height, no back arch'],
+      ['Dumbbell Lateral Raise', 'Shoulders', 'Dumbbell', 0, 'Cable Lateral Raise', '12–15', 60, 'Lead with the elbows, stop at shoulder height'],
+      ['Cable Lateral Raise', 'Shoulders', 'Cable', 0, 'Dumbbell Lateral Raise', '12–15', 60, 'Cable behind you, slow on the way down'],
+      ['Pike Push-ups', 'Shoulders', 'Bodyweight', 0, 'Push-ups', '6–12', 90, 'Hips high, head to the floor between the hands'],
+
+      ['Barbell Back Squat', 'Legs', 'Barbell', 3, 'Leg Press', '5–8', 180, 'Brace, sit between the hips, knees track the toes'],
+      ['Goblet Squat', 'Legs', 'Dumbbell', 1, 'Bodyweight Squat', '8–12', 120, 'Dumbbell at the chest, elbows inside the knees'],
+      ['Leg Press', 'Legs', 'Machine', 2, 'Goblet Squat', '10–12', 150, 'Lower until the hips start to lift, then drive'],
+      ['Bodyweight Squat', 'Legs', 'Bodyweight', 0, 'Goblet Squat', '15–25', 60, 'Slow down, pause at the bottom'],
+      ['Bodyweight Lunge', 'Legs', 'Bodyweight', 0, 'Bodyweight Squat', '10–15 / leg', 60, 'Step back, back knee just above the floor'],
+      ['Bulgarian Split Squat', 'Legs', 'Dumbbell', 1, 'Reverse Lunge', '8–12 / leg', 90, 'Back foot on a bench, front shin near vertical'],
+      ['Reverse Lunge', 'Legs', 'Dumbbell', 0, 'Bulgarian Split Squat', '8–12 / leg', 90, 'Step back, back knee just above the floor'],
+      ['Walking Lunge', 'Legs', 'Dumbbell', 0, 'Reverse Lunge', '10–12 / leg', 90, 'Long steps, torso upright'],
+      ['Step-ups', 'Legs', 'Dumbbell', 0, 'Reverse Lunge', '10–12 / leg', 90, 'Drive through the heel of the top foot'],
+      ['Leg Extension', 'Legs', 'Machine', 1, 'Goblet Squat', '12–15', 90, 'Pause at the top, slow down'],
+      ['Romanian Deadlift', 'Hamstrings', 'Barbell', 2, 'Dumbbell Romanian Deadlift', '8–10', 150, 'Soft knees, push the hips back, bar close'],
+      ['Dumbbell Romanian Deadlift', 'Hamstrings', 'Dumbbell', 1, 'Romanian Deadlift', '10–12', 120, 'Hips back until you feel the hamstrings stretch'],
+      ['Single-Leg Romanian Deadlift', 'Hamstrings', 'Bodyweight', 0, 'Dumbbell Romanian Deadlift', '10–12 / leg', 60, 'Hips square, reach long with the back leg'],
+      ['Trap Bar Deadlift', 'Hamstrings', 'Barbell', 3, 'Romanian Deadlift', '5–8', 180, 'Push the floor away, stand tall'],
+      ['Lying Leg Curl', 'Hamstrings', 'Machine', 1, 'Seated Leg Curl', '10–12', 90, 'Hips down, slow on the way back'],
+      ['Seated Leg Curl', 'Hamstrings', 'Machine', 1, 'Lying Leg Curl', '10–12', 90, 'Lean forward slightly for a bigger stretch'],
+      ['Hip Thrust', 'Glutes', 'Barbell', 2, 'Glute Bridge', '8–12', 120, 'Chin tucked, pause with the hips locked out'],
+      ['Glute Bridge', 'Glutes', 'Bodyweight', 0, 'Hip Thrust', '12–20', 60, 'Drive through the heels, squeeze at the top'],
+      ['Single-Leg Glute Bridge', 'Glutes', 'Bodyweight', 0, 'Glute Bridge', '10–15 / leg', 60, 'Hips level, pause at the top'],
+      ['Standing Calf Raise', 'Calves', 'Machine', 1, 'Single-Leg Calf Raise', '10–15', 60, 'Pause in the stretch and at the top'],
+      ['Single-Leg Calf Raise', 'Calves', 'Bodyweight', 1, 'Standing Calf Raise', '12–20 / leg', 60, 'On a step, full range, hold for balance'],
+
+      ['Barbell Curl', 'Biceps', 'Barbell', 1, 'Dumbbell Curl', '8–12', 90, 'Elbows still, no swinging'],
+      ['Dumbbell Curl', 'Biceps', 'Dumbbell', 1, 'Cable Curl', '10–12', 60, 'Turn the palm up as you curl'],
+      ['Hammer Curl', 'Biceps', 'Dumbbell', 0, 'Dumbbell Curl', '10–12', 60, 'Neutral grip, elbows by your sides'],
+      ['Incline Dumbbell Curl', 'Biceps', 'Dumbbell', 0, 'Dumbbell Curl', '10–12', 60, 'Arms hang straight, full stretch'],
+      ['Cable Curl', 'Biceps', 'Cable', 0, 'Dumbbell Curl', '10–15', 60, 'Constant tension, squeeze at the top'],
+      ['Triceps Pushdown', 'Triceps', 'Cable', 1, 'Overhead Dumbbell Extension', '10–15', 60, 'Elbows pinned, lock out fully'],
+      ['Overhead Dumbbell Extension', 'Triceps', 'Dumbbell', 1, 'Triceps Pushdown', '10–12', 60, 'Elbows in, deep stretch behind the head'],
+      ['Skull Crushers', 'Triceps', 'Barbell', 1, 'Overhead Dumbbell Extension', '8–12', 90, 'Lower to just behind the head'],
+      ['Close-Grip Bench Press', 'Triceps', 'Barbell', 1, 'Dips', '6–10', 120, 'Hands shoulder-width, elbows tucked'],
+      ['Bench Dips', 'Triceps', 'Bodyweight', 1, 'Diamond Push-ups', '10–15', 60, 'Shoulders down, stop at 90°'],
+      ['Diamond Push-ups', 'Triceps', 'Bodyweight', 0, 'Bench Dips', '6–15', 60, 'Hands close, elbows brush the ribs'],
+
+      ['Plank', 'Core', 'Bodyweight', 0, 'Dead Bug', '30–60s hold', 60, 'Squeeze glutes, ribs down'],
+      ['Dead Bug', 'Core', 'Bodyweight', 0, 'Plank', '8–12 / side', 60, 'Lower back pressed into the floor'],
+      ['Hanging Knee Raise', 'Core', 'Bar', 0, 'Reverse Crunch', '10–15', 60, 'Curl the pelvis up, no swinging'],
+      ['Reverse Crunch', 'Core', 'Bodyweight', 0, 'Hanging Knee Raise', '12–15', 60, 'Roll the hips off the floor slowly'],
+      ['Cable Crunch', 'Core', 'Cable', 0, 'Reverse Crunch', '12–15', 60, 'Crunch the ribs to the hips, hips still'],
+      ['Pallof Press', 'Core', 'Cable', 0, 'Dead Bug', '10–12 / side', 60, 'Resist the twist, press straight out'],
+      ["Farmer's Carry", 'Core', 'Dumbbell', 0, 'Plank', '30–45s walk', 90, 'Tall posture, short quick steps']
+    ];
+
+    const LIBRARY = new Map(LIBRARY_ROWS.map(([name, muscle, equipment, warmup, alt, reps, rest, cue]) =>
+      [name, { name, muscle, equipment, warmup, alt, reps, rest, cue }]));
+    const MUSCLES = ['Chest', 'Back', 'Shoulders', 'Legs', 'Hamstrings', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Core'];
+
+    function libraryTarget(entry) {
+      return entry.equipment === 'Bodyweight' || entry.equipment === 'Bar' ? 'Bodyweight' : '2 reps in reserve';
+    }
+
+    function repLabel(reps) {
+      return /reps|hold|walk|s\b/.test(reps) ? reps : `${reps} reps`;
+    }
+
+    // Equipment each template's alternatives may use
+    const EQUIPMENT_ALLOWED = { gym: null, dumbbells: ['Dumbbell', 'Bodyweight'], bodyweight: ['Bodyweight'] };
+
+    // An alternative the user can actually do: the named one, else the first same-muscle exercise with allowed equipment
+    function pickAlternative(e, wanted, allowed) {
+      const a = LIBRARY.get(wanted);
+      if (!allowed || (a && allowed.includes(a.equipment))) return a;
+      return [...LIBRARY.values()].find(x => x.muscle === e.muscle && x.name !== e.name && allowed.includes(x.equipment)) || null;
+    }
+
+    // A plan exercise from the library, alternative included; `o` overrides sets, reps, rest, warm-up or alt.
+    function libExercise(name, o = {}, allowed = null) {
+      const e = LIBRARY.get(name);
+      if (!e) throw new Error(`Unknown exercise: ${name}`);
+      const ex = { name, warmup: o.warmup ?? e.warmup, sets: o.sets ?? 3, repTarget: repLabel(o.reps || e.reps), weightTarget: libraryTarget(e), rest: o.rest ?? e.rest, cue: e.cue };
+      const a = pickAlternative(e, o.alt || e.alt, allowed);
+      if (a) ex.alt = { name: a.name, warmup: Math.min(a.warmup, ex.warmup), sets: ex.sets, repTarget: repLabel(a.reps), weightTarget: libraryTarget(a), rest: a.rest, cue: a.cue };
+      return ex;
+    }
+
+    /* Starter templates. `build` returns days of [title, [[exercise, overrides], ...]]. */
+    const TEMPLATES = [
+      {
+        id: 'full-body-3', name: 'Full Body 3×', days: 3, level: 'Beginner friendly', equipment: 'gym', minutes: 50,
+        blurb: 'Every muscle three times a week. The best start for most people.',
+        build: () => [
+          ['Full Body A', [['Barbell Back Squat', { reps: '6–8' }], ['Barbell Bench Press'], ['Lat Pulldown'], ['Romanian Deadlift'], ['Dumbbell Lateral Raise'], ['Plank']]],
+          ['Full Body B', [['Leg Press'], ['Seated Dumbbell Shoulder Press'], ['Seated Cable Row'], ['Lying Leg Curl'], ['Dumbbell Curl'], ['Triceps Pushdown']]],
+          ['Full Body C', [['Bulgarian Split Squat', { warmup: 2 }], ['Incline Dumbbell Press'], ['Assisted Pull-ups'], ['Hip Thrust'], ['Face Pull'], ['Hanging Knee Raise']]]
+        ]
+      },
+      {
+        id: 'upper-lower-4', name: 'Upper / Lower 4×', days: 4, level: 'Beginner to intermediate', equipment: 'gym', minutes: 55,
+        blurb: 'Two upper and two lower days. Each muscle twice a week with more volume.',
+        build: () => [
+          ['Upper A', [['Barbell Bench Press'], ['Barbell Bent-Over Row'], ['Seated Dumbbell Shoulder Press', { warmup: 1 }], ['Lat Pulldown', { warmup: 0 }], ['Dumbbell Curl'], ['Triceps Pushdown', { warmup: 0 }]]],
+          ['Lower A', [['Barbell Back Squat', { reps: '6–8' }], ['Romanian Deadlift'], ['Leg Extension', { warmup: 0 }], ['Lying Leg Curl', { warmup: 0 }], ['Standing Calf Raise'], ['Hanging Knee Raise']]],
+          ['Upper B', [['Incline Dumbbell Press', { warmup: 2 }], ['Seated Cable Row'], ['Lat Pulldown', { warmup: 0 }], ['Dumbbell Lateral Raise'], ['Hammer Curl', { warmup: 1 }], ['Overhead Dumbbell Extension']]],
+          ['Lower B', [['Leg Press'], ['Hip Thrust', { warmup: 1 }], ['Bulgarian Split Squat', { warmup: 0 }], ['Seated Leg Curl', { warmup: 0 }], ['Standing Calf Raise'], ['Cable Crunch']]]
+        ]
+      },
+      {
+        id: 'ppl-3', name: 'Push / Pull / Legs 3×', days: 3, level: 'Intermediate', equipment: 'gym', minutes: 60,
+        blurb: 'Pushing, pulling and legs on separate days. Run it twice a week for 6 days.',
+        build: () => PPL_DAYS()
+      },
+      {
+        id: 'ppl-6', name: 'Push / Pull / Legs 6×', days: 6, level: 'Intermediate to advanced', equipment: 'gym', minutes: 60,
+        blurb: 'The classic split, twice a week. High frequency for experienced lifters.',
+        build: () => [...PPL_DAYS(), ...PPL_DAYS().map(([t, ex]) => [t.replace(' A', ' B'), ex])]
+      },
+      {
+        id: 'dumbbell-3', name: 'Dumbbell Full Body 3×', days: 3, level: 'Beginner friendly', equipment: 'dumbbells', minutes: 45,
+        blurb: 'Just a pair of dumbbells and a bench. Works at home or in a busy gym.',
+        build: () => [
+          ['Full Body A', [['Goblet Squat', { warmup: 2 }], ['Dumbbell Bench Press'], ['Single-Arm Dumbbell Row', { alt: 'Chest-Supported Dumbbell Row' }], ['Dumbbell Romanian Deadlift', { warmup: 0 }], ['Dumbbell Lateral Raise'], ['Dead Bug']]],
+          ['Full Body B', [['Bulgarian Split Squat', { warmup: 2 }], ['Seated Dumbbell Shoulder Press', { warmup: 1, alt: 'Pike Push-ups' }], ['Chest-Supported Dumbbell Row', { alt: 'Single-Arm Dumbbell Row' }], ['Glute Bridge', { alt: 'Single-Leg Glute Bridge' }], ['Dumbbell Curl'], ['Overhead Dumbbell Extension', { warmup: 0 }]]],
+          ['Full Body C', [['Reverse Lunge', { warmup: 1 }], ['Incline Dumbbell Press', { warmup: 2 }], ['Single-Arm Dumbbell Row', { alt: 'Chest-Supported Dumbbell Row' }], ['Single-Leg Romanian Deadlift'], ['Rear Delt Dumbbell Fly', { alt: 'Dumbbell Lateral Raise' }], ["Farmer's Carry"]]]
+        ]
+      },
+      {
+        id: 'bodyweight-3', name: 'Bodyweight at Home 3×', days: 3, level: 'Beginner friendly', equipment: 'bodyweight', minutes: 35,
+        blurb: 'No equipment needed. Make it harder by slowing down and adding reps.',
+        build: () => [
+          ['Full Body A', [['Bodyweight Squat', { warmup: 1, alt: 'Bodyweight Lunge' }], ['Push-ups', { warmup: 1 }], ['Inverted Row'], ['Glute Bridge', { alt: 'Single-Leg Glute Bridge' }], ['Pike Push-ups'], ['Plank']]],
+          ['Full Body B', [['Bodyweight Lunge', { warmup: 1 }], ['Decline Push-ups', { warmup: 1 }], ['Towel Door Row'], ['Single-Leg Romanian Deadlift', { alt: 'Single-Leg Glute Bridge' }], ['Bench Dips', { warmup: 0 }], ['Dead Bug']]],
+          ['Full Body C', [['Bodyweight Squat', { warmup: 1, reps: '20–30' }], ['Push-ups', { warmup: 1 }], ['Inverted Row'], ['Single-Leg Calf Raise', { warmup: 0 }], ['Diamond Push-ups'], ['Reverse Crunch', { alt: 'Dead Bug' }]]]
+        ]
+      },
+      {
+        id: 'recomp-5', name: 'Recomposition Split 5×', days: 5, level: 'Intermediate', equipment: 'gym', minutes: 60,
+        blurb: 'Five focused days with extra arm work. Comes with suggested starting weights.',
+        build: null // the original built-in plan, kept as-is
+      }
+    ];
+
+    const PPL_DAYS = () => [
+      ['Push A', [['Barbell Bench Press'], ['Seated Dumbbell Shoulder Press', { warmup: 1 }], ['Incline Dumbbell Press', { warmup: 0 }], ['Dumbbell Lateral Raise'], ['Triceps Pushdown'], ['Overhead Dumbbell Extension', { warmup: 0 }]]],
+      ['Pull A', [['Lat Pulldown'], ['Barbell Bent-Over Row'], ['Seated Cable Row', { warmup: 0 }], ['Face Pull'], ['Barbell Curl'], ['Hammer Curl']]],
+      ['Legs A', [['Barbell Back Squat', { reps: '6–8' }], ['Romanian Deadlift'], ['Leg Press', { warmup: 0 }], ['Lying Leg Curl', { warmup: 0 }], ['Standing Calf Raise'], ['Hanging Knee Raise']]]
+    ];
+
+    // A template as a plan in the app's stored format (day labels, exercises with alternatives)
+    function templatePlan(t) {
+      const days = t.build
+        ? t.build().map(([title, list], i) => ({ day: `Day ${i + 1}`, title, exercises: list.map(([name, o]) => libExercise(name, o, EQUIPMENT_ALLOWED[t.equipment])) }))
+        : JSON.parse(JSON.stringify(DEFAULT_PLAN));
+      return { planName: t.name.replace(/ \d×$/, ''), templateId: t.id, days };
+    }
+
+    // Recommended template for the setup answers
+    function recommendTemplate({ days, equipment, level }) {
+      if (equipment === 'bodyweight') return 'bodyweight-3';
+      if (equipment === 'dumbbells') return 'dumbbell-3';
+      if (days <= 3) return 'full-body-3';
+      if (days === 4) return 'upper-lower-4';
+      if (days === 5) return level === 'Beginner' ? 'upper-lower-4' : 'recomp-5';
+      return level === 'Beginner' ? 'upper-lower-4' : 'ppl-6';
+    }
+
+    /* Existing users keep their plan: before templates existed, the built-in plan was the owner's own
+       programme. Anyone with data and no saved plan gets it saved as their plan, unchanged. */
+    const ONBOARDED_KEY = 'recomp_onboarded';
+    const SETUP_KEY = 'recomp_setup';
+
+    function migrateExistingUserPlan() {
+      if (getCustomPlan()) return;
+      const hasData = getHistory().length || getBodyweight().length || getProfile() ||
+        Object.keys(localStorage).some(k => /^active_d\d+_e\d+_s\d+_/.test(k));
+      if (!hasData) return;
+      localStorage.setItem(PLAN_KEY, JSON.stringify({ planName: DEFAULT_PLAN_NAME, templateId: 'recomp-5', days: JSON.parse(JSON.stringify(DEFAULT_PLAN)) }));
+      localStorage.setItem(ONBOARDED_KEY, '1');
+    }
+
+    function needsOnboarding() {
+      return !localStorage.getItem(ONBOARDED_KEY) && !getCustomPlan() && !getHistory().length;
+    }
+
+    /* First-launch setup: welcome, about you, training, pick a plan */
+    const GOALS = [
+      { id: 'gain', label: 'Build muscle', sub: 'Get bigger, eat a little more' },
+      { id: 'lose', label: 'Lose fat', sub: 'Keep muscle while you lean out' },
+      { id: 'recomp', label: 'Both', sub: 'Lose fat and build muscle' },
+      { id: 'strength', label: 'Get stronger', sub: 'Lift heavier over time' }
+    ];
+    const LEVELS = [
+      { id: 'Beginner', sub: 'Under 1 year' },
+      { id: 'Intermediate', sub: '1–3 years' },
+      { id: 'Advanced', sub: '3+ years' }
+    ];
+    const EQUIPMENT = [
+      { id: 'gym', label: 'Full gym', sub: 'Barbells, machines, cables' },
+      { id: 'dumbbells', label: 'Dumbbells', sub: 'A pair of dumbbells and a bench' },
+      { id: 'bodyweight', label: 'No equipment', sub: 'Bodyweight at home' }
+    ];
+    let onb = null;
+
+    function openOnboarding() {
+      const saved = readJSON(SETUP_KEY, {});
+      const profile = getProfile() || {};
+      onb = { step: 0, name: profile.name || '', goal: saved.goal || 'recomp', level: saved.level || 'Beginner', days: saved.days || 3, equipment: saved.equipment || 'gym', picked: null };
+      const el = document.getElementById('onboarding');
+      el.hidden = false;
+      void el.offsetWidth;
+      el.classList.add('open');
+      renderOnboarding();
+    }
+
+    function closeOnboarding() {
+      const el = document.getElementById('onboarding');
+      el.classList.remove('open');
+      setTimeout(() => { el.hidden = true; }, 300);
+      onb = null;
+    }
+
+    function onbSet(field, value) {
+      onb[field] = value;
+      if (field !== 'name') {
+        haptic('light');
+        renderOnboarding();
+      }
+    }
+
+    function onbGo(step) {
+      if (step === 3) onb.picked = recommendTemplate(onb);
+      onb.step = step;
+      renderOnboarding();
+      document.querySelector('#onboarding .onb-scroll').scrollTop = 0;
+    }
+
+    function templateById(id) {
+      return TEMPLATES.find(t => t.id === id) || TEMPLATES[0];
+    }
+
+    function templateCardHtml(t, { featured = false, recommended = false, onclick = '' } = {}) {
+      const plan = templatePlan(t);
+      return `
+        <div class="tpl-card ${featured ? 'featured' : ''}" ${onclick ? `onclick="${onclick}" role="button"` : ''}>
+          ${recommended ? '<div class="tpl-badge">Recommended for you</div>' : ''}
+          <div class="tpl-name">${escapeHtml(t.name)}</div>
+          <div class="tpl-meta">${t.days} days a week · ~${t.minutes} min · ${escapeHtml(t.level)}</div>
+          <div class="tpl-blurb">${escapeHtml(t.blurb)}</div>
+          ${featured ? `<div class="plan-days">${planDaysHtml(plan.days)}</div>` : ''}
+        </div>`;
+    }
+
+    function choiceGrid(items, current, field, cls = '') {
+      return `<div class="opt-grid ${cls}">${items.map(it => `
+        <button class="opt ${it.id === current ? 'on' : ''}" onclick="onbSet('${field}', ${typeof it.id === 'number' ? it.id : `'${it.id}'`})" aria-pressed="${it.id === current}">
+          <span class="opt-label">${escapeHtml(it.label || String(it.id))}</span>
+          ${it.sub ? `<span class="opt-sub">${escapeHtml(it.sub)}</span>` : ''}
+        </button>`).join('')}</div>`;
+    }
+
+    function renderOnboarding() {
+      const body = document.getElementById('onb-body');
+      const foot = document.getElementById('onb-foot');
+      document.getElementById('onb-dots').innerHTML = [0, 1, 2, 3].map(i => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
+      document.getElementById('onb-back').hidden = onb.step === 0;
+
+      if (onb.step === 0) {
+        body.innerHTML = `
+          <img class="onb-logo" src="icon-192.png" alt="">
+          <h2 class="onb-title">Welcome to Recomp</h2>
+          <p class="onb-text">Your training plan, rest timer and progress in one place.</p>
+          <div class="onb-points">
+            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.plan}</span><span><strong>A plan that fits you</strong><br>Pick a proven programme, or create one with AI.</span></div>
+            <div class="onb-point"><span class="onb-point-icon">${icon('check', 2.6)}</span><span><strong>Log in seconds</strong><br>Tap ✓ after each set and the rest timer starts on its own.</span></div>
+            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.backup}</span><span><strong>Private by design</strong><br>Everything stays on this phone. No account needed.</span></div>
+          </div>`;
+        foot.innerHTML = `
+          <button class="btn btn-primary" onclick="onbGo(1)">Get Started</button>
+          <button class="btn btn-plain" onclick="finishOnboarding('skip')">Skip for now</button>`;
+      } else if (onb.step === 1) {
+        body.innerHTML = `
+          <h2 class="onb-title">About you</h2>
+          <p class="onb-text">This shapes your plan and targets. You can change it later in Settings.</p>
+          <label class="onb-field">Your name <span class="opt-sub">(optional)</span>
+            <input type="text" id="onb-name" value="${escapeHtml(onb.name)}" placeholder="First name" autocomplete="given-name" oninput="onbSet('name', this.value)">
+          </label>
+          <div class="onb-q">What's your main goal?</div>
+          ${choiceGrid(GOALS, onb.goal, 'goal', 'two')}
+          <div class="onb-q">How long have you been lifting?</div>
+          ${choiceGrid(LEVELS.map(l => ({ ...l, label: l.id })), onb.level, 'level', 'three')}`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(2)">Continue</button>`;
+      } else if (onb.step === 2) {
+        body.innerHTML = `
+          <h2 class="onb-title">Your training</h2>
+          <p class="onb-text">Be realistic. A plan you can keep up beats a perfect one.</p>
+          <div class="onb-q">Days per week</div>
+          ${choiceGrid([2, 3, 4, 5, 6].map(n => ({ id: n })), onb.days, 'days', 'five')}
+          <div class="onb-q">Where do you train?</div>
+          ${choiceGrid(EQUIPMENT, onb.equipment, 'equipment')}`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(3)">See My Plan</button>`;
+      } else {
+        const rec = recommendTemplate(onb);
+        const picked = templateById(onb.picked || rec);
+        const others = TEMPLATES.filter(t => t.id !== picked.id);
+        body.innerHTML = `
+          <h2 class="onb-title">Your plan</h2>
+          <p class="onb-text">Every exercise has a swap if a machine is taken, plus warm-up sets and rest times. You can change plans any time.</p>
+          ${templateCardHtml(picked, { featured: true, recommended: picked.id === rec })}
+          <div class="onb-q">Other options</div>
+          ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `onbSet('picked', '${t.id}')` })).join('')}
+          <div class="tpl-card ai" onclick="finishOnboarding('ai')" role="button">
+            <div class="tpl-name">${ROW_ICONS.ai} Create one with AI</div>
+            <div class="tpl-blurb">Answer a few details and paste a ChatGPT, Claude or Gemini reply. Built around your equipment and goals.</div>
+          </div>`;
+        foot.innerHTML = `<button class="btn btn-positive" onclick="finishOnboarding('plan')">Use ${escapeHtml(picked.name)}</button>`;
+      }
+    }
+
+    function finishOnboarding(mode) {
+      if (mode !== 'skip') {
+        const goalType = onb.goal === 'strength' ? 'gain' : onb.goal;
+        const profile = { ...(getProfile() || {}), goalType };
+        if (onb.name.trim()) profile.name = onb.name.trim();
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        localStorage.setItem(SETUP_KEY, JSON.stringify({ goal: onb.goal, level: onb.level, days: onb.days, equipment: onb.equipment }));
+      }
+      const choice = mode === 'plan' ? templateById(onb.picked || recommendTemplate(onb))
+        : templateById(mode === 'skip' ? 'full-body-3' : recommendTemplate(onb));
+      setActivePlan(templatePlan(choice));
+      localStorage.setItem(ONBOARDED_KEY, '1');
+      const name = onb.name.trim();
+      closeOnboarding();
+      switchView('workout');
+      updateHeader();
+      updateStats();
+      window.scrollTo(0, 0);
+      if (mode === 'ai') {
+        const setup = readJSON(SETUP_KEY, {});
+        document.getElementById('ai-days').value = String(Math.min(7, Math.max(3, setup.days || 3)));
+        document.getElementById('ai-level').value = setup.level || 'Intermediate';
+        document.getElementById('ai-equipment').value = { gym: 'Full commercial gym', dumbbells: 'A pair of adjustable dumbbells and a bench', bodyweight: 'No equipment, bodyweight at home' }[setup.equipment] || '';
+        setTimeout(() => openAiSheet(), 350);
+      } else {
+        showToast(mode === 'skip' ? `Starting you on ${choice.name}. Change it in Settings.` : `${name ? `${name}, y` : 'Y'}our plan is ready. Start Day 1 whenever you are.`, { duration: 4000 });
+      }
+    }
+
+    function onbBack() {
+      if (onb && onb.step > 0) onbGo(onb.step - 1);
+    }
+
+    /* Template browser (Settings → Workout plan) */
+    let tplPicked = null;
+
+    function openTemplatesSheet() {
+      closeSheet('plan-sheet');
+      const current = getCustomPlan();
+      tplPicked = (current && current.templateId) || recommendTemplate(readJSON(SETUP_KEY, { days: 3, equipment: 'gym', level: 'Beginner' }));
+      renderTemplatesSheet();
+      setTimeout(() => openSheet('templates-sheet'), 50);
+    }
+
+    function pickTemplate(id) {
+      tplPicked = id;
+      haptic('light');
+      renderTemplatesSheet();
+      document.querySelector('#templates-sheet .sheet').scrollTop = 0;
+    }
+
+    function renderTemplatesSheet() {
+      const picked = templateById(tplPicked);
+      const current = getCustomPlan();
+      document.getElementById('tpl-list').innerHTML =
+        templateCardHtml(picked, { featured: true }) +
+        TEMPLATES.filter(t => t.id !== picked.id).map(t => templateCardHtml(t, { onclick: `pickTemplate('${t.id}')` })).join('');
+      document.getElementById('tpl-use').textContent = current && current.templateId === picked.id ? `Restart ${picked.name}` : `Use ${picked.name}`;
+    }
+
+    async function useTemplate() {
+      const t = templateById(tplPicked);
+      const current = getCustomPlan();
+      const warning = anyUnsavedSets() ? ' Unsaved sets will be cleared.' : '';
+      if (current && !await confirmSheet(`Switch to ${t.name}?`, `This replaces “${current.planName}”.${warning} Your workout history is kept.`, 'Switch Plan')) return;
+      setActivePlan(templatePlan(t));
+      closeSheet('templates-sheet');
+      renderSettings();
+      haptic('success');
+      showToast(`Now using ${t.name}`);
+    }
+
+    /* First-workout guide: shown until the first workout is saved or it's dismissed */
+    const TIP_KEY = 'recomp_tip_logging';
+
+    function loggingTipHtml() {
+      if (getHistory().length || localStorage.getItem(TIP_KEY)) return '';
+      return `
+        <div class="tip-card">
+          <div class="tip-title">How logging works</div>
+          <ol class="tip-steps">
+            <li>Type the weight and reps you did. Grey numbers are suggestions.</li>
+            <li>Tap <strong>✓</strong> to lock the set. The rest timer starts on its own.</li>
+            <li>Tap <strong>Finish Workout</strong> at the bottom when you're done.</li>
+          </ol>
+          <button class="btn btn-secondary btn-sm" onclick="dismissLoggingTip()">Got it</button>
+        </div>`;
+    }
+
+    function dismissLoggingTip() {
+      localStorage.setItem(TIP_KEY, '1');
+      haptic('light');
+      renderWorkout();
+    }
+
     // Init App
+    migrateExistingUserPlan();
     loadActivePlan();
     currentDayIdx = initialDayIdx();
     initNav();
@@ -4979,6 +5585,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     })();
     setInterval(() => { if (currentView === 'workout') updateHeader(); }, 60000);
     updateHeader();
+    if (needsOnboarding()) openOnboarding();
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
