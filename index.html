@@ -274,6 +274,23 @@
     .chip.tip { background: var(--accent-soft); color: var(--accent); }
     .chip.tip svg { color: var(--accent); }
     .icon-btn.on { color: var(--text); }
+    .warmup-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+    .warmup-label { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-right: 2px; }
+    .warmup-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 32px;
+      padding: 0 11px;
+      border: 1px dashed var(--surface-3);
+      border-radius: 999px;
+      background: none;
+      color: var(--text-2);
+      font-size: var(--t-footnote);
+      font-weight: 600;
+    }
+    .warmup-chip svg { width: 12px; height: 12px; }
+    .warmup-chip.done { border: 1px solid transparent; background: var(--surface-2); color: var(--text-3); text-decoration: line-through; }
     .ex-info {
       margin-top: 12px;
       padding: 12px;
@@ -1372,6 +1389,9 @@
           <label>Reps<input type="text" id="cx-reps" placeholder="8–12" value="8–12"></label>
           <label>Weight target<input type="text" id="cx-weight" placeholder="e.g. 20 kg"></label>
           <label>Rest<select id="cx-rest"></select></label>
+          <label class="full">Warm-up sets
+            <select id="cx-warmup"><option value="0" selected>None</option><option value="1">1 (light set)</option><option value="2">2 (ramp up)</option><option value="3">3 (heavy lift)</option></select>
+          </label>
         </div>
         <div class="sheet-actions">
           <button class="btn btn-primary" onclick="submitCustomExercise()">Add Exercise</button>
@@ -1506,76 +1526,76 @@
         day: "Day 1",
         title: "Upper Chest & Heavy Biceps Focus",
         exercises: [
-          { name: "Barbell Bench Press", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
-            alt: { name: "Incline DB Press", repTarget: "12–15 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering, 1s pause at the chest" } },
-          { name: "Pec Deck Machine Flyes", repTarget: "10–12 reps", weightTarget: "Moderate", rest: 90, sets: 3,
-            alt: { name: "Incline DB Flyes", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Deep stretch, 2s pause at the bottom" } },
-          { name: "Barbell Bicep Curls", repTarget: "8–10 reps", weightTarget: "20–27.5 kg", rest: 120, sets: 3,
-            alt: { name: "Standing Alt DB Curls", repTarget: "10–12 reps / arm", weightTarget: "12.5 kg DBs", rest: 90, sets: 3, cue: "Twist palm up at the top, no swinging" } },
-          { name: "Incline DB Curls (45°)", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
-            alt: { name: "Seated DB Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "3s lowering, full stretch at the bottom" } },
-          { name: "Barbell Reverse Curls", repTarget: "8–10 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
-            alt: { name: "Cross-Body DB Hammer Curls", repTarget: "10–12 reps / arm", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Curl toward the opposite shoulder" } }
+          { name: "Barbell Bench Press", warmup: 2, repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
+            alt: { name: "Incline DB Press", warmup: 2, repTarget: "12–15 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering, 1s pause at the chest" } },
+          { name: "Pec Deck Machine Flyes", warmup: 0, repTarget: "10–12 reps", weightTarget: "Moderate", rest: 90, sets: 3,
+            alt: { name: "Incline DB Flyes", warmup: 0, repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Deep stretch, 2s pause at the bottom" } },
+          { name: "Barbell Bicep Curls", warmup: 1, repTarget: "8–10 reps", weightTarget: "20–27.5 kg", rest: 120, sets: 3,
+            alt: { name: "Standing Alt DB Curls", warmup: 1, repTarget: "10–12 reps / arm", weightTarget: "12.5 kg DBs", rest: 90, sets: 3, cue: "Twist palm up at the top, no swinging" } },
+          { name: "Incline DB Curls (45°)", warmup: 0, repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
+            alt: { name: "Seated DB Curls", warmup: 0, repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "3s lowering, full stretch at the bottom" } },
+          { name: "Barbell Reverse Curls", warmup: 0, repTarget: "8–10 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
+            alt: { name: "Cross-Body DB Hammer Curls", warmup: 0, repTarget: "10–12 reps / arm", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Curl toward the opposite shoulder" } }
         ]
       },
       {
         day: "Day 2",
         title: "Lower Body & Core Focus",
         exercises: [
-          { name: "Leg Press Machine", repTarget: "10–12 reps", weightTarget: "Moderate-Heavy", rest: 150, sets: 3,
-            alt: { name: "Barbell Squats", repTarget: "8–12 reps", weightTarget: "35–50 kg bar", rest: 150, sets: 3, cue: "3s down, hips below knees if mobility allows" } },
-          { name: "Barbell Romanian Deadlifts", repTarget: "8–10 reps", weightTarget: "45–60 kg", rest: 180, sets: 3,
-            alt: { name: "Single-Leg DB RDLs", repTarget: "10–12 reps / leg", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, hips square, feel the hamstring stretch" } },
-          { name: "Single-Leg DB Calf Raise", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DB", rest: 90, sets: 3,
-            alt: { name: "Standing Barbell Calf Raise", repTarget: "12–15 reps", weightTarget: "40–50 kg bar", rest: 60, sets: 3, cue: "2s pause at the bottom stretch, 1s squeeze at the top" } },
-          { name: "Hanging Leg Raises / Knee Raises", repTarget: "12–15 reps", weightTarget: "Bodyweight", rest: 60, sets: 3,
-            alt: { name: "Incline Crunches / 60s Plank", repTarget: "12–15 reps or 60s", weightTarget: "Bodyweight", rest: 60, sets: 3, cue: "Hold a 5 kg plate once 15 reps is easy" } }
+          { name: "Leg Press Machine", warmup: 2, repTarget: "10–12 reps", weightTarget: "Moderate-Heavy", rest: 150, sets: 3,
+            alt: { name: "Barbell Squats", warmup: 2, repTarget: "8–12 reps", weightTarget: "35–50 kg bar", rest: 150, sets: 3, cue: "3s down, hips below knees if mobility allows" } },
+          { name: "Barbell Romanian Deadlifts", warmup: 2, repTarget: "8–10 reps", weightTarget: "45–60 kg", rest: 180, sets: 3,
+            alt: { name: "Single-Leg DB RDLs", warmup: 1, repTarget: "10–12 reps / leg", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, hips square, feel the hamstring stretch" } },
+          { name: "Single-Leg DB Calf Raise", warmup: 1, repTarget: "12–15 reps", weightTarget: "10–12.5 kg DB", rest: 90, sets: 3,
+            alt: { name: "Standing Barbell Calf Raise", warmup: 1, repTarget: "12–15 reps", weightTarget: "40–50 kg bar", rest: 60, sets: 3, cue: "2s pause at the bottom stretch, 1s squeeze at the top" } },
+          { name: "Hanging Leg Raises / Knee Raises", warmup: 0, repTarget: "12–15 reps", weightTarget: "Bodyweight", rest: 60, sets: 3,
+            alt: { name: "Incline Crunches / 60s Plank", warmup: 0, repTarget: "12–15 reps or 60s", weightTarget: "Bodyweight", rest: 60, sets: 3, cue: "Hold a 5 kg plate once 15 reps is easy" } }
         ]
       },
       {
         day: "Day 3",
         title: "Shoulders & Heavy Triceps Focus",
         exercises: [
-          { name: "Barbell Overhead Shoulder Press", repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3,
-            alt: { name: "Seated DB Overhead Press", repTarget: "10–12 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering to ear level" } },
-          { name: "Standing DB Lateral Raises", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4,
-            alt: { name: "Single-Arm DB Lateral Raises", repTarget: "12–15 reps / arm", weightTarget: "7.5–10 kg DB", rest: 60, sets: 4, cue: "Lean away holding a post, lead with the elbow" } },
-          { name: "Close-Grip Barbell Bench Press", repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3,
-            alt: { name: "Weighted Bench Dips", repTarget: "8–12 reps", weightTarget: "10–15 kg plate", rest: 120, sets: 3, cue: "Elbows back, stop at 90°" } },
-          { name: "Seated 60° Incline DB Overhead Ext", repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3,
-            alt: { name: "Seated Barbell French Press", repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Elbows in, deep stretch behind the head" } },
-          { name: "Incline DB Skullcrushers (30°)", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
-            alt: { name: "Lying Barbell Skullcrushers", repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Lower to just behind the head" } }
+          { name: "Barbell Overhead Shoulder Press", warmup: 2, repTarget: "8–10 reps", weightTarget: "30–40 kg", rest: 180, sets: 3,
+            alt: { name: "Seated DB Overhead Press", warmup: 2, repTarget: "10–12 reps", weightTarget: "12.5 kg DBs", rest: 120, sets: 3, cue: "3s lowering to ear level" } },
+          { name: "Standing DB Lateral Raises", warmup: 0, repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 90, sets: 4,
+            alt: { name: "Single-Arm DB Lateral Raises", warmup: 0, repTarget: "12–15 reps / arm", weightTarget: "7.5–10 kg DB", rest: 60, sets: 4, cue: "Lean away holding a post, lead with the elbow" } },
+          { name: "Close-Grip Barbell Bench Press", warmup: 1, repTarget: "6–8 reps", weightTarget: "35–45 kg", rest: 180, sets: 3,
+            alt: { name: "Weighted Bench Dips", warmup: 1, repTarget: "8–12 reps", weightTarget: "10–15 kg plate", rest: 120, sets: 3, cue: "Elbows back, stop at 90°" } },
+          { name: "Seated 60° Incline DB Overhead Ext", warmup: 1, repTarget: "8–12 reps", weightTarget: "Single 12.5–15 kg", rest: 120, sets: 3,
+            alt: { name: "Seated Barbell French Press", warmup: 1, repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Elbows in, deep stretch behind the head" } },
+          { name: "Incline DB Skullcrushers (30°)", warmup: 0, repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 120, sets: 3,
+            alt: { name: "Lying Barbell Skullcrushers", warmup: 0, repTarget: "10–12 reps", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "Lower to just behind the head" } }
         ]
       },
       {
         day: "Day 4",
         title: "Back & Lower Arm Width",
         exercises: [
-          { name: "Lat Pulldown Machine", repTarget: "8–10 reps", weightTarget: "Moderate-Heavy", rest: 120, sets: 3,
-            alt: { name: "Pull-ups / Negative Pull-ups", repTarget: "Max reps (3–8) or 5 negatives", weightTarget: "Bodyweight", rest: 120, sets: 3, cue: "Negatives: jump up, lower for 5s" } },
-          { name: "Barbell Bent-Over Rows", repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
-            alt: { name: "Single-Arm DB Rows", repTarget: "12–15 reps / arm", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "Pull to the hip, 2s squeeze at the top" } },
-          { name: "Cross-Body DB Hammer Curls", repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
-            alt: { name: "Incline Neutral-Grip DB Curls", repTarget: "10–12 reps", weightTarget: "8–12.5 kg DBs", rest: 90, sets: 3, cue: "Arms hang straight down, no shoulder swing" } },
-          { name: "Heavy DB Farmer’s Carries", repTarget: "45s walks", weightTarget: "12.5 kg DBs", rest: 90, sets: 3,
-            alt: { name: "Barbell Static Grip Hold", repTarget: "30–45s hold", weightTarget: "50 kg bar", rest: 90, sets: 3, cue: "Double overhand, shoulders packed" } }
+          { name: "Lat Pulldown Machine", warmup: 2, repTarget: "8–10 reps", weightTarget: "Moderate-Heavy", rest: 120, sets: 3,
+            alt: { name: "Pull-ups / Negative Pull-ups", warmup: 1, repTarget: "Max reps (3–8) or 5 negatives", weightTarget: "Bodyweight", rest: 120, sets: 3, cue: "Negatives: jump up, lower for 5s" } },
+          { name: "Barbell Bent-Over Rows", warmup: 1, repTarget: "8–10 reps", weightTarget: "40–55 kg", rest: 180, sets: 3,
+            alt: { name: "Single-Arm DB Rows", warmup: 0, repTarget: "12–15 reps / arm", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "Pull to the hip, 2s squeeze at the top" } },
+          { name: "Cross-Body DB Hammer Curls", warmup: 0, repTarget: "8–10 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Incline Neutral-Grip DB Curls", warmup: 0, repTarget: "10–12 reps", weightTarget: "8–12.5 kg DBs", rest: 90, sets: 3, cue: "Arms hang straight down, no shoulder swing" } },
+          { name: "Heavy DB Farmer’s Carries", warmup: 0, repTarget: "45s walks", weightTarget: "12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Barbell Static Grip Hold", warmup: 0, repTarget: "30–45s hold", weightTarget: "50 kg bar", rest: 90, sets: 3, cue: "Double overhand, shoulders packed" } }
         ]
       },
       {
         day: "Day 5",
         title: "Chest Definition & Arm Pump",
         exercises: [
-          { name: "Pec Deck Machine Flyes", repTarget: "12–15 reps", weightTarget: "Moderate", rest: 90, sets: 3,
-            alt: { name: "Flat DB Flyes", repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Slight elbow bend, 2s stretch at the bottom" } },
-          { name: "Barbell Pullovers", repTarget: "10–12 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
-            alt: { name: "Single DB Pullover", repTarget: "12–15 reps", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, ribs down" } },
-          { name: "Standing DB Bicep Curls", repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
-            alt: { name: "Barbell 21s", repTarget: "21 reps (7+7+7)", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "7 bottom half, 7 top half, 7 full" } },
-          { name: "Bench Dips", repTarget: "10–12 reps", weightTarget: "BW + 10 kg plate", rest: 90, sets: 3,
-            alt: { name: "Overhand DB Tricep Kickbacks", repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 60, sets: 3, cue: "Upper arm locked, 1s squeeze at lockout" } },
-          { name: "Bodyweight Push-ups", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2,
-            alt: { name: "Decline Push-ups (Feet elevated)", repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2, cue: "Body straight, chest to the floor" } }
+          { name: "Pec Deck Machine Flyes", warmup: 1, repTarget: "12–15 reps", weightTarget: "Moderate", rest: 90, sets: 3,
+            alt: { name: "Flat DB Flyes", warmup: 1, repTarget: "12–15 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3, cue: "Slight elbow bend, 2s stretch at the bottom" } },
+          { name: "Barbell Pullovers", warmup: 1, repTarget: "10–12 reps", weightTarget: "15–22.5 kg", rest: 90, sets: 3,
+            alt: { name: "Single DB Pullover", warmup: 1, repTarget: "12–15 reps", weightTarget: "12.5 kg DB", rest: 90, sets: 3, cue: "3s lowering, ribs down" } },
+          { name: "Standing DB Bicep Curls", warmup: 1, repTarget: "10–12 reps", weightTarget: "10–12.5 kg DBs", rest: 90, sets: 3,
+            alt: { name: "Barbell 21s", warmup: 1, repTarget: "21 reps (7+7+7)", weightTarget: "15–20 kg bar", rest: 90, sets: 3, cue: "7 bottom half, 7 top half, 7 full" } },
+          { name: "Bench Dips", warmup: 1, repTarget: "10–12 reps", weightTarget: "BW + 10 kg plate", rest: 90, sets: 3,
+            alt: { name: "Overhand DB Tricep Kickbacks", warmup: 0, repTarget: "12–15 reps", weightTarget: "7.5–10 kg DBs", rest: 60, sets: 3, cue: "Upper arm locked, 1s squeeze at lockout" } },
+          { name: "Bodyweight Push-ups", warmup: 0, repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2,
+            alt: { name: "Decline Push-ups (Feet elevated)", warmup: 0, repTarget: "Failure", weightTarget: "Bodyweight", rest: 75, sets: 2, cue: "Body straight, chest to the floor" } }
         ]
       }
     ];
@@ -2092,7 +2112,7 @@
     }
 
     function planExerciseSub(ex) {
-      return `${ex.sets} × ${ex.repTarget} · ${ex.weightTarget} · rest ${fmtClock(ex.rest)}`;
+      return `${ex.warmup ? `${ex.warmup} warm-up + ` : ''}${ex.sets} × ${ex.repTarget} · ${ex.weightTarget} · rest ${fmtClock(ex.rest)}`;
     }
 
     function renderAddExerciseList() {
@@ -2184,7 +2204,8 @@
           sets: parseInt(document.getElementById('cx-sets').value, 10) || 3,
           repTarget: /reps|s\b|hold|failure/i.test(reps) ? reps : `${reps.replace('-', '–')} reps`,
           weightTarget: document.getElementById('cx-weight').value.trim() || 'Custom',
-          rest: parseInt(document.getElementById('cx-rest').value, 10) || 90
+          rest: parseInt(document.getElementById('cx-rest').value, 10) || 90,
+          warmup: parseInt(document.getElementById('cx-warmup').value, 10) || 0
         }
       });
     }
@@ -2202,8 +2223,10 @@
         isCustom: true
       };
       if (t.cue) custom.cue = t.cue;
+      if (t.warmup !== undefined) custom.warmup = t.warmup;
       if (t.alt && typeof t.alt === 'object' && t.alt.name) {
         custom.alt = { name: t.alt.name, repTarget: t.alt.repTarget, weightTarget: t.alt.weightTarget, rest: t.alt.rest, sets: t.alt.sets };
+        if (t.alt.warmup !== undefined) custom.alt.warmup = t.alt.warmup;
         if (t.alt.cue) custom.alt.cue = t.alt.cue;
       }
       if (fromDay) custom.fromDay = fromDay;
@@ -2284,6 +2307,75 @@
       const customs = getCustomExercises(dayIdx).map((ex, j) =>
         withSwap(ex, base.length + j, { isCustom: true, ...(ex.fromDay ? { fromDay: ex.fromDay } : {}) }));
       return [...base, ...customs];
+    }
+
+    /* Warm-up sets: a short ramp to the working weight before the working sets. They are ticked off, not
+       logged: they never count toward history, volume or PRs. */
+    const WARMUP_RAMPS = {
+      1: [{ pct: 0.5, reps: 8 }],
+      2: [{ pct: 0.5, reps: 8 }, { pct: 0.75, reps: 4 }],
+      3: [{ pct: 0.4, reps: 8 }, { pct: 0.6, reps: 5 }, { pct: 0.8, reps: 2 }]
+    };
+    const COMPOUND_RE = /press|squat|deadlift|\bRDL|row|pull-?down|pull-?up|chin-?up|dip|lunge|leg press|hip thrust/i;
+
+    // Plans without warm-up counts (older or imported ones): 2 before the day's first exercise,
+    // 1 before a later compound lift, none for isolation work.
+    function defaultWarmup(ex, exIdx) {
+      if (exIdx === 0) return 2;
+      return COMPOUND_RE.test(ex.name) ? 1 : 0;
+    }
+
+    function warmupCount(ex, exIdx) {
+      const n = parseInt(ex.warmup, 10);
+      return Math.min(3, Number.isNaN(n) ? defaultWarmup(ex, exIdx) : Math.max(0, n));
+    }
+
+    function warmupKey(dayIdx, exIdx, i) {
+      return `active_d${dayIdx}_e${exIdx}_wu${i}`;
+    }
+
+    // The working weight the ramp builds to: what's typed in set 1, else the suggestion, else the plan's target.
+    function workingWeight(ex, exIdx, suggestion) {
+      const typed = parseFloat(localStorage.getItem(setKey(currentDayIdx, exIdx, 1, 'w')));
+      if (typed > 0) return typed;
+      if (suggestion && suggestion.w > 0) return suggestion.w;
+      if (/\bBW\b|bodyweight/i.test(ex.weightTarget)) return 0;
+      const m = String(ex.weightTarget).match(/(\d+(?:\.\d+)?)/);
+      return m ? parseFloat(m[1]) : 0;
+    }
+
+    function warmupSets(ex, exIdx, suggestion) {
+      const n = warmupCount(ex, exIdx);
+      if (!n) return [];
+      const work = workingWeight(ex, exIdx, suggestion);
+      const barbell = /barbell|\bbar\b|bench press|squat|deadlift|\bRDL/i.test(`${ex.name} ${ex.weightTarget}`) && !/\bDBs?\b/.test(ex.name);
+      const dumbbell = /\bDBs?\b/.test(`${ex.name} ${ex.weightTarget}`);
+      return WARMUP_RAMPS[n].map(({ pct, reps }) => {
+        // No number to work from (machines "Moderate", bodyweight): name the effort instead
+        if (!work) return { label: `${pct < 0.55 ? 'Light' : pct < 0.7 ? 'Moderate' : 'Heavier'} × ${reps}`, reps };
+        let kg = work * pct;
+        kg = dumbbell ? Math.max(1, Math.round(kg)) : Math.max(barbell ? 20 : 2.5, Math.round(kg / 2.5) * 2.5);
+        // Too close to the working weight to be a warm-up (e.g. a 20 kg curl): just go light
+        if (kg >= work * 0.85) return { label: `Light × ${reps}`, reps };
+        if (barbell && kg <= 20) return { label: `Bar × ${reps}`, kg: 20, reps };
+        return { label: `${fmtNum(kg)} kg × ${reps}`, kg, reps };
+      });
+    }
+
+    // Tick a warm-up set; the next one (or set 1) is suggested after a short rest.
+    function toggleWarmup(exIdx, i) {
+      const key = warmupKey(currentDayIdx, exIdx, i);
+      const done = localStorage.getItem(key) === 'true';
+      if (done) localStorage.removeItem(key);
+      else localStorage.setItem(key, 'true');
+      haptic(done ? 'light' : 'success');
+      renderWorkout();
+      if (done) return;
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+      const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), 1));
+      const ramp = warmupSets(ex, exIdx, suggestion);
+      const nextIdx = ramp.findIndex((_, j) => j > i && localStorage.getItem(warmupKey(currentDayIdx, exIdx, j)) !== 'true');
+      startRestTimer(60, nextIdx !== -1 ? `Next: warm-up ${nextIdx + 1} · ${ramp[nextIdx].label}` : nextSetLabel(exIdx, 0));
     }
 
     // The swap choice is remembered (equipment rarely changes); entered values stay in place.
@@ -2726,6 +2818,7 @@
         const tip = progressionTip(ex, lastSetFor(last, 1));
         const lastBest = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
         const showInfo = infoOpen.has(exStateKey(exIdx));
+        const warmups = allDone ? [] : warmupSets(ex, exIdx, suggestSet(ex, lastSetFor(last, 1)));
 
         html += `
           <div class="card ex-card">
@@ -2735,11 +2828,19 @@
               ${allDone ? `<button class="icon-btn plain" onclick="collapseExercise(${exIdx})" aria-label="Collapse">${icon('chevronUp')}</button>` : ''}
               <button class="icon-btn plain ${showInfo ? 'on' : ''}" onclick="toggleExInfo(${exIdx})" aria-label="Exercise details" aria-expanded="${showInfo}">${icon('infoCircle', 1.8)}</button>
             </div>
-            <div class="ex-meta">${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
+            <div class="ex-meta">${warmups.length ? `${warmups.length} warm-up + ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
             <div class="ex-chips">
               <button class="chip" onclick="pickRest(${exIdx})">${icon('clock', 2)}Rest ${fmtClock(rest)}</button>
               ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}
             </div>
+            ${warmups.length ? `
+              <div class="warmup-row" role="group" aria-label="Warm-up sets">
+                <span class="warmup-label">Warm-up</span>
+                ${warmups.map((w, i) => {
+                  const wDone = localStorage.getItem(warmupKey(currentDayIdx, exIdx, i)) === 'true';
+                  return `<button class="warmup-chip ${wDone ? 'done' : ''}" onclick="toggleWarmup(${exIdx}, ${i})" aria-pressed="${wDone}">${wDone ? icon('check', 3) : ''}${escapeHtml(w.label)}</button>`;
+                }).join('')}
+              </div>` : ''}
             ${showInfo ? `
               <div class="ex-info">
                 ${ex.cue ? `<div class="ex-info-row"><span class="ex-info-label">Cue</span><span>${escapeHtml(ex.cue)}</span></div>` : ''}
@@ -4462,7 +4563,8 @@
     }
 
     function planExerciseOut(ex) {
-      const out = { name: ex.name, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
+      const out = { name: ex.name, warmup: ex.warmup, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
+      if (out.warmup === undefined) delete out.warmup;
       if (ex.cue) out.cue = ex.cue;
       return out;
     }
@@ -4509,6 +4611,7 @@ Rules:
 - "weight": a realistic starting load for me, e.g. "40–50 kg", "12.5 kg DBs", "Moderate" or "Bodyweight".
 - "rest": seconds between sets as a number (60–180).
 - "cue": one short technique tip.
+- "warmup": number of light ramp-up sets before the working sets (0–3), not counted as working sets. Use 2 for the day's first heavy compound lift (3 if its working sets are 5 reps or fewer), 1 for a later compound lift or the first exercise for a new joint or muscle (e.g. first biceps or triceps move, overhead or elbow-heavy moves), and 0 for isolation, high-rep or bodyweight work on muscles already warmed up.
 - Every exercise needs an "alt": an alternative using different equipment, with its own sets/reps/weight/rest/cue tuned for the same effort (lighter load = more reps or slower tempo).
 
 Reply with ONLY valid JSON in exactly this format, no other text:
@@ -4520,12 +4623,13 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       "exercises": [
         {
           "name": "Barbell Bench Press",
+          "warmup": 2,
           "sets": 3,
           "reps": "8–10 reps",
           "weight": "40–50 kg",
           "rest": 150,
           "cue": "3s lowering, pause on the chest",
-          "alt": { "name": "DB Bench Press", "sets": 3, "reps": "10–12 reps", "weight": "15–20 kg DBs", "rest": 120, "cue": "Full stretch at the bottom" }
+          "alt": { "name": "DB Bench Press", "warmup": 2, "sets": 3, "reps": "10–12 reps", "weight": "15–20 kg DBs", "rest": 120, "cue": "Full stretch at the bottom" }
         }
       ]
     }
@@ -4572,6 +4676,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           sets: int(raw.sets, 1, 10, 3)
         };
         if (text(raw.cue)) ex.cue = text(raw.cue);
+        const warmup = raw.warmup ?? raw.warmupSets ?? raw.warmups;
+        if (warmup !== undefined && warmup !== null && !Number.isNaN(parseInt(warmup, 10))) ex.warmup = int(warmup, 0, 3, 0);
         return ex;
       };
 
