@@ -389,13 +389,10 @@
       padding: 0;
     }
     .set-more-btn svg { width: 20px; height: 20px; }
-    .locked-row .set-more-btn { height: 30px; }
-    .locked-rest { margin-left: auto; font-size: var(--t-caption); font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
-    .locked-rest.faster { color: var(--accent); }
-    .locked-rest.record { color: var(--gold); }
+    .locked-row .set-more-btn { margin-left: auto; height: 30px; }
 
     /* Swipe a set left to delete */
-    .set-swipe { position: relative; margin-bottom: 8px; border-radius: var(--r-md); overflow: hidden; touch-action: pan-y; }
+    .set-swipe { position: relative; margin-bottom: 0; border-radius: var(--r-md); overflow: hidden; touch-action: pan-y; }
     .set-swipe .set-block { margin-bottom: 0; position: relative; z-index: 1; transition: transform 0.25s var(--ease-out), background-color 0.2s ease, border-color 0.2s ease; }
     .set-swipe .set-block.dragging { transition: none; }
     .set-block:not(.completed) { background: var(--surface-2); }
@@ -499,6 +496,16 @@
       border-left: 2px solid var(--orange);
     }
     .drop-label { font-size: var(--t-footnote); font-weight: 600; color: var(--orange); min-width: 54px; }
+    /* Line under each set: add a drop set on the left, rest before the next set on the right */
+    .set-link { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0 4px 2px; }
+    .set-link-line { flex: 1; height: 0; border-top: 1px dashed var(--separator); }
+    .set-link button { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px; border: none; border-radius: 999px; background: none; font-size: var(--t-footnote); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .set-link button:active { background: var(--surface-2); transform: none; }
+    .set-link svg { width: 14px; height: 14px; }
+    .link-drop { color: var(--orange); margin-left: -10px; }
+    .link-rest { color: var(--text-2); margin-right: -10px; }
+    .link-rest.faster { color: var(--accent); }
+    .link-rest.record { color: var(--gold); }
     .drop-row input[type="number"] { height: 40px; }
     /* Sticky bar while a workout is in progress */
     .session-bar {
@@ -3354,13 +3361,21 @@
           const suggestion = suggestSet(ex, lastSetFor(last, s));
           const canDelete = totalSets > 1;
           const swipe = canDelete ? `data-swipe="${exIdx},${s}"` : '';
-          const moreBtn = `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>`;
+          const moreBtn = canDelete ? `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>` : '';
+          // Always-visible line under the set: add a drop set, and the rest that follows it
+          const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
+          const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr')) === 'rest';
+          const setLink = `
+            <div class="set-link">
+              <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">+ Drop set</button>
+              <span class="set-link-line"></span>
+              <button class="link-rest ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" onclick="pickSetRest(${exIdx}, ${s})" aria-label="Rest after set ${s}: ${fmtClock(setRest)}. Change">${icon('clock', 2)}${fmtClock(setRest)} rest</button>
+            </div>`;
 
           if (isDone) {
             // Committed set: a solid, locked line. Tap to edit.
             const shownW = parseFloat(valW) > 0 ? fmtNum(parseFloat(valW)) : null;
             const prType = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr'));
-            const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
             html += `
               <div class="set-swipe" ${swipe}>
                 <button class="swipe-delete" onclick="deleteSetWithUndo(${exIdx}, ${s})">Delete</button>
@@ -3372,7 +3387,6 @@
                     <span class="locked-x">×</span>
                     <span class="locked-val">${escapeHtml(valR || '–')}<span class="locked-unit">reps</span></span>
                     ${prType ? `<span class="pr-badge" title="${PR_LABELS[prType] || 'Personal record'}">PR</span>` : ''}
-                    <span class="locked-rest ${prType === 'rest' ? 'record' : setRest < ex.rest ? 'faster' : ''}" title="Rest after this set">${fmtClock(setRest)}</span>
                     ${moreBtn}
                   </div>
                   ${drops.filter(d => d.r).map((drop, i) => `
@@ -3380,6 +3394,7 @@
                   `).join('')}
                 </div>
               </div>
+              ${setLink}
             `;
             continue;
           }
@@ -3417,6 +3432,7 @@
                 `).join('')}
               </div>
             </div>
+            ${setLink}
           `;
         }
 
@@ -3560,15 +3576,10 @@
     async function openSetMenu(exIdx, setNum) {
       const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
       const count = getSetCount(currentDayIdx, exIdx, ex.sets);
-      const actions = [
-        { label: `Rest after this set · ${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))}`, value: 'rest' },
-        { label: 'Add drop set', value: 'drop' }
-      ];
-      if (count > 1) actions.push({ label: 'Delete set', value: 'delete', destructive: true });
-      const choice = await actionSheet(`Set ${setNum}`, ex.name, actions);
-      if (choice === 'rest') pickSetRest(exIdx, setNum);
-      else if (choice === 'drop') addDrop(exIdx, setNum);
-      else if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);
+      // Drop sets and rest have their own line under each set; the menu is just for deleting
+      if (count <= 1) return;
+      const choice = await actionSheet(`Set ${setNum}`, ex.name, [{ label: 'Delete set', value: 'delete', destructive: true }]);
+      if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);
     }
 
     // Brief green flash so a typed value visibly "lands"
