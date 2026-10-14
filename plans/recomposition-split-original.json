@@ -1,0 +1,421 @@
+{
+  "planName": "Recomposition Split",
+  "days": [
+    {
+      "title": "Upper Chest & Heavy Biceps Focus",
+      "exercises": [
+        {
+          "name": "Barbell Bench Press",
+          "warmup": 2,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "40–55 kg",
+          "rest": 180,
+          "alt": {
+            "name": "Incline DB Press",
+            "warmup": 2,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "12.5 kg DBs",
+            "rest": 120,
+            "cue": "3s lowering, 1s pause at the chest"
+          }
+        },
+        {
+          "name": "Pec Deck Machine Flyes",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "Moderate",
+          "rest": 90,
+          "alt": {
+            "name": "Incline DB Flyes",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "10–12.5 kg DBs",
+            "rest": 90,
+            "cue": "Deep stretch, 2s pause at the bottom"
+          }
+        },
+        {
+          "name": "Barbell Bicep Curls",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "20–27.5 kg",
+          "rest": 120,
+          "alt": {
+            "name": "Standing Alt DB Curls",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "10–12 reps / arm",
+            "weight": "12.5 kg DBs",
+            "rest": 90,
+            "cue": "Twist palm up at the top, no swinging"
+          }
+        },
+        {
+          "name": "Incline DB Curls (45°)",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "10–12.5 kg DBs",
+          "rest": 120,
+          "alt": {
+            "name": "Seated DB Curls",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "8–10 reps",
+            "weight": "10–12.5 kg DBs",
+            "rest": 90,
+            "cue": "3s lowering, full stretch at the bottom"
+          }
+        },
+        {
+          "name": "Barbell Reverse Curls",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "15–22.5 kg",
+          "rest": 90,
+          "alt": {
+            "name": "Cross-Body DB Hammer Curls",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "10–12 reps / arm",
+            "weight": "10–12.5 kg DBs",
+            "rest": 90,
+            "cue": "Curl toward the opposite shoulder"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Lower Body & Core Focus",
+      "exercises": [
+        {
+          "name": "Leg Press Machine",
+          "warmup": 2,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "Moderate-Heavy",
+          "rest": 150,
+          "alt": {
+            "name": "Barbell Squats",
+            "warmup": 2,
+            "sets": 3,
+            "reps": "8–12 reps",
+            "weight": "35–50 kg bar",
+            "rest": 150,
+            "cue": "3s down, hips below knees if mobility allows"
+          }
+        },
+        {
+          "name": "Barbell Romanian Deadlifts",
+          "warmup": 2,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "45–60 kg",
+          "rest": 180,
+          "alt": {
+            "name": "Single-Leg DB RDLs",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "10–12 reps / leg",
+            "weight": "12.5 kg DB",
+            "rest": 90,
+            "cue": "3s lowering, hips square, feel the hamstring stretch"
+          }
+        },
+        {
+          "name": "Single-Leg DB Calf Raise",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "12–15 reps",
+          "weight": "10–12.5 kg DB",
+          "rest": 90,
+          "alt": {
+            "name": "Standing Barbell Calf Raise",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "40–50 kg bar",
+            "rest": 60,
+            "cue": "2s pause at the bottom stretch, 1s squeeze at the top"
+          }
+        },
+        {
+          "name": "Hanging Leg Raises / Knee Raises",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "12–15 reps",
+          "weight": "Bodyweight",
+          "rest": 60,
+          "alt": {
+            "name": "Incline Crunches / 60s Plank",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "12–15 reps or 60s",
+            "weight": "Bodyweight",
+            "rest": 60,
+            "cue": "Hold a 5 kg plate once 15 reps is easy"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Shoulders & Heavy Triceps Focus",
+      "exercises": [
+        {
+          "name": "Barbell Overhead Shoulder Press",
+          "warmup": 2,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "30–40 kg",
+          "rest": 180,
+          "alt": {
+            "name": "Seated DB Overhead Press",
+            "warmup": 2,
+            "sets": 3,
+            "reps": "10–12 reps",
+            "weight": "12.5 kg DBs",
+            "rest": 120,
+            "cue": "3s lowering to ear level"
+          }
+        },
+        {
+          "name": "Standing DB Lateral Raises",
+          "warmup": 0,
+          "sets": 4,
+          "reps": "12–15 reps",
+          "weight": "7.5–10 kg DBs",
+          "rest": 90,
+          "alt": {
+            "name": "Single-Arm DB Lateral Raises",
+            "warmup": 0,
+            "sets": 4,
+            "reps": "12–15 reps / arm",
+            "weight": "7.5–10 kg DB",
+            "rest": 60,
+            "cue": "Lean away holding a post, lead with the elbow"
+          }
+        },
+        {
+          "name": "Close-Grip Barbell Bench Press",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "6–8 reps",
+          "weight": "35–45 kg",
+          "rest": 180,
+          "alt": {
+            "name": "Weighted Bench Dips",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "8–12 reps",
+            "weight": "10–15 kg plate",
+            "rest": 120,
+            "cue": "Elbows back, stop at 90°"
+          }
+        },
+        {
+          "name": "Seated 60° Incline DB Overhead Ext",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "8–12 reps",
+          "weight": "Single 12.5–15 kg",
+          "rest": 120,
+          "alt": {
+            "name": "Seated Barbell French Press",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "10–12 reps",
+            "weight": "15–20 kg bar",
+            "rest": 90,
+            "cue": "Elbows in, deep stretch behind the head"
+          }
+        },
+        {
+          "name": "Incline DB Skullcrushers (30°)",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "10–12.5 kg DBs",
+          "rest": 120,
+          "alt": {
+            "name": "Lying Barbell Skullcrushers",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "10–12 reps",
+            "weight": "15–20 kg bar",
+            "rest": 90,
+            "cue": "Lower to just behind the head"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Back & Lower Arm Width",
+      "exercises": [
+        {
+          "name": "Lat Pulldown Machine",
+          "warmup": 2,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "Moderate-Heavy",
+          "rest": 120,
+          "alt": {
+            "name": "Pull-ups / Negative Pull-ups",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "Max reps (3–8) or 5 negatives",
+            "weight": "Bodyweight",
+            "rest": 120,
+            "cue": "Negatives: jump up, lower for 5s"
+          }
+        },
+        {
+          "name": "Barbell Bent-Over Rows",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "40–55 kg",
+          "rest": 180,
+          "alt": {
+            "name": "Single-Arm DB Rows",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "12–15 reps / arm",
+            "weight": "12.5 kg DB",
+            "rest": 90,
+            "cue": "Pull to the hip, 2s squeeze at the top"
+          }
+        },
+        {
+          "name": "Cross-Body DB Hammer Curls",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "8–10 reps",
+          "weight": "10–12.5 kg DBs",
+          "rest": 90,
+          "alt": {
+            "name": "Incline Neutral-Grip DB Curls",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "10–12 reps",
+            "weight": "8–12.5 kg DBs",
+            "rest": 90,
+            "cue": "Arms hang straight down, no shoulder swing"
+          }
+        },
+        {
+          "name": "Heavy DB Farmer’s Carries",
+          "warmup": 0,
+          "sets": 3,
+          "reps": "45s walks",
+          "weight": "12.5 kg DBs",
+          "rest": 90,
+          "alt": {
+            "name": "Barbell Static Grip Hold",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "30–45s hold",
+            "weight": "50 kg bar",
+            "rest": 90,
+            "cue": "Double overhand, shoulders packed"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Chest Definition & Arm Pump",
+      "exercises": [
+        {
+          "name": "Pec Deck Machine Flyes",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "12–15 reps",
+          "weight": "Moderate",
+          "rest": 90,
+          "alt": {
+            "name": "Flat DB Flyes",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "10–12.5 kg DBs",
+            "rest": 90,
+            "cue": "Slight elbow bend, 2s stretch at the bottom"
+          }
+        },
+        {
+          "name": "Barbell Pullovers",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "15–22.5 kg",
+          "rest": 90,
+          "alt": {
+            "name": "Single DB Pullover",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "12.5 kg DB",
+            "rest": 90,
+            "cue": "3s lowering, ribs down"
+          }
+        },
+        {
+          "name": "Standing DB Bicep Curls",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "10–12.5 kg DBs",
+          "rest": 90,
+          "alt": {
+            "name": "Barbell 21s",
+            "warmup": 1,
+            "sets": 3,
+            "reps": "21 reps (7+7+7)",
+            "weight": "15–20 kg bar",
+            "rest": 90,
+            "cue": "7 bottom half, 7 top half, 7 full"
+          }
+        },
+        {
+          "name": "Bench Dips",
+          "warmup": 1,
+          "sets": 3,
+          "reps": "10–12 reps",
+          "weight": "BW + 10 kg plate",
+          "rest": 90,
+          "alt": {
+            "name": "Overhand DB Tricep Kickbacks",
+            "warmup": 0,
+            "sets": 3,
+            "reps": "12–15 reps",
+            "weight": "7.5–10 kg DBs",
+            "rest": 60,
+            "cue": "Upper arm locked, 1s squeeze at lockout"
+          }
+        },
+        {
+          "name": "Bodyweight Push-ups",
+          "warmup": 0,
+          "sets": 2,
+          "reps": "Failure",
+          "weight": "Bodyweight",
+          "rest": 75,
+          "alt": {
+            "name": "Decline Push-ups (Feet elevated)",
+            "warmup": 0,
+            "sets": 2,
+            "reps": "Failure",
+            "weight": "Bodyweight",
+            "rest": 75,
+            "cue": "Body straight, chest to the floor"
+          }
+        }
+      ]
+    }
+  ]
+}

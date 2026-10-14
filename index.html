@@ -1166,6 +1166,7 @@
     .onb-top { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 10px) 12px 6px; }
     .onb-spacer { width: 36px; }
     .onb-dots { display: flex; gap: 6px; }
+    #onb-back[hidden] { display: flex; visibility: hidden; }
     .onb-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-3); transition: width 0.25s var(--ease-out), background-color 0.2s ease; }
     .onb-dots i.on { width: 22px; border-radius: 4px; background: var(--text); }
     .onb-dots i.done { background: var(--text-2); }
@@ -1188,6 +1189,19 @@
     .opt-grid.two { grid-template-columns: 1fr 1fr; }
     .opt-grid.three { grid-template-columns: repeat(3, 1fr); }
     .opt-grid.five { grid-template-columns: repeat(5, 1fr); }
+    .opt-grid.seven { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .opt-grid.seven .opt { align-items: center; text-align: center; padding: 12px 0; }
+    .opt-grid.seven .opt-label { font-size: var(--t-headline); }
+    .start-opts { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .start-opt { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--separator); border-radius: var(--r-lg); background: var(--surface); color: var(--text); text-align: left; }
+    .start-opt:active { background: var(--surface-2); }
+    .start-opt-ico { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #000; }
+    .start-opt-ico svg { width: 20px; height: 20px; }
+    .start-opt:not(:first-child) .start-opt-ico { color: #fff; }
+    .start-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .start-opt-title { font-size: var(--t-headline); font-weight: 600; }
+    .start-opt-sub { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.4; }
+    .start-opt .chevron { color: var(--text-3); }
     .opt {
       display: flex;
       flex-direction: column;
@@ -1212,6 +1226,9 @@
     .tpl-card.featured { border-color: var(--accent); cursor: default; }
     .tpl-card.ai .tpl-name { display: flex; align-items: center; gap: 8px; }
     .tpl-card.ai .tpl-name svg { width: 18px; height: 18px; color: #9085e9; }
+    .tpl-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .tpl-badges .tpl-badge { margin-bottom: 0; }
+    .tpl-badge.creator { background: var(--gold); }
     .tpl-badge { display: inline-block; font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #000; background: var(--accent); border-radius: 999px; padding: 3px 8px; margin-bottom: 8px; }
     .tpl-name { font-size: var(--t-headline); font-weight: 700; }
     .tpl-meta { font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
@@ -5845,9 +5862,9 @@ Reply with ONLY valid JSON in exactly this format, no other text:
         ]
       },
       {
-        id: 'recomp-5', name: 'Recomposition Split 5×', days: 5, level: 'Intermediate', equipment: 'gym', minutes: 60,
-        blurb: 'Five focused days with extra arm work. Comes with suggested starting weights.',
-        build: null // the original built-in plan, kept as-is
+        id: 'recomp-5', name: 'Recomposition Split 5×', days: 5, level: 'Intermediate', equipment: 'gym', minutes: 60, creator: true,
+        blurb: 'The plan this app was built around: five focused days with extra arm work. Progress by adding weight, adding reps, or cutting rest at the same weight.',
+        build: null // the creator's own plan, with personal weights swapped for effort targets
       }
     ];
 
@@ -5858,10 +5875,27 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     ];
 
     // A template as a plan in the app's stored format (day labels, exercises with alternatives)
+    // The creator's plan for someone else: same exercises, sets, reps and rest, but effort targets
+    // instead of the creator's own weights (the app suggests weights after the first session).
+    function effortTarget(target) {
+      const t = String(target || '');
+      if (!/\d\s*kg/i.test(t)) return t;
+      return /^BW\b/i.test(t) ? 'Bodyweight + extra weight' : '2 reps in reserve';
+    }
+
+    function creatorPlanDays() {
+      const days = JSON.parse(JSON.stringify(DEFAULT_PLAN));
+      days.forEach(d => d.exercises.forEach(ex => {
+        ex.weightTarget = effortTarget(ex.weightTarget);
+        if (ex.alt) ex.alt.weightTarget = effortTarget(ex.alt.weightTarget);
+      }));
+      return days;
+    }
+
     function templatePlan(t) {
       const days = t.build
         ? t.build().map(([title, list], i) => ({ day: `Day ${i + 1}`, title, exercises: list.map(([name, o]) => libExercise(name, o, EQUIPMENT_ALLOWED[t.equipment])) }))
-        : JSON.parse(JSON.stringify(DEFAULT_PLAN));
+        : creatorPlanDays();
       return { planName: t.name.replace(/ \d×$/, ''), templateId: t.id, days, schedule: defaultSchedule(days.length) };
     }
 
@@ -5915,7 +5949,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     function openOnboarding() {
       const saved = readJSON(SETUP_KEY, {});
       const profile = getProfile() || {};
-      onb = { step: 0, name: profile.name || '', goal: saved.goal || 'recomp', level: saved.level || 'Beginner', days: saved.days || 3, equipment: saved.equipment || 'gym', picked: null };
+      onb = { step: 0, path: 'pick', name: profile.name || '', goal: saved.goal || 'recomp', level: saved.level || 'Beginner', days: saved.days || 3, equipment: saved.equipment || 'gym', picked: null };
       const el = document.getElementById('onboarding');
       el.hidden = false;
       void el.offsetWidth;
@@ -5938,8 +5972,16 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       }
     }
 
+    // Setup has two routes after "How do you want to start?": pick (about you, training, plan) or own (name, days)
+    function onbStart(path) {
+      haptic('light');
+      if (path === 'ai') return finishOnboarding('ai');
+      onb.path = path;
+      onbGo(2);
+    }
+
     function onbGo(step) {
-      if (step === 3) onb.picked = recommendTemplate(onb);
+      if (step === 4) onb.picked = recommendTemplate(onb);
       onb.step = step;
       renderOnboarding();
       document.querySelector('#onboarding .onb-scroll').scrollTop = 0;
@@ -5953,7 +5995,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       const plan = templatePlan(t);
       return `
         <div class="tpl-card ${featured ? 'featured' : ''}" ${onclick ? `onclick="${onclick}" role="button"` : ''}>
-          ${recommended ? '<div class="tpl-badge">Recommended for you</div>' : ''}
+          ${recommended || t.creator ? `<div class="tpl-badges">${recommended ? '<span class="tpl-badge">Recommended for you</span>' : ''}${t.creator ? '<span class="tpl-badge creator">Creator\'s plan</span>' : ''}</div>` : ''}
           <div class="tpl-name">${escapeHtml(t.name)}</div>
           <div class="tpl-meta">${t.days} days a week · ~${t.minutes} min · ${escapeHtml(t.level)}</div>
           <div class="tpl-blurb">${escapeHtml(t.blurb)}</div>
@@ -5972,7 +6014,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     function renderOnboarding() {
       const body = document.getElementById('onb-body');
       const foot = document.getElementById('onb-foot');
-      document.getElementById('onb-dots').innerHTML = [0, 1, 2, 3].map(i => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
+      const stepCount = onb.path === 'own' ? 3 : 5;
+      document.getElementById('onb-dots').innerHTML = Array.from({ length: stepCount }, (_, i) => i).map(i => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
       document.getElementById('onb-back').hidden = onb.step === 0;
 
       if (onb.step === 0) {
@@ -5981,14 +6024,41 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           <h2 class="onb-title">Welcome to Recomp</h2>
           <p class="onb-text">Your training plan, rest timer and progress in one place.</p>
           <div class="onb-points">
-            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.plan}</span><span><strong>A plan that fits you</strong><br>Pick a proven programme, or create one with AI.</span></div>
+            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.plan}</span><span><strong>A plan that's yours</strong><br>Start from a proven plan, build your own, or create one with AI. Change anything, any time.</span></div>
             <div class="onb-point"><span class="onb-point-icon">${icon('check', 2.6)}</span><span><strong>Log in seconds</strong><br>Tap ✓ after each set and the rest timer starts on its own.</span></div>
+            <div class="onb-point"><span class="onb-point-icon">${icon('arrowUp', 2.4)}</span><span><strong>See yourself improve</strong><br>Records for more weight, more reps, or the same work on less rest.</span></div>
             <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.backup}</span><span><strong>Private by design</strong><br>Everything stays on this phone. No account needed.</span></div>
           </div>`;
         foot.innerHTML = `
           <button class="btn btn-primary" onclick="onbGo(1)">Get Started</button>
           <button class="btn btn-plain" onclick="finishOnboarding('skip')">Skip for now</button>`;
       } else if (onb.step === 1) {
+        const option = (path, iconSvg, color, title, sub) => `
+          <button class="start-opt" onclick="onbStart('${path}')">
+            <span class="start-opt-ico" style="background:${color}">${iconSvg}</span>
+            <span class="start-opt-text"><span class="start-opt-title">${title}</span><span class="start-opt-sub">${sub}</span></span>
+            <span class="chevron">${icon('chevron')}</span>
+          </button>`;
+        body.innerHTML = `
+          <h2 class="onb-title">How do you want to start?</h2>
+          <p class="onb-text">Whichever you pick, the plan is yours. Edit any day, exercise, set or rest time later in the Plan tab.</p>
+          <div class="start-opts">
+            ${option('pick', icon('check', 2.6), 'var(--accent)', 'Pick a plan for me', 'Answer 4 quick questions and get a proven plan. Best if you are new to lifting.')}
+            ${option('own', icon('pencil', 2.2), '#3987e5', 'I have my own routine', 'Type in your days and exercises. Sets, reps, rest and warm-ups are filled in for you.')}
+            ${option('ai', ROW_ICONS.ai, '#9085e9', 'Create one with AI', 'Paste a plan from ChatGPT, Claude or Gemini, built around your goals.')}
+          </div>`;
+        foot.innerHTML = '';
+      } else if (onb.step === 2 && onb.path === 'own') {
+        body.innerHTML = `
+          <h2 class="onb-title">Your routine</h2>
+          <p class="onb-text">We'll set up one day per training day. You can add, remove or rename days as you go.</p>
+          <label class="onb-field">Your name <span class="opt-sub">(optional)</span>
+            <input type="text" id="onb-name" value="${escapeHtml(onb.name)}" placeholder="First name" autocomplete="given-name" oninput="onbSet('name', this.value)">
+          </label>
+          <div class="onb-q">How many days a week do you train?</div>
+          ${choiceGrid([1, 2, 3, 4, 5, 6, 7].map(n => ({ id: n })), onb.days, 'days', 'seven')}`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="finishOnboarding('build')">Start Building</button>`;
+      } else if (onb.step === 2) {
         body.innerHTML = `
           <h2 class="onb-title">About you</h2>
           <p class="onb-text">This shapes your plan and targets. You can change it later in Settings.</p>
@@ -5999,8 +6069,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           ${choiceGrid(GOALS, onb.goal, 'goal', 'two')}
           <div class="onb-q">How long have you been lifting?</div>
           ${choiceGrid(LEVELS.map(l => ({ ...l, label: l.id })), onb.level, 'level', 'three')}`;
-        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(2)">Continue</button>`;
-      } else if (onb.step === 2) {
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(3)">Continue</button>`;
+      } else if (onb.step === 3) {
         body.innerHTML = `
           <h2 class="onb-title">Your training</h2>
           <p class="onb-text">Be realistic. A plan you can keep up beats a perfect one.</p>
@@ -6008,14 +6078,14 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           ${choiceGrid([2, 3, 4, 5, 6].map(n => ({ id: n })), onb.days, 'days', 'five')}
           <div class="onb-q">Where do you train?</div>
           ${choiceGrid(EQUIPMENT, onb.equipment, 'equipment')}`;
-        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(3)">See My Plan</button>`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbGo(4)">See My Plan</button>`;
       } else {
         const rec = recommendTemplate(onb);
         const picked = templateById(onb.picked || rec);
         const others = TEMPLATES.filter(t => t.id !== picked.id);
         body.innerHTML = `
           <h2 class="onb-title">Your plan</h2>
-          <p class="onb-text">Every exercise has a swap if a machine is taken, plus warm-up sets and rest times. You can change plans any time.</p>
+          <p class="onb-text">Every exercise has a swap if a machine is taken, plus warm-up sets and rest times. Nothing is locked: change it any time in the Plan tab.</p>
           ${templateCardHtml(picked, { featured: true, recommended: picked.id === rec })}
           <div class="onb-q">Other options</div>
           ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `onbSet('picked', '${t.id}')` })).join('')}
@@ -6064,7 +6134,9 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     }
 
     function onbBack() {
-      if (onb && onb.step > 0) onbGo(onb.step - 1);
+      if (!onb || onb.step === 0) return;
+      if (onb.step === 2) onb.path = 'pick';
+      onbGo(onb.step - 1);
     }
 
     /* Template browser (Settings → Workout plan) */
