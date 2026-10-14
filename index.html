@@ -1195,6 +1195,9 @@
     .onb-q { font-size: var(--t-headline); font-weight: 600; margin: 22px 0 10px; }
     .onb-field { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); }
     .onb-field input { width: 100%; height: 48px; font-size: var(--t-headline); }
+    .onb-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .onb-row .onb-field { justify-content: flex-end; }
+    .opt-grid.invalid { border-radius: var(--r-md); outline: 1px solid var(--danger); outline-offset: 3px; }
     .opt-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
     .opt-grid.two { grid-template-columns: 1fr 1fr; }
     .opt-grid.three { grid-template-columns: repeat(3, 1fr); }
@@ -5258,6 +5261,11 @@
       return age > 0 && age < 120 ? age : null;
     }
 
+    // Age from the birth date (Profile) or, when only an age was given at setup, that age
+    function profileAge(profile) {
+      return (profile && (calcAge(profile.birthDate) || profile.age)) || null;
+    }
+
     function currentWeightKg(profile) {
       const bw = getBodyweight();
       return bw.length ? bw[bw.length - 1].kg : (profile && profile.weightKg) || null;
@@ -5266,7 +5274,7 @@
     // Mifflin-St Jeor resting burn × activity, adjusted for the goal. Estimates, not prescriptions.
     function nutritionTargets(profile) {
       const weight = currentWeightKg(profile);
-      const age = calcAge(profile.birthDate);
+      const age = profileAge(profile);
       if (!profile.sex || !age || !profile.heightCm || !weight) return null;
       const bmr = 10 * weight + 6.25 * profile.heightCm - 5 * age + (profile.sex === 'male' ? 5 : -161);
       const maintenance = bmr * (ACTIVITY_LEVELS[profile.activity] || ACTIVITY_LEVELS.desk).factor;
@@ -5418,13 +5426,13 @@
       const setup = readJSON(SETUP_KEY, {});
       const val = (id, v) => { if (v !== undefined && v !== null && v !== '') document.getElementById(id).value = String(v); };
       val('ai-sex', p.sex);
-      val('ai-age', setup.age || calcAge(p.birthDate));
+      val('ai-age', profileAge(p) || setup.age);
       val('ai-height', p.heightCm);
       val('ai-weight', currentWeightKg(p));
       val('ai-goal', setup.goal && AI_GOALS[setup.goal] ? setup.goal : p.goalType);
       val('ai-days', setup.days ? Math.min(7, Math.max(2, setup.days)) : null);
       val('ai-level', setup.level);
-      val('ai-equipment', setup.equipmentText);
+      val('ai-equipment', setup.equipmentText || { gym: 'Full commercial gym', dumbbells: 'A pair of adjustable dumbbells and a bench', bodyweight: 'No equipment, bodyweight at home' }[setup.equipment]);
       val('ai-notes', setup.notes);
     }
 
@@ -5448,6 +5456,7 @@
       if (get('ai-sex')) next.sex = get('ai-sex');
       if (num('ai-height') >= 100 && num('ai-height') <= 250) next.heightCm = num('ai-height');
       if (num('ai-weight') >= 25 && num('ai-weight') <= 300) next.weightKg = num('ai-weight');
+      if (num('ai-age') >= 13 && num('ai-age') <= 90 && !calcAge(p.birthDate)) next.age = Math.round(num('ai-age'));
       localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
       updateHeader();
       updateStats();
@@ -6043,6 +6052,14 @@ The file must be valid JSON in exactly this format:
         ]
       },
       {
+        id: 'full-body-2', name: 'Full Body 2×', days: 2, level: 'Beginner friendly', equipment: 'gym', minutes: 55,
+        blurb: 'Two full-body sessions a week for a busy schedule. Every muscle twice a week.',
+        build: () => [
+          ['Full Body A', [['Barbell Back Squat', { reps: '6–8' }], ['Barbell Bench Press'], ['Lat Pulldown'], ['Romanian Deadlift'], ['Dumbbell Lateral Raise'], ['Plank']]],
+          ['Full Body B', [['Leg Press'], ['Incline Dumbbell Press'], ['Seated Cable Row'], ['Hip Thrust'], ['Dumbbell Curl'], ['Triceps Pushdown']]]
+        ]
+      },
+      {
         id: 'upper-lower-4', name: 'Upper / Lower 4×', days: 4, level: 'Beginner to intermediate', equipment: 'gym', minutes: 55,
         blurb: 'Two upper and two lower days. Each muscle twice a week with more volume.',
         build: () => [
@@ -6122,6 +6139,7 @@ The file must be valid JSON in exactly this format:
     function recommendTemplate({ days, equipment, level }) {
       if (equipment === 'bodyweight') return 'bodyweight-3';
       if (equipment === 'dumbbells') return 'dumbbell-3';
+      if (days <= 2) return 'full-body-2';
       if (days <= 3) return 'full-body-3';
       if (days === 4) return 'upper-lower-4';
       if (days === 5) return level === 'Beginner' ? 'upper-lower-4' : 'recomp-5';
@@ -6146,13 +6164,34 @@ The file must be valid JSON in exactly this format:
       return !localStorage.getItem(ONBOARDED_KEY) && !getCustomPlan() && !getHistory().length;
     }
 
-    /* First-launch setup: welcome, then build your own plan or create one with AI */
+    /* First-launch setup: welcome → about you → your training → create your plan
+       (sample plan, build your own, or AI) → for sample plans, pick one */
+    const GOALS = [
+      { id: 'recomp', label: 'Lose fat & build muscle', sub: 'Both at once' },
+      { id: 'gain', label: 'Build muscle', sub: 'Get bigger' },
+      { id: 'lose', label: 'Lose fat', sub: 'Keep muscle while leaning out' },
+      { id: 'strength', label: 'Get stronger', sub: 'Lift heavier' }
+    ];
+    const LEVELS = [
+      { id: 'Beginner', sub: 'Under 1 year' },
+      { id: 'Intermediate', sub: '1–3 years' },
+      { id: 'Advanced', sub: '3+ years' }
+    ];
+    const EQUIPMENT = [
+      { id: 'gym', label: 'Full gym', sub: 'Barbells, machines, cables' },
+      { id: 'dumbbells', label: 'Dumbbells', sub: 'A pair of dumbbells and a bench' },
+      { id: 'bodyweight', label: 'No equipment', sub: 'Bodyweight at home' }
+    ];
     let onb = null;
 
     function openOnboarding() {
       const saved = readJSON(SETUP_KEY, {});
-      const profile = getProfile() || {};
-      onb = { step: 0, name: profile.name || '', days: saved.days || 3 };
+      const p = getProfile() || {};
+      onb = {
+        step: 0, path: null, picked: null,
+        name: p.name || '', sex: p.sex || '', age: profileAge(p) || saved.age || '', height: p.heightCm || '', weight: p.weightKg || '', goalKg: p.goalKg || '',
+        goal: saved.goal || p.goalType || 'recomp', level: saved.level || 'Beginner', days: saved.days || 3, equipment: saved.equipment || 'gym'
+      };
       const el = document.getElementById('onboarding');
       el.hidden = false;
       void el.offsetWidth;
@@ -6168,18 +6207,56 @@ The file must be valid JSON in exactly this format:
       onb = null;
     }
 
-    function onbSet(field, value) {
+    // Typed fields update quietly; choices re-render to show the selection
+    function onbSet(field, value, quiet = false) {
       onb[field] = value;
-      if (field !== 'name') {
+      if (!quiet) {
         haptic('light');
         renderOnboarding();
       }
     }
 
+    function onbAboutValid() {
+      if (!onb.sex) { fieldError(document.getElementById('onb-sex'), 'Pick one so your targets are right.'); return false; }
+      const need = [['onb-age', 'Age should be 13–90.', 13, 90], ['onb-height', 'Height should be 100–250 cm.', 100, 250], ['onb-weight', 'Weight should be 25–300 kg.', 25, 300]];
+      for (const [id, msg, lo, hi] of need) {
+        const el = document.getElementById(id);
+        const v = parseFloat(el.value);
+        if (!el.value || (lo !== undefined && !(v >= lo && v <= hi))) { fieldError(el, msg); return false; }
+      }
+      const goal = document.getElementById('onb-goalkg');
+      if (goal.value && !(parseFloat(goal.value) >= 25 && parseFloat(goal.value) <= 300)) { fieldError(goal, 'Weight should be 25–300 kg.'); return false; }
+      return true;
+    }
+
+    // Save what's been answered so far to the profile and setup, so every route (and Settings) uses it
+    function saveOnbAnswers() {
+      const num = v => { const n = parseFloat(v); return isNaN(n) ? null : Math.round(n * 10) / 10; };
+      const p = getProfile() || {};
+      const profile = { ...p, sex: onb.sex || p.sex || '', heightCm: num(onb.height) || p.heightCm || null, weightKg: num(onb.weight) || p.weightKg || null, goalKg: num(onb.goalKg) || p.goalKg || null, goalType: onb.goal === 'strength' ? 'gain' : onb.goal };
+      if (onb.name.trim()) profile.name = onb.name.trim();
+      if (num(onb.age) && !calcAge(p.birthDate)) profile.age = Math.round(num(onb.age));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      localStorage.setItem(SETUP_KEY, JSON.stringify({ ...readJSON(SETUP_KEY, {}), age: num(onb.age), goal: onb.goal, level: onb.level, days: onb.days, equipment: onb.equipment }));
+    }
+
+    function onbNext() {
+      if (onb.step === 1) {
+        if (!onbAboutValid()) return;
+        saveOnbAnswers();
+      }
+      if (onb.step === 2) saveOnbAnswers();
+      onbGo(onb.step + 1);
+    }
+
     function onbStart(path) {
       haptic('light');
-      if (path === 'ai') return finishOnboarding('ai');
-      onbGo(2);
+      onb.path = path;
+      if (path === 'sample') {
+        onb.picked = recommendTemplate(onb);
+        return onbGo(4);
+      }
+      finishOnboarding(path === 'own' ? 'build' : 'ai');
     }
 
     function onbGo(step) {
@@ -6215,8 +6292,13 @@ The file must be valid JSON in exactly this format:
     function renderOnboarding() {
       const body = document.getElementById('onb-body');
       const foot = document.getElementById('onb-foot');
-      document.getElementById('onb-dots').innerHTML = [0, 1, 2].map(i => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
+      const total = onb.step === 4 ? 5 : 4;
+      document.getElementById('onb-dots').innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
       document.getElementById('onb-back').hidden = onb.step === 0;
+      const field = (id, key, label, attrs, sub = '') => `
+        <label class="onb-field">${label}${sub ? ` <span class="opt-sub">${sub}</span>` : ''}
+          <input ${attrs} id="${id}" value="${escapeHtml(onb[key])}" oninput="onbSet('${key}', this.value, true)">
+        </label>`;
 
       if (onb.step === 0) {
         body.innerHTML = `
@@ -6224,7 +6306,7 @@ The file must be valid JSON in exactly this format:
           <h2 class="onb-title">Welcome to Recomp</h2>
           <p class="onb-text">Your training plan, rest timer and progress in one place.</p>
           <div class="onb-points">
-            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.plan}</span><span><strong>Your own plan</strong><br>Build it yourself, or let AI create one around your body and goals. Change anything, any time.</span></div>
+            <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.plan}</span><span><strong>A plan that fits you</strong><br>Start from a sample plan, build your own, or let AI create one. Change anything, any time.</span></div>
             <div class="onb-point"><span class="onb-point-icon">${icon('check', 2.6)}</span><span><strong>Log in seconds</strong><br>Tap ✓ after each set and the rest timer starts on its own.</span></div>
             <div class="onb-point"><span class="onb-point-icon">${icon('arrowUp', 2.4)}</span><span><strong>See yourself improve</strong><br>Records for more weight, more reps, or the same work on less rest.</span></div>
             <div class="onb-point"><span class="onb-point-icon">${ROW_ICONS.backup}</span><span><strong>Private by design</strong><br>Everything stays on this phone. No account needed.</span></div>
@@ -6233,44 +6315,72 @@ The file must be valid JSON in exactly this format:
           <button class="btn btn-primary" onclick="onbGo(1)">Get Started</button>
           <button class="btn btn-plain" onclick="finishOnboarding('skip')">Skip for now</button>`;
       } else if (onb.step === 1) {
+        body.innerHTML = `
+          <h2 class="onb-title">About you</h2>
+          <p class="onb-text">Used to shape your plan and your calorie and protein targets. It stays on this phone.</p>
+          ${field('onb-name', 'name', 'Your name', 'type="text" placeholder="First name (optional)" autocomplete="given-name"')}
+          <div class="onb-q">Sex</div>
+          <div class="opt-grid two" id="onb-sex" tabindex="-1">${[['male', 'Male'], ['female', 'Female']].map(([id, label]) => `
+            <button class="opt ${onb.sex === id ? 'on' : ''}" onclick="onbSet('sex', '${id}')" aria-pressed="${onb.sex === id}"><span class="opt-label">${label}</span></button>`).join('')}</div>
+          <div class="onb-row">
+            ${field('onb-age', 'age', 'Age', 'type="number" inputmode="numeric" placeholder="e.g. 30"')}
+            ${field('onb-height', 'height', 'Height', 'type="number" inputmode="decimal" placeholder="cm"')}
+          </div>
+          <div class="onb-row">
+            ${field('onb-weight', 'weight', 'Weight', 'type="number" step="0.1" inputmode="decimal" placeholder="kg"')}
+            ${field('onb-goalkg', 'goalKg', 'Target weight', 'type="number" step="0.1" inputmode="decimal" placeholder="kg · optional"')}
+          </div>`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbNext()">Continue</button>`;
+      } else if (onb.step === 2) {
+        body.innerHTML = `
+          <h2 class="onb-title">Your training</h2>
+          <p class="onb-text">Be realistic. A plan you can keep up beats a perfect one.</p>
+          <div class="onb-q">Main goal</div>
+          ${choiceGrid(GOALS, onb.goal, 'goal', 'two')}
+          <div class="onb-q">How long have you been lifting?</div>
+          ${choiceGrid(LEVELS.map(l => ({ ...l, label: l.id })), onb.level, 'level', 'three')}
+          <div class="onb-q">Days per week</div>
+          ${choiceGrid([2, 3, 4, 5, 6].map(n => ({ id: n })), onb.days, 'days', 'five')}
+          <div class="onb-q">Where do you train?</div>
+          ${choiceGrid(EQUIPMENT, onb.equipment, 'equipment')}`;
+        foot.innerHTML = `<button class="btn btn-primary" onclick="onbNext()">Continue</button>`;
+      } else if (onb.step === 3) {
         const option = (path, iconSvg, color, title, sub) => `
           <button class="start-opt" onclick="onbStart('${path}')">
             <span class="start-opt-ico" style="background:${color}">${iconSvg}</span>
             <span class="start-opt-text"><span class="start-opt-title">${title}</span><span class="start-opt-sub">${sub}</span></span>
             <span class="chevron">${icon('chevron')}</span>
           </button>`;
+        const rec = templateById(recommendTemplate(onb));
         body.innerHTML = `
           <h2 class="onb-title">Create your plan</h2>
-          <p class="onb-text">Either way the plan is yours. Edit any day, exercise, set or rest time later in the Plan tab.</p>
+          <p class="onb-text">${onb.name.trim() ? `${escapeHtml(onb.name.trim())}, w` : 'W'}hichever you pick, the plan is yours. Edit any day, exercise, set or rest time later in the Plan tab.</p>
           <div class="start-opts">
+            ${option('sample', ROW_ICONS.plan, 'var(--accent)', 'Start with a sample plan', `Proven plans with warm-ups, rest times and swaps. We suggest ${escapeHtml(rec.name)} for you.`)}
             ${option('own', icon('pencil', 2.2), '#3987e5', 'Create your own plan', 'Pick your days and exercises from a library of 70+ moves. Sets, reps, rest and warm-ups are filled in for you.')}
-            ${option('ai', ROW_ICONS.ai, '#9085e9', 'Create your plan with AI', 'Tell us about you, copy the prompt into ChatGPT, Claude or Gemini, and upload the plan file it gives you.')}
-          </div>
-          <div class="onb-note">Want a ready-made plan instead? You'll find starter plans in the Plan tab.</div>`;
+            ${option('ai', ROW_ICONS.ai, '#9085e9', 'Create your plan with AI', 'Copy a prompt with your details into ChatGPT, Claude or Gemini, and upload the plan file it gives you.')}
+          </div>`;
         foot.innerHTML = '';
       } else {
+        const rec = recommendTemplate(onb);
+        const picked = templateById(onb.picked || rec);
+        const others = TEMPLATES.filter(t => t.id !== picked.id);
         body.innerHTML = `
-          <h2 class="onb-title">Your routine</h2>
-          <p class="onb-text">We'll set up one day per training day. You can add, remove or rename days as you go.</p>
-          <label class="onb-field">Your name <span class="opt-sub">(optional)</span>
-            <input type="text" id="onb-name" value="${escapeHtml(onb.name)}" placeholder="First name" autocomplete="given-name" oninput="onbSet('name', this.value)">
-          </label>
-          <div class="onb-q">How many days a week do you train?</div>
-          ${choiceGrid([1, 2, 3, 4, 5, 6, 7].map(n => ({ id: n })), onb.days, 'days', 'seven')}`;
-        foot.innerHTML = `<button class="btn btn-primary" onclick="finishOnboarding('build')">Start Building</button>`;
+          <h2 class="onb-title">Sample plans</h2>
+          <p class="onb-text">Every exercise has a swap if a machine is taken, plus warm-up sets and rest times. Nothing is locked: change it any time in the Plan tab.</p>
+          ${templateCardHtml(picked, { featured: true, recommended: picked.id === rec })}
+          <div class="onb-q">Other plans</div>
+          ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `onbSet('picked', '${t.id}'); document.querySelector('#onboarding .onb-scroll').scrollTop = 0` })).join('')}`;
+        foot.innerHTML = `<button class="btn btn-positive" onclick="finishOnboarding('sample')">Use ${escapeHtml(picked.name)}</button>`;
       }
     }
 
-    // Everyone gets a working plan straight away (Full Body 3×), so closing the builder or the AI sheet early still leaves a usable app
+    // Everyone leaves setup with a working plan, so closing the builder or the AI sheet early still leaves a usable app
     function finishOnboarding(mode) {
-      const name = onb.name.trim();
-      if (mode === 'build') {
-        if (name) localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...(getProfile() || {}), name }));
-        localStorage.setItem(SETUP_KEY, JSON.stringify({ ...readJSON(SETUP_KEY, {}), days: onb.days }));
-      }
-      const choice = templateById('full-body-3');
+      const choice = templateById(mode === 'sample' ? (onb.picked || recommendTemplate(onb)) : mode === 'skip' ? 'full-body-3' : recommendTemplate(onb));
       setActivePlan(templatePlan(choice));
       localStorage.setItem(ONBOARDED_KEY, '1');
+      const name = onb.name.trim();
       const days = onb.days;
       closeOnboarding();
       switchView('workout');
@@ -6279,6 +6389,7 @@ The file must be valid JSON in exactly this format:
       window.scrollTo(0, 0);
       if (mode === 'build') setTimeout(() => buildOwnPlan(days), 350);
       else if (mode === 'ai') setTimeout(() => openAiSheet(), 350);
+      else if (mode === 'sample') showToast(`${name ? `${name}, y` : 'Y'}our plan is ready. ${dayAt(currentDayIdx).title} is up first.`, { duration: 4000 });
       else showToast(`Starting you on ${choice.name}. Change it any time in Plan.`, { duration: 4000 });
     }
 
