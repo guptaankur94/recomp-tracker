@@ -8,6 +8,7 @@ The owner wants every change in the app immediately:
 
 - Test each change, then commit and push it straight to `main`. Don't open pull requests unless asked.
 - The phone picks it up on next launch through the "Update ready · Reload" toast.
+- Bump `APP_VERSION` in `index.html` (date-based, e.g. `2026.10.15` or `2026.10.15b`) with every pushed change. Settings shows it, and the app's update check compares it, so people can tell which version they're on.
 - When a change adds or renames a file the app needs offline, add it to `ASSETS` in `sw.js` and bump `CACHE`.
 
 ## Before pushing

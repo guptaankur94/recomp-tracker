@@ -78,7 +78,9 @@
     body.kb-open .bottom-tab-bar, body.kb-open .rest-pill { visibility: hidden; }
     body.kb-open .sheet { padding-bottom: 12px; }
     body.kb-open .onb-foot { padding-bottom: 12px; }
-    button { font-family: inherit; cursor: pointer; }
+    /* Same buttons on every iPhone: older iOS versions otherwise add their own styling (blue text, bevels) */
+    button, input[type="button"], input[type="submit"] { -webkit-appearance: none; appearance: none; font-family: inherit; color: inherit; border-radius: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    a { -webkit-tap-highlight-color: transparent; }
     strong { font-weight: 600; color: var(--text); }
 
     /* Shared pressed state: every tappable control gives way slightly under the finger */
@@ -147,7 +149,6 @@
     .hero-lbl { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; white-space: nowrap; margin-top: 1px; }
     .hero-lbl.good { color: var(--accent); }
     .hero-lbl.bad { color: var(--orange); }
-    .hero.welcome { display: block; }
     .hero-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 4px; }
     .hero-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.4; }
     .hero-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 0; border: none; background: none; color: var(--blue); font-size: var(--t-footnote); font-weight: 600; }
@@ -1137,6 +1138,8 @@
     .plan-warning { font-size: var(--t-footnote); color: var(--orange); margin-top: 4px; }
     .step { padding: 14px 0; border-bottom: 0.5px solid var(--separator); }
     .step:last-of-type { border-bottom: none; }
+    .step-num.done { background: var(--accent); color: #000; }
+    .step-num.done svg { width: 13px; height: 13px; }
     .step-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; margin: -2px 0 10px; }
     .step-text strong { color: var(--text); }
     .ai-paste { margin-top: 10px; }
@@ -1174,7 +1177,30 @@
     .onboarding.open { opacity: 1; }
     .onb-top { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 10px) 12px 6px; }
     .onb-spacer { width: 36px; }
-    .onb-dots { display: flex; gap: 6px; }
+    .onb-dots { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+    .onb-stage { display: flex; align-items: center; gap: 6px; font-size: var(--t-caption); font-weight: 600; color: var(--text-3); white-space: nowrap; }
+    .onb-stage-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--text-2); transition: background-color 0.25s ease; }
+    .onb-stage-dot svg { width: 12px; height: 12px; }
+    .onb-stage.on { color: var(--text); }
+    .onb-stage.on .onb-stage-dot { background: var(--text); color: #000; }
+    .onb-stage.done { color: var(--accent); }
+    .onb-stage.done .onb-stage-dot { background: var(--accent); color: #000; animation: checkIn 0.35s ease-out; }
+    .onb-stage-line { width: 14px; height: 2px; border-radius: 1px; background: var(--surface-3); }
+    .onb-title.center, .onb-text.center { text-align: center; }
+    .onb-done-tick { width: 76px; height: 76px; margin: 28px auto 16px; border-radius: 50%; background: var(--accent); color: #000; display: flex; align-items: center; justify-content: center; animation: setPop 0.5s ease-out; box-shadow: 0 10px 30px rgba(48, 209, 88, 0.35); }
+    .onb-done-tick svg { width: 38px; height: 38px; }
+    .onb-card { background: var(--surface); border-radius: var(--r-lg); padding: 14px 16px; margin-top: 12px; }
+    .onb-card-title { font-size: var(--t-headline); font-weight: 700; }
+    .onb-card-sub { font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
+    .onb-card-head { display: flex; align-items: center; gap: 8px; font-size: var(--t-body); font-weight: 700; margin-bottom: 6px; }
+    .onb-card-head svg { width: 18px; height: 18px; color: var(--accent); }
+    .onb-card-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; }
+    .onb-card-text strong, .onb-steps strong { color: var(--text); }
+    .onb-steps { margin: 0; padding-left: 20px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.6; }
+    .tpl-filters { display: flex; gap: 6px; overflow-x: auto; margin: 0 -20px 14px; padding: 0 20px; scrollbar-width: none; }
+    .tpl-filters::-webkit-scrollbar { display: none; }
+    .tpl-filter { flex-shrink: 0; height: 32px; padding: 0 14px; border: 1px solid var(--separator); border-radius: 999px; background: none; color: var(--text-2); font-size: var(--t-footnote); font-weight: 600; }
+    .tpl-filter.on { background: var(--text); border-color: var(--text); color: #000; }
     #onb-back[hidden] { display: flex; visibility: hidden; }
     .onb-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-3); transition: width 0.25s var(--ease-out), background-color 0.2s ease; }
     .onb-dots i.on { width: 22px; border-radius: 4px; background: var(--text); }
@@ -1251,15 +1277,6 @@
     #ai-sheet .sheet-actions, #templates-sheet .sheet-actions { position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); margin: 8px -20px 0; padding: 12px 20px calc(20px + env(safe-area-inset-bottom)); background: var(--surface); box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.35); }
 
     /* Get-started checklist on the home card */
-    .start-steps { display: flex; flex-direction: column; margin-top: 10px; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); }
-    .start-step { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 12px; border: none; background: none; color: var(--text); text-align: left; }
-    .start-step + .start-step { border-top: 0.5px solid var(--separator); }
-    .start-step:active:not(:disabled) { transform: none; background: var(--surface-3); }
-    .start-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface-3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #000; }
-    .start-step.done .start-check { background: var(--accent); border-color: var(--accent); }
-    .start-check svg { width: 13px; height: 13px; }
-    .start-title { font-size: var(--t-body); font-weight: 600; }
-    .start-step.done .start-title { color: var(--text-2); }
 
     /* First-workout guide and empty states */
     .tip-card { background: var(--surface); border: 1px solid rgba(10, 132, 255, 0.45); border-radius: var(--r-lg); padding: 14px 16px; margin-bottom: 14px; }
@@ -1568,7 +1585,7 @@
         <div class="sheet-sub">Any chatbot works. Fill in what you're happy to share; it makes the plan fit you better.</div>
       </div>
 
-      <div class="step">
+      <div class="step" id="ai-step-1">
         <div class="step-head"><span class="step-num">1</span>About you</div>
         <div class="form-grid ai-form">
           <label>Sex
@@ -1596,23 +1613,23 @@
         </div>
       </div>
 
-      <div class="step">
+      <div class="step" id="ai-step-2">
         <div class="step-head"><span class="step-num">2</span>Copy the prompt and send it</div>
-        <div class="step-text">Paste it into ChatGPT, Claude or Gemini and send it.</div>
+        <div class="step-text">Copy it, then open your chatbot, paste it and send.</div>
         <button class="btn btn-primary" id="ai-copy-btn" onclick="copyAiPrompt()">Copy Prompt</button>
         <div class="chatbot-links">
-          <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
-          <a class="chip" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
-          <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+          <a class="chip" href="https://chatgpt.com/" target="_blank" rel="noopener" onclick="openChatbot(event, 'chatgpt')">Open ChatGPT</a>
+          <a class="chip" href="https://claude.ai/new" target="_blank" rel="noopener" onclick="openChatbot(event, 'claude')">Open Claude</a>
+          <a class="chip" href="https://gemini.google.com/app" target="_blank" rel="noopener" onclick="openChatbot(event, 'gemini')">Open Gemini</a>
         </div>
       </div>
 
-      <div class="step">
+      <div class="step" id="ai-step-3">
         <div class="step-head"><span class="step-num">3</span>Download the plan file</div>
-        <div class="step-text">The chatbot replies with a file called <strong>my-plan.json</strong>. Tap it and choose Download, or Save to Files.</div>
+        <div class="step-text">The chatbot replies with a file called <strong>my-plan.json</strong> (or my-plan.txt). Tap it and choose Download, or Save to Files.</div>
       </div>
 
-      <div class="step">
+      <div class="step" id="ai-step-4">
         <div class="step-head"><span class="step-num">4</span>Upload it here</div>
         <button class="btn btn-secondary" onclick="document.getElementById('plan-file').click()">Upload Plan File</button>
         <details class="ai-paste" id="ai-paste">
@@ -2097,6 +2114,8 @@
       overlay.style.top = overlay.style.height = overlay.style.bottom = '';
       overlay.classList.remove('open');
       if (overlay.onSheetClose) overlay.onSheetClose();
+      if (typeof introSheetClosed === 'function') introSheetClosed(id, overlay.dataset.saved === '1');
+      delete overlay.dataset.saved;
       const done = () => { if (!overlay.classList.contains('open')) overlay.style.display = 'none'; };
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) done();
       else setTimeout(done, 320);
@@ -2371,27 +2390,6 @@
       const history = getHistory();
       const profileLink = getProfile() ? '' : `<button class="hero-link" onclick="openProfileSheet()">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`;
 
-      if (!history.length) {
-        // New users: a short checklist instead of empty numbers
-        const first = programData[currentDayIdx] || programData[0];
-        const step = (done, title, sub, onclick) => `
-          <button class="start-step ${done ? 'done' : ''}" onclick="${onclick}">
-            <span class="start-check">${done ? icon('check', 3) : ''}</span>
-            <span class="row-main"><span class="start-title">${title}</span><span class="row-sub">${sub}</span></span>
-            <span class="chevron">${icon('chevron')}</span>
-          </button>`;
-        const profile = getProfile();
-        hero.innerHTML = `
-          <div class="hero welcome">
-            <div class="hero-title">Get started</div>
-            <div class="start-steps">
-              ${step(true, `Plan: ${escapeHtml(getPlanName())}`, `${programData.length} days a week · tap to view or change`, "switchView('plan')")}
-              ${step(!!(profile && profile.heightCm && profile.weightKg), 'Add your body stats', 'Optional · unlocks calorie and protein targets', 'openProfileSheet()')}
-              ${step(false, `Start ${escapeHtml(first.day)}: ${escapeHtml(first.title)}`, 'Scroll down and log your first set', "document.querySelector('#workout-content .ex-card').scrollIntoView({ behavior: 'smooth', block: 'start' })")}
-            </div>
-          </div>`;
-        return;
-      }
 
       const weekStart = startOfWeek(new Date()).getTime();
       const thisWeek = history.filter(s => s.id >= weekStart).length;
@@ -3499,7 +3497,6 @@
         `;
       }
 
-      html += planTipHtml() + loggingTipHtml();
       if (isCustomDay() && !allExercises.length) {
         html += `
           <div class="empty-card">
@@ -5464,6 +5461,7 @@
     document.querySelectorAll('#ai-sheet .ai-form input, #ai-sheet .ai-form select').forEach(el => el.addEventListener('change', () => {
       if (aiFormValid()) saveAiForm();
       document.getElementById('ai-copy-btn').innerHTML = 'Copy Prompt';
+      updateAiSteps();
     }));
 
     function buildAiPrompt() {
@@ -5504,7 +5502,7 @@ Rules:
 - "warmup": number of light ramp-up sets before the working sets (0–3), not counted as working sets. Use 2 for the day's first heavy compound lift (3 if its working sets are 5 reps or fewer), 1 for a later compound lift or the first exercise for a new joint or muscle (e.g. first biceps or triceps move, overhead or elbow-heavy moves), and 0 for isolation, high-rep or bodyweight work on muscles already warmed up.
 - Every exercise needs an "alt": an alternative using different equipment, with its own sets/reps/weight/rest/cue tuned for the same effort (lighter load = more reps or slower tempo).
 
-How to send it: create a downloadable file named my-plan.json containing the plan, so I can download it and upload it to the app. Don't paste the JSON into the chat. If you can't create files, reply with only the JSON inside one code block and nothing else.
+How to send it: create a downloadable JSON file named my-plan.json containing the plan, so I can download it and upload it to the app (a my-plan.txt file with the same JSON is fine too). Don't paste the JSON into the chat. Only if you can't create files at all, reply with just the JSON inside one code block and nothing else.
 
 The file must be valid JSON in exactly this format:
 {
@@ -5750,16 +5748,62 @@ The file must be valid JSON in exactly this format:
         }
       }
       useBtn.disabled = !pendingPlan;
+      updateAiSteps();
     }
 
     function useAiPlan() {
       if (!pendingPlan) return;
       const plan = pendingPlan;
       setActivePlan(plan);
+      document.getElementById('ai-sheet').dataset.saved = '1';
+      const inSetup = !!introPending;
       closeSheet('ai-sheet');
+      if (inSetup) return;
       haptic('success');
       showToast(`“${plan.planName}” is now your plan`);
       renderSettings();
+    }
+
+    // Each step of the AI sheet gets a tick once it's done
+    function updateAiSteps() {
+      const done = {
+        1: ['ai-sex', 'ai-age', 'ai-height', 'ai-weight'].every(id => document.getElementById(id).value.trim()),
+        2: document.getElementById('ai-copy-btn').textContent.includes('Copied'),
+        3: !!pendingPlan,
+        4: !!pendingPlan
+      };
+      for (let n = 1; n <= 4; n++) {
+        const num = document.querySelector(`#ai-step-${n} .step-num`);
+        num.classList.toggle('done', done[n]);
+        num.innerHTML = done[n] ? icon('check', 3.4) : String(n);
+      }
+    }
+
+    /* Chatbot buttons: on iPhone try the app first, and open the website if the app doesn't take over.
+       A chatbot whose app didn't open is remembered, so next time its website opens straight away. */
+    const CHATBOTS = {
+      chatgpt: { app: 'chatgpt://', web: 'https://chatgpt.com/' },
+      claude: { app: 'claude://', web: 'https://claude.ai/new' },
+      gemini: { app: 'googlegemini://', web: 'https://gemini.google.com/app' }
+    };
+    const NO_APP_KEY = 'recomp_chatbot_no_app';
+
+    function openChatbot(e, id) {
+      const bot = CHATBOTS[id];
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const noApp = readJSON(NO_APP_KEY, {});
+      if (!isIOS || noApp[id]) return; // the link opens the website as usual
+      e.preventDefault();
+      let left = false;
+      const onHide = () => { if (document.hidden) left = true; };
+      document.addEventListener('visibilitychange', onHide);
+      window.location.href = bot.app;
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        if (left || document.hidden) return;
+        localStorage.setItem(NO_APP_KEY, JSON.stringify({ ...noApp, [id]: true }));
+        if (!window.open(bot.web, '_blank')) window.location.href = bot.web;
+      }, 1500);
     }
 
     function copyAiPrompt() {
@@ -5767,6 +5811,7 @@ The file must be valid JSON in exactly this format:
       saveAiForm();
       copyText(buildAiPrompt(), 'Prompt copied. Paste it into your chatbot, then upload the file it gives you.', 'AI Prompt').then(ok => {
         if (ok) document.getElementById('ai-copy-btn').innerHTML = `${icon('check', 3)}Copied`;
+        updateAiSteps();
       });
     }
 
@@ -5784,6 +5829,7 @@ The file must be valid JSON in exactly this format:
         if (openSheets.includes(document.getElementById('ai-sheet'))) {
           document.getElementById('ai-reply').value = reader.result;
           validatePlanPaste();
+          if (pendingPlan && introPending) return useAiPlan();
           document.getElementById('ai-status').scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
           openAiSheet(String(reader.result));
@@ -5916,7 +5962,12 @@ The file must be valid JSON in exactly this format:
           ${settingsRow({ iconName: ROW_ICONS.reset, color: 'var(--danger)', title: 'Reset all data', danger: true, onclick: 'clearAllData()' })}
         </div>
 
-        <div class="settings-foot">Recomp keeps everything on this phone. Nothing is uploaded.</div>`;
+        <div class="group-label">App</div>
+        <div class="group">
+          ${settingsRow({ iconName: ROW_ICONS.backup, color: '#636366', title: 'Check for updates', sub: `Version ${APP_VERSION}`, onclick: 'checkForUpdate(true)' })}
+        </div>
+
+        <div class="settings-foot">Recomp keeps everything on this phone. Nothing is uploaded.<br>Version ${APP_VERSION}</div>`;
     }
 
     let resizeTimer = null;
@@ -6060,6 +6111,25 @@ The file must be valid JSON in exactly this format:
         ]
       },
       {
+        id: 'strength-5x5-3', name: 'Strength 5×5', days: 3, level: 'Beginner to intermediate', equipment: 'gym', minutes: 60, type: 'strength',
+        blurb: 'The classic strength builder: five heavy sets of five on the big barbell lifts. Add a little weight every session.',
+        build: () => [
+          ['Workout A', [['Barbell Back Squat', { sets: 5, reps: '5', rest: 180, warmup: 3 }], ['Barbell Bench Press', { sets: 5, reps: '5', rest: 180, warmup: 3 }], ['Barbell Bent-Over Row', { sets: 5, reps: '5', rest: 150, warmup: 2 }], ['Plank', { warmup: 0 }]]],
+          ['Workout B', [['Barbell Back Squat', { sets: 5, reps: '5', rest: 180, warmup: 3 }], ['Barbell Overhead Press', { sets: 5, reps: '5', rest: 180, warmup: 2 }], ['Trap Bar Deadlift', { sets: 3, reps: '5', rest: 180, warmup: 2 }], ['Chin-ups', { reps: '5–8', warmup: 0 }]]],
+          ['Workout A2', [['Barbell Back Squat', { sets: 5, reps: '5', rest: 180, warmup: 3 }], ['Barbell Bench Press', { sets: 5, reps: '5', rest: 180, warmup: 3 }], ['Barbell Bent-Over Row', { sets: 5, reps: '5', rest: 150, warmup: 2 }], ['Hanging Knee Raise', { warmup: 0 }]]]
+        ]
+      },
+      {
+        id: 'glutes-legs-4', name: 'Glutes & Legs 4×', days: 4, level: 'Beginner to intermediate', equipment: 'gym', minutes: 55, type: 'split',
+        blurb: 'Two lower-body days built around the glutes and hamstrings, plus two upper-body days to keep things balanced.',
+        build: () => [
+          ['Glutes & Hamstrings', [['Hip Thrust', { warmup: 2 }], ['Romanian Deadlift', { warmup: 1 }], ['Bulgarian Split Squat', { warmup: 0 }], ['Lying Leg Curl', { warmup: 0 }], ['Single-Leg Glute Bridge', { reps: '12–15' }], ['Standing Calf Raise']]],
+          ['Upper A', [['Lat Pulldown'], ['Seated Dumbbell Shoulder Press', { warmup: 1 }], ['Seated Cable Row', { warmup: 0 }], ['Dumbbell Lateral Raise'], ['Triceps Pushdown', { warmup: 0 }], ['Dumbbell Curl', { warmup: 0 }]]],
+          ['Quads & Glutes', [['Barbell Back Squat', { reps: '6–8' }], ['Walking Lunge', { warmup: 0 }], ['Step-ups', { warmup: 0 }], ['Leg Extension', { warmup: 0 }], ['Seated Leg Curl', { warmup: 0 }], ['Plank']]],
+          ['Upper B', [['Incline Dumbbell Press', { warmup: 2 }], ['Single-Arm Dumbbell Row', { warmup: 0 }], ['Face Pull'], ['Cable Lateral Raise', { warmup: 0 }], ['Hammer Curl', { warmup: 0 }], ['Cable Crunch']]]
+        ]
+      },
+      {
         id: 'upper-lower-4', name: 'Upper / Lower 4×', days: 4, level: 'Beginner to intermediate', equipment: 'gym', minutes: 55,
         blurb: 'Two upper and two lower days. Each muscle twice a week with more volume.',
         build: () => [
@@ -6103,6 +6173,32 @@ The file must be valid JSON in exactly this format:
         build: null // the creator's own plan, with personal weights swapped for effort targets
       }
     ];
+
+    // Grouping for the plan pickers
+    const TEMPLATE_TYPES = [['all', 'All'], ['full', 'Full body'], ['split', 'Splits'], ['home', 'Home'], ['strength', 'Strength']];
+    function templateType(t) {
+      return t.type || (t.equipment !== 'gym' ? 'home' : /^full-body/.test(t.id) ? 'full' : 'split');
+    }
+
+    // Switching to a type keeps the picked plan if it fits, otherwise picks that type's best match
+    function pickForFilter(currentId, type, recId) {
+      if (type === 'all' || templateType(templateById(currentId)) === type) return currentId;
+      const group = TEMPLATES.filter(t => templateType(t) === type);
+      return (group.find(t => t.id === recId) || group[0] || templateById(currentId)).id;
+    }
+
+    // Picked plan first (with its days), then the rest of the chosen group; shared by setup and Plan → Starter plans
+    function templateListHtml({ picked, rec = null, filter = 'all', pickFn, filterFn }) {
+      const chosen = templateById(picked);
+      const others = TEMPLATES.filter(t => t.id !== chosen.id && (filter === 'all' || templateType(t) === filter));
+      return `
+        <div class="tpl-filters" role="group" aria-label="Plan types">${TEMPLATE_TYPES.map(([id, label]) =>
+          `<button class="tpl-filter ${filter === id ? 'on' : ''}" onclick="${filterFn}('${id}')" aria-pressed="${filter === id}">${label}</button>`).join('')}</div>
+        ${templateCardHtml(chosen, { featured: true, recommended: chosen.id === rec })}
+        ${others.length ? `<div class="onb-q">${filter === 'all' ? 'Other plans' : `More ${TEMPLATE_TYPES.find(x => x[0] === filter)[1].toLowerCase()} plans`}</div>` : ''}
+        ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `${pickFn}('${t.id}')` })).join('')}
+        ${!others.length ? '<div class="onb-note">No other plans of this type yet.</div>' : ''}`;
+    }
 
     const PPL_DAYS = () => [
       ['Push A', [['Barbell Bench Press'], ['Seated Dumbbell Shoulder Press', { warmup: 1 }], ['Incline Dumbbell Press', { warmup: 0 }], ['Dumbbell Lateral Raise'], ['Triceps Pushdown'], ['Overhead Dumbbell Extension', { warmup: 0 }]]],
@@ -6292,9 +6388,14 @@ The file must be valid JSON in exactly this format:
     function renderOnboarding() {
       const body = document.getElementById('onb-body');
       const foot = document.getElementById('onb-foot');
-      const total = onb.step === 4 ? 5 : 4;
-      document.getElementById('onb-dots').innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i === onb.step ? 'on' : i < onb.step ? 'done' : ''}"></i>`).join('');
-      document.getElementById('onb-back').hidden = onb.step === 0;
+      // Labelled progress: each stage gets a tick once it's done (step 4 is still "Your plan"; 5 is the finish)
+      const stage = onb.step >= 5 ? 4 : Math.min(onb.step, 3);
+      document.getElementById('onb-dots').innerHTML = onb.step === 0 ? '' : ['About you', 'Training', 'Your plan'].map((label, i) => {
+        const n = i + 1;
+        const state = stage > n ? 'done' : stage === n ? 'on' : '';
+        return `<span class="onb-stage ${state}"><span class="onb-stage-dot">${state === 'done' ? icon('check', 3.4) : n}</span>${label}</span>`;
+      }).join('<span class="onb-stage-line"></span>');
+      document.getElementById('onb-back').hidden = onb.step === 0 || onb.step === 5;
       const field = (id, key, label, attrs, sub = '') => `
         <label class="onb-field">${label}${sub ? ` <span class="opt-sub">${sub}</span>` : ''}
           <input ${attrs} id="${id}" value="${escapeHtml(onb[key])}" oninput="onbSet('${key}', this.value, true)">
@@ -6356,23 +6457,94 @@ The file must be valid JSON in exactly this format:
           <h2 class="onb-title">Create your plan</h2>
           <p class="onb-text">${onb.name.trim() ? `${escapeHtml(onb.name.trim())}, w` : 'W'}hichever you pick, the plan is yours. Edit any day, exercise, set or rest time later in the Plan tab.</p>
           <div class="start-opts">
-            ${option('sample', ROW_ICONS.plan, 'var(--accent)', 'Start with a sample plan', `Proven plans with warm-ups, rest times and swaps. We suggest ${escapeHtml(rec.name)} for you.`)}
+            ${option('sample', ROW_ICONS.plan, 'var(--accent)', 'Pick a ready-made plan', `Full body, splits, home, strength and more, with warm-ups, rest times and swaps. We suggest ${escapeHtml(rec.name)} for you.`)}
             ${option('own', icon('pencil', 2.2), '#3987e5', 'Create your own plan', 'Pick your days and exercises from a library of 70+ moves. Sets, reps, rest and warm-ups are filled in for you.')}
             ${option('ai', ROW_ICONS.ai, '#9085e9', 'Create your plan with AI', 'Copy a prompt with your details into ChatGPT, Claude or Gemini, and upload the plan file it gives you.')}
           </div>`;
         foot.innerHTML = '';
-      } else {
+      } else if (onb.step === 4) {
         const rec = recommendTemplate(onb);
         const picked = templateById(onb.picked || rec);
-        const others = TEMPLATES.filter(t => t.id !== picked.id);
         body.innerHTML = `
-          <h2 class="onb-title">Sample plans</h2>
+          <h2 class="onb-title">Ready-made plans</h2>
           <p class="onb-text">Every exercise has a swap if a machine is taken, plus warm-up sets and rest times. Nothing is locked: change it any time in the Plan tab.</p>
-          ${templateCardHtml(picked, { featured: true, recommended: picked.id === rec })}
-          <div class="onb-q">Other plans</div>
-          ${others.map(t => templateCardHtml(t, { recommended: t.id === rec, onclick: `onbSet('picked', '${t.id}'); document.querySelector('#onboarding .onb-scroll').scrollTop = 0` })).join('')}`;
+          ${templateListHtml({ picked: picked.id, rec, filter: onb.filter || 'all', pickFn: 'onbPickTemplate', filterFn: 'onbFilterTemplates' })}`;
         foot.innerHTML = `<button class="btn btn-positive" onclick="finishOnboarding('sample')">Use ${escapeHtml(picked.name)}</button>`;
+      } else {
+        // Finish: one calm screen with what to know, then the workout
+        const days = programData.length;
+        const schedule = getSchedule();
+        const title = onb.result === 'uploaded' ? 'Plan uploaded' : onb.result === 'fallback' ? 'Ready when you are' : "You're all set";
+        const sub = onb.result === 'uploaded' ? 'Your AI plan is in and ready to train.'
+          : onb.result === 'fallback' ? `We've started you on ${escapeHtml(getPlanName())} so you can train today. Build your own or create one with AI any time in the Plan tab.`
+          : `${onb.name.trim() ? `${escapeHtml(onb.name.trim())}, y` : 'Y'}our plan is ready.`;
+        body.innerHTML = `
+          <div class="onb-done-tick">${icon('check', 3)}</div>
+          <h2 class="onb-title center">${title}</h2>
+          <p class="onb-text center">${sub}</p>
+          <div class="onb-card">
+            <div class="onb-card-title">${escapeHtml(getPlanName())}</div>
+            <div class="onb-card-sub">${days} day${days === 1 ? '' : 's'} a week${schedule ? ` · ${WEEKDAYS.filter((_, w) => Number.isInteger(schedule[w])).join(', ')}` : ''} · first up: ${escapeHtml(dayAt(currentDayIdx).title)}</div>
+          </div>
+          <div class="onb-card">
+            <div class="onb-card-head">${icon('pencil', 2.2)}This plan is yours</div>
+            <div class="onb-card-text">Change any day, exercise, set or rest time in the <strong>Plan</strong> tab. Your history is always kept.</div>
+          </div>
+          <div class="onb-card">
+            <div class="onb-card-head">${icon('check', 2.6)}How logging works</div>
+            <ol class="onb-steps">
+              <li>Type the weight and reps you did. Grey numbers are suggestions.</li>
+              <li>Tap <strong>✓</strong> to log the set. The rest timer starts on its own.</li>
+              <li>Tap <strong>Finish Workout</strong> at the bottom when you're done.</li>
+            </ol>
+          </div>`;
+        foot.innerHTML = `<button class="btn btn-positive" onclick="startTraining()">Start Training</button>`;
       }
+    }
+
+    function onbPickTemplate(id) {
+      onb.picked = id;
+      haptic('light');
+      renderOnboarding();
+      document.querySelector('#onboarding .onb-scroll').scrollTop = 0;
+    }
+
+    function onbFilterTemplates(type) {
+      onb.filter = type;
+      onb.picked = pickForFilter(onb.picked || recommendTemplate(onb), type, recommendTemplate(onb));
+      haptic('light');
+      renderOnboarding();
+    }
+
+    // Own plan and AI plan finish in the editor / AI sheet; when that closes, setup comes back for the finish screen
+    let introPending = null;
+
+    function showIntroFinish(result) {
+      const answers = introPending || { name: '' };
+      introPending = null;
+      onb = { ...answers, step: 5, result };
+      const el = document.getElementById('onboarding');
+      el.hidden = false;
+      void el.offsetWidth;
+      el.classList.add('open');
+      renderOnboarding();
+      document.querySelector('#onboarding .onb-scroll').scrollTop = 0;
+      haptic('success');
+    }
+
+    function introSheetClosed(id, saved) {
+      if (!introPending || !['editor-sheet', 'ai-sheet'].includes(id)) return;
+      setTimeout(() => {
+        if (introPending && !openSheets.length) showIntroFinish(saved ? (id === 'ai-sheet' ? 'uploaded' : 'saved') : 'fallback');
+      }, 360);
+    }
+
+    function startTraining() {
+      closeOnboarding();
+      switchView('workout');
+      window.scrollTo(0, 0);
+      renderWorkout();
+      updateStats();
     }
 
     // Everyone leaves setup with a working plan, so closing the builder or the AI sheet early still leaves a usable app
@@ -6380,17 +6552,22 @@ The file must be valid JSON in exactly this format:
       const choice = templateById(mode === 'sample' ? (onb.picked || recommendTemplate(onb)) : mode === 'skip' ? 'full-body-3' : recommendTemplate(onb));
       setActivePlan(templatePlan(choice));
       localStorage.setItem(ONBOARDED_KEY, '1');
-      const name = onb.name.trim();
+      updateHeader();
+      updateStats();
+      if (mode === 'sample') return onbGo(5);
+      if (mode === 'skip') {
+        closeOnboarding();
+        switchView('workout');
+        window.scrollTo(0, 0);
+        return showToast(`Starting you on ${choice.name}. Change it any time in Plan.`, { duration: 4000 });
+      }
+      introPending = { name: onb.name, days: onb.days };
       const days = onb.days;
       closeOnboarding();
       switchView('workout');
-      updateHeader();
-      updateStats();
       window.scrollTo(0, 0);
       if (mode === 'build') setTimeout(() => buildOwnPlan(days), 350);
-      else if (mode === 'ai') setTimeout(() => openAiSheet(), 350);
-      else if (mode === 'sample') showToast(`${name ? `${name}, y` : 'Y'}our plan is ready. ${dayAt(currentDayIdx).title} is up first.`, { duration: 4000 });
-      else showToast(`Starting you on ${choice.name}. Change it any time in Plan.`, { duration: 4000 });
+      else setTimeout(() => openAiSheet(), 350);
     }
 
     function onbBack() {
@@ -6408,6 +6585,14 @@ The file must be valid JSON in exactly this format:
       setTimeout(() => openSheet('templates-sheet'), 50);
     }
 
+    let tplFilter = 'all';
+    function filterTemplates(type) {
+      tplFilter = type;
+      tplPicked = pickForFilter(tplPicked, type, null);
+      haptic('light');
+      renderTemplatesSheet();
+    }
+
     function pickTemplate(id) {
       tplPicked = id;
       haptic('light');
@@ -6418,9 +6603,7 @@ The file must be valid JSON in exactly this format:
     function renderTemplatesSheet() {
       const picked = templateById(tplPicked);
       const current = getCustomPlan();
-      document.getElementById('tpl-list').innerHTML =
-        templateCardHtml(picked, { featured: true }) +
-        TEMPLATES.filter(t => t.id !== picked.id).map(t => templateCardHtml(t, { onclick: `pickTemplate('${t.id}')` })).join('');
+      document.getElementById('tpl-list').innerHTML = templateListHtml({ picked: picked.id, filter: tplFilter, pickFn: 'pickTemplate', filterFn: 'filterTemplates' });
       document.getElementById('tpl-use').textContent = current && current.templateId === picked.id ? `Restart ${picked.name}` : `Use ${picked.name}`;
     }
 
@@ -6435,9 +6618,6 @@ The file must be valid JSON in exactly this format:
       haptic('success');
       showToast(`Now using ${t.name}`);
     }
-
-    /* First-workout guide: shown until the first workout is saved or it's dismissed */
-    const TIP_KEY = 'recomp_tip_logging';
 
     /* Coach tips: one short hint at the moment a feature becomes useful, each shown once.
        People who already have workouts saved start with all of them marked seen. */
@@ -6473,8 +6653,6 @@ The file must be valid JSON in exactly this format:
 
     function replayTips() {
       localStorage.setItem(TIPS_KEY, '[]');
-      localStorage.removeItem(PLAN_TIP_KEY);
-      localStorage.removeItem(TIP_KEY);
       closeSheet('guide-sheet');
       renderWorkout();
       showToast('Tips will show again as you train');
@@ -6500,45 +6678,7 @@ The file must be valid JSON in exactly this format:
       openSheet('guide-sheet');
     }
 
-    const PLAN_TIP_KEY = 'recomp_tip_plan';
 
-    function planTipHtml() {
-      if (getHistory().length || localStorage.getItem(PLAN_TIP_KEY) || isCustomDay()) return '';
-      return `
-        <div class="tip-card plan-tip">
-          <div class="tip-title">This is your plan to change</div>
-          <div class="tip-text">${escapeHtml(dayAt(currentDayIdx).title)} is day ${currentDayIdx + 1} of ${escapeHtml(getPlanName())}. Tap ${icon('pencil', 2.2)} to change it, or open <strong>Plan</strong> below to edit or build your own.</div>
-          <div class="tip-actions">
-            <button class="btn btn-secondary btn-sm" onclick="dismissPlanTip()">Got it</button>
-            <button class="btn btn-plain btn-sm" onclick="dismissPlanTip(); switchView('plan')">Open Plan</button>
-          </div>
-        </div>`;
-    }
-
-    function dismissPlanTip() {
-      localStorage.setItem(PLAN_TIP_KEY, '1');
-      renderWorkout();
-    }
-
-    function loggingTipHtml() {
-      if (getHistory().length || localStorage.getItem(TIP_KEY)) return '';
-      return `
-        <div class="tip-card">
-          <div class="tip-title">How logging works</div>
-          <ol class="tip-steps">
-            <li>Type the weight and reps you did. Grey numbers are suggestions.</li>
-            <li>Tap <strong>✓</strong> to lock the set. The rest timer starts on its own.</li>
-            <li>Tap <strong>Finish Workout</strong> at the bottom when you're done.</li>
-          </ol>
-          <button class="btn btn-secondary btn-sm" onclick="dismissLoggingTip()">Got it</button>
-        </div>`;
-    }
-
-    function dismissLoggingTip() {
-      localStorage.setItem(TIP_KEY, '1');
-      haptic('light');
-      renderWorkout();
-    }
 
     /* Plan editor: a working copy of the plan, edited across three views (plan, day, exercise) and saved
        in one go. Exercise and alternative pickers reuse the Add Exercise sheet. */
@@ -6573,7 +6713,7 @@ The file must be valid JSON in exactly this format:
       const overlay = document.getElementById('editor-sheet');
       overlay.onSheetClose = () => {
         // Closed by swipe or backdrop with unsaved edits: offer to reopen them
-        if (editor && editor.dirty && !editor.saved) {
+        if (editor && editor.dirty && !editor.saved && !introPending) {
           const kept = editor;
           showToast('Plan changes not saved', { type: 'info', actionLabel: 'Reopen', onAction: () => { editor = kept; renderEditor(); openSheet('editor-sheet'); } });
         }
@@ -6807,6 +6947,7 @@ The file must be valid JSON in exactly this format:
       editor.saved = true;
       const schedule = plan.schedule.some(v => Number.isInteger(v)) ? plan.schedule : undefined;
       setActivePlan({ planName: plan.planName, days, ...(schedule ? { schedule } : {}) });
+      document.getElementById('editor-sheet').dataset.saved = '1';
       closeSheet('editor-sheet');
       editor = null;
       renderSettings();
@@ -6822,6 +6963,9 @@ The file must be valid JSON in exactly this format:
       openPlanEditor({ plan: { planName: 'My Plan', schedule: defaultSchedule(n), days: weekdays.map((w, i) => ({ day: `Day ${i + 1}`, title: WEEKDAY_NAMES[w], exercises: [] })) } });
       setTimeout(() => editorGo('day', 0), 80);
     }
+
+    // Shown in Settings and compared on update checks; bump with every change
+    const APP_VERSION = '2026.10.15';
 
     // Init App
     migrateExistingUserPlan();
@@ -6849,8 +6993,38 @@ The file must be valid JSON in exactly this format:
     updateHeader();
     if (needsOnboarding()) openOnboarding();
 
+    /* Updates. A Home Screen app is usually resumed rather than relaunched, so besides the service
+       worker's check on launch, the app asks for the latest page whenever it comes back to the front.
+       A newer version is stored for offline use straight away and offered with Reload. */
+    let lastUpdateCheck = 0;
+    async function checkForUpdate(manual = false) {
+      if (!location.protocol.startsWith('http')) return;
+      if (!manual && Date.now() - lastUpdateCheck < 10 * 60 * 1000) return;
+      lastUpdateCheck = Date.now();
+      try {
+        const res = await fetch('./index.html', { cache: 'no-store' });
+        const text = await res.text();
+        const m = text.match(/const APP_VERSION = '([^']+)'/);
+        if (!res.ok || !m) throw new Error('bad response');
+        if (m[1] === APP_VERSION) {
+          if (manual) showToast(`You're up to date · version ${APP_VERSION}`);
+          return;
+        }
+        if ('caches' in window) {
+          for (const key of await caches.keys()) {
+            const cache = await caches.open(key);
+            await Promise.all(['./', './index.html'].map(url => cache.put(url, new Response(text, { headers: { 'Content-Type': 'text/html; charset=utf-8' } }))));
+          }
+        }
+        showToast(`Update ready · version ${m[1]}`, { type: 'info', actionLabel: 'Reload', onAction: () => location.reload(), duration: 0 });
+      } catch (e) {
+        if (manual) showToast("Couldn't check for updates. Are you online?", { type: 'error' });
+      }
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
+
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js').then(reg => reg.update()).catch(() => {});
       // The app opens from cache; the service worker says when a newer version has been downloaded.
       navigator.serviceWorker.addEventListener('message', e => {
         if (e.data && e.data.type === 'update-available') {
