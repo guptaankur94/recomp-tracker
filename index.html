@@ -859,7 +859,34 @@
     .nav-item:active .nav-ico { transform: scale(0.9); }
     .nav-item .fill-active { fill: none; transition: fill 0.15s ease; }
     .nav-item.active { color: var(--text); }
-    .nav-item.active .nav-ico { background: rgba(255, 255, 255, 0.14); }
+    /* One glass pill glides between tabs with a soft spring; icons sit above it */
+    .nav-indicator {
+      position: absolute;
+      top: 6px; left: 0;
+      height: calc(100% - 12px);
+      width: 64px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 55%, rgba(255, 255, 255, 0.14) 100%);
+      border: 0.5px solid rgba(255, 255, 255, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 6px 16px rgba(0, 0, 0, 0.35);
+      -webkit-backdrop-filter: blur(6px) saturate(170%);
+      backdrop-filter: blur(6px) saturate(170%);
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, width;
+    }
+    .nav-indicator.ready { opacity: 1; transition: transform 0.5s cubic-bezier(0.34, 1.18, 0.64, 1), width 0.5s cubic-bezier(0.34, 1.18, 0.64, 1), opacity 0.2s ease; }
+    /* Stretch while travelling, like a drop of liquid */
+    .nav-indicator.moving { animation: navStretch 0.5s ease-out; }
+    @keyframes navStretch { 0% { scale: 1 1; } 35% { scale: 1.18 0.88; } 70% { scale: 0.97 1.03; } 100% { scale: 1 1; } }
+    .nav-item { position: relative; z-index: 1; }
+    .nav-item.active svg { animation: navPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes navPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+    /* New section slides in from the side you're heading to */
+    .view.enter-right { animation: viewInRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .view.enter-left { animation: viewInLeft 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    @keyframes viewInRight { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+    @keyframes viewInLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
     .nav-item.active .fill-active { fill: currentColor; }
     /* Workout keeps its green circle, sitting inside the capsule */
     .nav-item.center .nav-ico { width: 48px; height: 48px; max-width: none; background: var(--accent); color: #000; }
@@ -1419,6 +1446,7 @@
       100% { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
     }
     @media (prefers-reduced-motion: reduce) {
+      .nav-indicator.ready, .nav-indicator.moving, .nav-item.active svg, .view.enter-right, .view.enter-left { transition: none; animation: none; }
       .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
       .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
       .rest-pill, .just-collapsed, .ex-complete.pop, .summary-badge, .just-completed .pr-badge, .chart-area.fade, .saved-tick.pop { animation: none; }
@@ -1855,6 +1883,7 @@
 
   <!-- Bottom tab bar -->
   <nav class="bottom-tab-bar" aria-label="Sections">
+    <span class="nav-indicator" aria-hidden="true"></span>
     <button class="nav-item" id="tab-nav-plan" onclick="switchView('plan')" aria-label="Plan">
       <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="5" y="4.5" width="14" height="16.5" rx="2.6"/>
@@ -4301,9 +4330,45 @@
     }
 
 
+    const VIEW_ORDER = ['plan', 'history', 'workout', 'progress', 'settings'];
+
+    // Glide the glass pill under the current tab (instantly the first time)
+    function moveNavIndicator(animate = true) {
+      const bar = document.querySelector('.bottom-tab-bar');
+      const pill = bar.querySelector('.nav-indicator');
+      const tab = document.getElementById(`tab-nav-${currentView}`);
+      if (!tab || !bar.offsetWidth) return;
+      const ico = tab.querySelector('.nav-ico');
+      const barBox = bar.getBoundingClientRect();
+      const box = (tab.classList.contains('center') ? tab : ico).getBoundingClientRect();
+      const width = Math.min(68, box.width);
+      const x = box.left - barBox.left + (box.width - width) / 2 - bar.clientLeft;
+      if (!animate) pill.classList.remove('ready');
+      pill.style.width = `${width}px`;
+      pill.style.transform = `translateX(${x}px)`;
+      if (animate) {
+        pill.classList.remove('moving');
+        void pill.offsetWidth;
+        pill.classList.add('moving');
+      } else {
+        void pill.offsetWidth;
+        pill.classList.add('ready');
+      }
+    }
+    window.addEventListener('resize', () => moveNavIndicator(false));
+
     function switchView(viewName) {
+      const from = currentView;
       if (viewName !== currentView) window.scrollTo(0, 0);
       currentView = viewName;
+      if (from !== viewName) {
+        const view = document.getElementById(`view-${viewName}`);
+        const dir = VIEW_ORDER.indexOf(viewName) > VIEW_ORDER.indexOf(from) ? 'enter-right' : 'enter-left';
+        view.classList.remove('enter-right', 'enter-left');
+        void view.offsetWidth;
+        view.classList.add(dir);
+        view.addEventListener('animationend', () => view.classList.remove(dir), { once: true });
+      }
       updateHeader();
       ['workout', 'plan', 'history', 'progress', 'settings'].forEach(name => {
         document.getElementById(`view-${name}`).hidden = viewName !== name;
@@ -4312,6 +4377,7 @@
         if (viewName === name) tab.setAttribute('aria-current', 'page');
         else tab.removeAttribute('aria-current');
       });
+      moveNavIndicator(from !== viewName);
 
       if (viewName === 'history') {
         renderCalendarAndHistory();
@@ -6968,9 +7034,10 @@ The file must be valid JSON in exactly this format:
     }
 
     // Shown in Settings and compared on update checks; bump with every change
-    const APP_VERSION = '2026.10.15b';
+    const APP_VERSION = '2026.10.15c';
 
     // Init App
+    requestAnimationFrame(() => moveNavIndicator(false));
     migrateExistingUserPlan();
     initTips();
     loadActivePlan();
