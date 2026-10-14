@@ -844,10 +844,20 @@
       background: none;
       padding: 0;
     }
-    .nav-item svg { width: 26px; height: 26px; }
+    .nav-item svg { width: 22px; height: 22px; }
+    /* Each section sits in a round icon; the active one gets a soft disc */
+    .nav-ico { display: flex; align-items: center; justify-content: center; width: 38px; height: 34px; border-radius: 999px; transition: background-color 0.2s ease, transform 0.2s var(--ease-out); }
+    .nav-item:active .nav-ico { transform: scale(0.9); }
     .nav-item .fill-active { fill: none; transition: fill 0.15s ease; }
     .nav-item.active { color: var(--text); }
+    .nav-item.active .nav-ico { background: rgba(255, 255, 255, 0.12); }
     .nav-item.active .fill-active { fill: currentColor; }
+    /* Workout: the raised green button in the middle of the bar */
+    .nav-item.center { color: var(--text-2); }
+    .nav-item.center .nav-ico { width: 60px; height: 60px; margin-top: -26px; margin-bottom: -3px; background: var(--accent); color: #000; border: 4px solid #000; box-shadow: 0 6px 18px rgba(48, 209, 88, 0.35); }
+    .nav-item.center svg { width: 28px; height: 28px; }
+    .nav-item.center.active { color: var(--accent); }
+    .nav-item.center:not(.active) .nav-ico { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45); }
 
     /* Rest timer: floating pill + full-screen view */
     .rest-pill {
@@ -1226,6 +1236,42 @@
     .tip-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 6px; }
     .tip-steps { margin: 0 0 12px; padding-left: 20px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; }
     .tip-steps strong { color: var(--text); }
+    .tip-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; margin-bottom: 12px; }
+    .tip-text strong { color: var(--text); }
+    .tip-text svg { width: 14px; height: 14px; vertical-align: -2px; color: var(--text); }
+    .tip-actions { display: flex; gap: 8px; }
+    .plan-tip { border-color: rgba(48, 209, 88, 0.45); }
+    .day-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* Plan tab */
+    .plan-hero { padding: 18px 16px 16px; }
+    .plan-hero-name { font-size: var(--t-title2, 22px); font-weight: 700; letter-spacing: -0.01em; }
+    .plan-hero-meta { font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
+    .week-strip { display: flex; gap: 6px; margin-top: 14px; }
+    .week-dot { flex: 1; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: var(--t-caption); font-weight: 700; color: var(--text-3); background: var(--surface-2); }
+    .week-dot.on { background: var(--c); color: #fff; }
+    .plan-own { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0; padding: 10px 12px; border-radius: var(--r-md); background: var(--accent-soft); color: var(--text); font-size: var(--t-footnote); line-height: 1.45; }
+    .plan-own svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+    .plan-hero .btn { width: 100%; }
+    .pday { padding: 14px 16px; cursor: pointer; transition: transform 0.15s ease; }
+    .pday:active { transform: scale(0.985); }
+    .pday-head { display: flex; align-items: center; gap: 12px; }
+    .pday-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; flex-shrink: 0; }
+    .pday-text { flex: 1; min-width: 0; }
+    .pday-title { font-size: var(--t-headline); font-weight: 600; line-height: 1.3; }
+    .pday-meta { font-size: var(--t-footnote); color: var(--text-2); }
+    .pday-start { flex-shrink: 0; }
+    .pday-ex { font-size: var(--t-footnote); color: var(--text-2); margin-top: 10px; line-height: 1.45; }
+    .pday-edit { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: var(--t-footnote); font-weight: 600; color: var(--accent); }
+    .pday-edit svg { width: 14px; height: 14px; }
+    .plan-add-day { width: 100%; margin-bottom: 4px; }
+    .new-plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .new-plan-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px; border: none; border-radius: var(--r-lg); background: var(--surface); color: var(--text); text-align: left; }
+    .new-plan-ico { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 8px; }
+    .new-plan-ico svg { width: 18px; height: 18px; }
+    .new-plan-title { font-size: var(--t-body); font-weight: 600; }
+    .new-plan-sub { font-size: var(--t-caption); color: var(--text-2); }
+    .plan-foot { font-size: var(--t-footnote); color: var(--text-3); text-align: center; margin: 16px 0 8px; }
     .empty-card { background: var(--surface); border-radius: var(--r-lg); padding: 22px 18px; text-align: center; }
     .empty-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 6px; }
     .empty-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; margin-bottom: 14px; }
@@ -1333,6 +1379,10 @@
     <div id="hero"></div>
     <div class="nav-tabs" id="day-nav-tabs"></div>
     <div id="workout-content"></div>
+  </div>
+
+  <div id="view-plan" class="view" hidden>
+    <div id="plan-view"></div>
   </div>
 
   <div id="view-history" class="view" hidden>
@@ -1700,41 +1750,49 @@
   </div>
 
   <!-- Bottom tab bar -->
-  <nav class="bottom-tab-bar">
-    <button class="nav-item active" id="tab-nav-workout" onclick="switchView('workout')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect class="fill-active" x="2.5" y="9" width="2.8" height="6" rx="1"/>
-        <rect class="fill-active" x="5.3" y="6.5" width="3.4" height="11" rx="1.2"/>
-        <rect class="fill-active" x="15.3" y="6.5" width="3.4" height="11" rx="1.2"/>
-        <rect class="fill-active" x="18.7" y="9" width="2.8" height="6" rx="1"/>
-        <path d="M8.7 12h6.6"/>
-      </svg>
-      Workout
+  <nav class="bottom-tab-bar" aria-label="Sections">
+    <button class="nav-item" id="tab-nav-plan" onclick="switchView('plan')">
+      <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="5" y="4.5" width="14" height="16.5" rx="2.6"/>
+        <rect class="fill-active" x="8.5" y="2.8" width="7" height="3.6" rx="1.2"/>
+        <path d="M8.5 11h7M8.5 14.5h7M8.5 18h4"/>
+      </svg></span>
+      Plan
     </button>
     <button class="nav-item" id="tab-nav-history" onclick="switchView('history')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="3.5" y="5" width="17" height="15.5" rx="3"/>
         <path class="fill-active" d="M3.5 8a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v2h-17z"/>
         <path d="M8 3v4M16 3v4M3.5 10h17"/>
         <circle cx="8.5" cy="14.5" r="0.6"/><circle cx="12" cy="14.5" r="0.6"/><circle cx="15.5" cy="14.5" r="0.6"/>
-      </svg>
+      </svg></span>
       History
     </button>
+    <button class="nav-item center active" id="tab-nav-workout" onclick="switchView('workout')">
+      <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2.5" y="9" width="2.8" height="6" rx="1" fill="currentColor"/>
+        <rect x="5.3" y="6.5" width="3.4" height="11" rx="1.2" fill="currentColor"/>
+        <rect x="15.3" y="6.5" width="3.4" height="11" rx="1.2" fill="currentColor"/>
+        <rect x="18.7" y="9" width="2.8" height="6" rx="1" fill="currentColor"/>
+        <path d="M8.7 12h6.6" stroke-width="2.4"/>
+      </svg></span>
+      Workout
+    </button>
     <button class="nav-item" id="tab-nav-progress" onclick="switchView('progress')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3.5 20h17"/>
         <rect class="fill-active" x="5" y="12.5" width="3.2" height="4.5" rx="1"/>
         <rect class="fill-active" x="10.4" y="8.5" width="3.2" height="8.5" rx="1"/>
         <rect class="fill-active" x="15.8" y="4.5" width="3.2" height="12.5" rx="1"/>
-      </svg>
+      </svg></span>
       Progress
     </button>
     <button class="nav-item" id="tab-nav-settings" onclick="switchView('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 7h9.5M18.5 7H20M4 17h3.5M12.5 17H20"/>
         <circle class="fill-active" cx="16" cy="7" r="2.5"/>
         <circle class="fill-active" cx="10" cy="17" r="2.5"/>
-      </svg>
+      </svg></span>
       Settings
     </button>
   </nav>
@@ -2170,7 +2228,7 @@
           <div class="hero welcome">
             <div class="hero-title">Get started</div>
             <div class="start-steps">
-              ${step(true, `Plan: ${escapeHtml(getPlanName())}`, `${programData.length} days a week · tap to view or change`, 'openPlanSheet()')}
+              ${step(true, `Plan: ${escapeHtml(getPlanName())}`, `${programData.length} days a week · tap to view or change`, "switchView('plan')")}
               ${step(!!(profile && profile.heightCm && profile.weightKg), 'Add your body stats', 'Optional · unlocks calorie and protein targets', 'openProfileSheet()')}
               ${step(false, `Start ${escapeHtml(first.day)}: ${escapeHtml(first.title)}`, 'Scroll down and log your first set', "document.querySelector('#workout-content .ex-card').scrollIntoView({ behavior: 'smooth', block: 'start' })")}
             </div>
@@ -3258,7 +3316,10 @@
             <div class="day-kicker">${dayKicker()}</div>
             <div class="day-title">${escapeHtml(data.title)}</div>
           </div>
-          <button class="icon-btn" onclick="openDayMenu()" aria-label="Workout options">${icon('more', 2)}</button>
+          <div class="day-actions">
+            ${isCustomDay() ? '' : `<button class="icon-btn" onclick="openPlanEditor({ dayIdx: currentDayIdx })" aria-label="Edit this day">${icon('pencil', 2)}</button>`}
+            <button class="icon-btn" onclick="openDayMenu()" aria-label="Workout options">${icon('more', 2)}</button>
+          </div>
         </div>
       `;
 
@@ -3281,7 +3342,7 @@
         `;
       }
 
-      html += loggingTipHtml();
+      html += planTipHtml() + loggingTipHtml();
       if (isCustomDay() && !allExercises.length) {
         html += `
           <div class="empty-card">
@@ -4072,7 +4133,7 @@
       if (viewName !== currentView) window.scrollTo(0, 0);
       currentView = viewName;
       updateHeader();
-      ['workout', 'history', 'progress', 'settings'].forEach(name => {
+      ['workout', 'plan', 'history', 'progress', 'settings'].forEach(name => {
         document.getElementById(`view-${name}`).hidden = viewName !== name;
         const tab = document.getElementById(`tab-nav-${name}`);
         tab.classList.toggle('active', viewName === name);
@@ -4086,6 +4147,8 @@
         renderProgress();
       } else if (viewName === 'settings') {
         renderSettings();
+      } else if (viewName === 'plan') {
+        renderPlanView();
       }
     }
 
@@ -5122,6 +5185,7 @@
       const name = profile && profile.name ? profile.name.split(' ')[0] : '';
       const views = {
         workout: { kicker: now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }), title: `Good ${part}${name ? `, ${name}` : ''}` },
+        plan: { kicker: 'Yours to change', title: 'Your Plan' },
         history: { kicker: getPlanName(), title: 'History' },
         progress: { kicker: goal ? `Goal ${fmtNum(goal)} kg` : 'Your trends', title: 'Progress' },
         settings: { kicker: getPlanName(), title: 'Settings' }
@@ -5333,6 +5397,80 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       document.getElementById('plan-summary').innerHTML =
         `<strong>${escapeHtml(getPlanName())}</strong> · ${programData.length} days · ${total} exercises · ${getSchedule() ? 'weekly schedule' : 'rotates in order'}`;
       document.getElementById('plan-days').innerHTML = planDaysHtml(programData, getSchedule());
+      if (currentView === 'plan') renderPlanView();
+    }
+
+    /* Plan tab: the active plan, each day, and ways to start a different one */
+    function dayMinutes(day) {
+      const sec = day.exercises.reduce((t, ex) => t + (parseInt(ex.sets, 10) || 3) * ((parseInt(ex.rest, 10) || 90) + 40) + (parseInt(ex.warmup, 10) || 0) * 60, 0);
+      return Math.max(10, Math.round(sec / 60 / 5) * 5);
+    }
+
+    function startPlanDay(i) {
+      currentDayIdx = i;
+      switchView('workout');
+      initNav();
+      scrollActiveTab();
+      renderWorkout();
+      haptic('light');
+    }
+
+    function addPlanDay() {
+      openPlanEditor();
+      setTimeout(() => editorAddDay(), 80);
+    }
+
+    function renderPlanView() {
+      const schedule = getSchedule();
+      const total = programData.reduce((n, d) => n + d.exercises.length, 0);
+      const week = WEEKDAYS.map((w, i) => {
+        const d = schedule ? schedule[i] : null;
+        const on = Number.isInteger(d) && programData[d];
+        return `<span class="week-dot ${on ? 'on' : ''}" ${on ? `style="--c:${dayColor(programData[d].day)}"` : ''} title="${WEEKDAY_NAMES[i]}${on ? ` · ${escapeHtml(programData[d].title)}` : ' · Rest'}">${w[0]}</span>`;
+      }).join('');
+      const tile = (iconSvg, color, title, sub, onclick) => `
+        <button class="new-plan-tile" onclick="${onclick}">
+          <span class="new-plan-ico" style="background:${color}">${iconSvg}</span>
+          <span class="new-plan-title">${title}</span>
+          <span class="new-plan-sub">${sub}</span>
+        </button>`;
+      document.getElementById('plan-view').innerHTML = `
+        <div class="card plan-hero">
+          <div class="plan-hero-name">${escapeHtml(getPlanName())}</div>
+          <div class="plan-hero-meta">${programData.length} day${programData.length === 1 ? '' : 's'} · ${total} exercises · ${schedule ? 'weekly schedule' : 'rotates in order'}</div>
+          ${schedule ? `<div class="week-strip" aria-label="Weekly schedule">${week}</div>` : ''}
+          <div class="plan-own">${icon('pencil', 2.2)}<span>This plan is yours. Change any day, exercise, set or rest time. Your history is kept.</span></div>
+          <button class="btn btn-primary" onclick="openPlanEditor()">Edit Plan</button>
+        </div>
+
+        <div class="group-label">Days</div>
+        ${programData.map((d, i) => {
+          const when = weekdaysFor(i, schedule);
+          const names = d.exercises.map(e => escapeHtml(e.name));
+          return `
+          <div class="card pday" onclick="openPlanEditor({ dayIdx: ${i} })" role="button" aria-label="Edit ${escapeHtml(d.day)} · ${escapeHtml(d.title)}">
+            <div class="pday-head">
+              <span class="pday-num" style="background:${dayColor(d.day)}">${i + 1}</span>
+              <div class="pday-text">
+                <div class="pday-title">${escapeHtml(d.title)}</div>
+                <div class="pday-meta">${when.length ? `${when.join(', ')} · ` : ''}${d.exercises.length} exercise${d.exercises.length === 1 ? '' : 's'} · ~${dayMinutes(d)} min</div>
+              </div>
+              <button class="btn btn-secondary btn-sm pday-start" onclick="event.stopPropagation(); startPlanDay(${i})">Start</button>
+            </div>
+            <div class="pday-ex">${names.slice(0, 4).join(' · ')}${names.length > 4 ? ` · +${names.length - 4} more` : ''}</div>
+            <div class="pday-edit">${icon('pencil', 2.2)}Edit day</div>
+          </div>`;
+        }).join('')}
+        ${programData.length < 7 ? '<button class="btn btn-secondary plan-add-day" onclick="addPlanDay()">+ Add Day</button>' : ''}
+
+        <div class="group-label">Start a different plan</div>
+        <div class="new-plan-grid">
+          ${tile(icon('pencil', 2.2), '#3987e5', 'Build my own', 'Pick days and exercises', 'buildOwnPlan(Math.max(1, programData.length))')}
+          ${tile(ROW_ICONS.plan, '#199e70', 'Starter plans', 'Proven programmes', 'openTemplatesSheet()')}
+          ${tile(ROW_ICONS.ai, '#9085e9', 'Create with AI', 'ChatGPT, Claude, Gemini', 'openAiSheet()')}
+          ${tile(ROW_ICONS.backup, '#636366', 'Import a file', '.json or .txt plan', "document.getElementById('plan-file').click()")}
+        </div>
+        <div class="plan-foot">Switching plans keeps your workout history and records.</div>`;
     }
 
     function openPlanSheet() {
@@ -5519,8 +5657,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 
         <div class="group-label">Training</div>
         <div class="group">
-          ${settingsRow({ iconName: ROW_ICONS.plan, color: '#3987e5', title: 'Workout plan', sub: `${escapeHtml(getPlanName())} · ${programData.length} days · ${totalEx} exercises`, onclick: 'openPlanSheet()' })}
-          ${settingsRow({ iconName: ROW_ICONS.ai, color: '#9085e9', title: 'Create a plan with AI', sub: 'ChatGPT, Claude or Gemini', onclick: 'openAiSheet()' })}
+          ${settingsRow({ iconName: ROW_ICONS.plan, color: '#3987e5', title: 'Workout plan', sub: `${escapeHtml(getPlanName())} · ${programData.length} days · ${totalEx} exercises`, onclick: "switchView('plan')" })}
         </div>
 
         <div class="group-label">Data</div>
@@ -5922,7 +6059,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
         document.getElementById('ai-equipment').value = { gym: 'Full commercial gym', dumbbells: 'A pair of adjustable dumbbells and a bench', bodyweight: 'No equipment, bodyweight at home' }[setup.equipment] || '';
         setTimeout(() => openAiSheet(), 350);
       } else {
-        showToast(mode === 'skip' ? `Starting you on ${choice.name}. Change it in Settings.` : `${name ? `${name}, y` : 'Y'}our plan is ready. ${dayAt(currentDayIdx).title} is up first.`, { duration: 4000 });
+        showToast(mode === 'skip' ? `Starting you on ${choice.name}. Change it any time in Plan.` : `${name ? `${name}, y` : 'Y'}our plan is ready. ${dayAt(currentDayIdx).title} is up first.`, { duration: 4000 });
       }
     }
 
@@ -5971,6 +6108,26 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 
     /* First-workout guide: shown until the first workout is saved or it's dismissed */
     const TIP_KEY = 'recomp_tip_logging';
+
+    const PLAN_TIP_KEY = 'recomp_tip_plan';
+
+    function planTipHtml() {
+      if (getHistory().length || localStorage.getItem(PLAN_TIP_KEY) || isCustomDay()) return '';
+      return `
+        <div class="tip-card plan-tip">
+          <div class="tip-title">This is your plan to change</div>
+          <div class="tip-text">${escapeHtml(dayAt(currentDayIdx).title)} is day ${currentDayIdx + 1} of ${escapeHtml(getPlanName())}. Tap ${icon('pencil', 2.2)} to change it, or open <strong>Plan</strong> below to edit or build your own.</div>
+          <div class="tip-actions">
+            <button class="btn btn-secondary btn-sm" onclick="dismissPlanTip()">Got it</button>
+            <button class="btn btn-plain btn-sm" onclick="dismissPlanTip(); switchView('plan')">Open Plan</button>
+          </div>
+        </div>`;
+    }
+
+    function dismissPlanTip() {
+      localStorage.setItem(PLAN_TIP_KEY, '1');
+      renderWorkout();
+    }
 
     function loggingTipHtml() {
       if (getHistory().length || localStorage.getItem(TIP_KEY)) return '';
@@ -6285,14 +6442,14 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     restoreRestTimer();
     updateStats();
     renderBackupBadge();
-    // Home-screen shortcuts: ?action=log-weight opens the weight log, ?view=history|progress|settings a tab
+    // Home-screen shortcuts: ?action=log-weight opens the weight log, ?view=plan|history|progress|settings a tab
     (() => {
       const params = new URLSearchParams(location.search);
       const view = params.get('view');
       if (params.get('action') === 'log-weight') {
         switchView('progress');
         setTimeout(() => document.getElementById('bw-input').focus(), 300);
-      } else if (['history', 'progress', 'settings'].includes(view)) {
+      } else if (['plan', 'history', 'progress', 'settings'].includes(view)) {
         switchView(view);
       }
     })();
