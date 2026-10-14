@@ -1289,6 +1289,21 @@
     .new-plan-title { font-size: var(--t-body); font-weight: 600; }
     .new-plan-sub { font-size: var(--t-caption); color: var(--text-2); }
     .plan-foot { font-size: var(--t-footnote); color: var(--text-3); text-align: center; margin: 16px 0 8px; }
+    .guide-link { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 44px; margin-bottom: 8px; border: none; background: none; color: var(--accent); font-size: var(--t-body); font-weight: 600; }
+    .guide-link svg { width: 18px; height: 18px; }
+    /* Coach tips: a speech bubble pointing at the control it explains */
+    .coach { position: relative; display: flex; align-items: flex-start; gap: 10px; margin: 4px 0 12px; padding: 12px 12px 12px 14px; border-radius: var(--r-md); background: #0a84ff; color: #fff; font-size: var(--t-footnote); line-height: 1.45; animation: setPop 0.35s ease-out; }
+    .coach::before { content: ''; position: absolute; top: -6px; right: 48px; width: 12px; height: 12px; background: #0a84ff; transform: rotate(45deg); border-radius: 2px; }
+    .coach-text { flex: 1; }
+    .coach-ok { flex-shrink: 0; height: 30px; padding: 0 12px; border: none; border-radius: 999px; background: rgba(255, 255, 255, 0.22); color: #fff; font-size: var(--t-footnote); font-weight: 700; }
+    .coach.left::before, .ex-info .coach::before, #progress-tip .coach::before { left: 24px; right: auto; }
+    .guide-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 0.5px solid var(--separator); }
+    .guide-item:last-child { border-bottom: none; }
+    .guide-ico { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .guide-ico svg { width: 18px; height: 18px; }
+    .guide-title { font-size: var(--t-body); font-weight: 600; margin-bottom: 2px; }
+    .guide-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; }
+    .guide-text strong { color: var(--text); }
     .empty-card { background: var(--surface); border-radius: var(--r-lg); padding: 22px 18px; text-align: center; }
     .empty-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 6px; }
     .empty-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; margin-bottom: 14px; }
@@ -1441,6 +1456,7 @@
       <div class="section-title">Exercise Progress</div>
       <select id="progress-ex-select" onchange="selectProgressExercise(this.value)" aria-label="Exercise"></select>
       <div class="segmented" id="metric-seg"></div>
+      <div id="progress-tip"></div>
       <div id="ex-chart"></div>
       <button class="btn btn-plain entries-btn" id="ex-entries-btn" onclick="toggleEntries('ex')" hidden></button>
       <div id="ex-table"></div>
@@ -1578,6 +1594,22 @@
   </div>
 
   <!-- Backup options -->
+  <!-- How Recomp works -->
+  <div class="sheet-overlay" id="guide-sheet">
+    <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="guide-title">How Recomp works</div>
+        <div class="sheet-sub">Everything the app does, in two minutes.</div>
+      </div>
+      <div id="guide-body"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="replayTips()">Show the tips again</button>
+        <button class="btn btn-primary" onclick="closeSheet('guide-sheet')">Done</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="backup-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="backup-sheet-title">
       <div class="sheet-head">
@@ -3369,6 +3401,7 @@
           </div>`;
       }
 
+      let tipShown = false;
       allExercises.forEach((ex, exIdx) => {
         const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
         const last = getLastPerformance(ex.name, history);
@@ -3447,6 +3480,7 @@
               <div class="ex-info">
                 ${ex.cue ? `<div class="ex-info-row"><span class="ex-info-label">Cue</span><span>${escapeHtml(ex.cue)}</span></div>` : ''}
                 ${last ? `<div class="ex-info-row"><span class="ex-info-label">Last</span><span>${shortDate(last.session.id)} · best ${fmtSetLine(lastBest)}</span></div>` : ''}
+                ${ex.otherName && !ex.swapped && !tipSeen('swap') ? coachTip('swap', 'Machine taken?', `Swap to ${escapeHtml(ex.otherName)}. It has its own targets and history, and you can swap back any time.`) : ''}
                 ${ex.otherName ? `
                   <div class="ex-info-row"><span class="ex-info-label">${ex.swapped ? 'Original' : 'Alternative'}</span><span>${escapeHtml(ex.otherName)}</span></div>
                   <button class="btn btn-secondary btn-sm" onclick="toggleSwap(${exIdx})">${icon('swap')}Swap to ${escapeHtml(ex.otherName)}</button>` : ''}
@@ -3455,6 +3489,18 @@
               </div>` : ''}
             <div class="set-container">
         `;
+
+        // One coach tip at a time: rest after the first logged set, then drop sets once an exercise is done
+        let tipAfterSet = 0;
+        let tipHtml = '';
+        if (!tipShown && doneSets && !tipSeen('rest')) {
+          tipAfterSet = [...Array(totalSets).keys()].map(i => i + 1).find(s => localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true');
+          tipHtml = coachTip('rest', 'Logged. Rest timer started.', 'Tap − or + to change the rest after this set. The same weight on less rest is progress too.');
+        } else if (!tipShown && allDone && !tipSeen('drop')) {
+          tipAfterSet = totalSets;
+          tipHtml = coachTip('drop', 'One more push?', '+ Drop set adds a lighter set straight after any set, to squeeze out the last reps.', true);
+        }
+        if (tipHtml) tipShown = true;
 
         for (let s = 1; s <= totalSets; s++) {
           const wKey = setKey(currentDayIdx, exIdx, s, 'w');
@@ -3506,6 +3552,7 @@
                 </div>
               </div>
               ${setLink}
+              ${s === tipAfterSet ? tipHtml : ''}
             `;
             continue;
           }
@@ -3544,6 +3591,7 @@
               </div>
             </div>
             ${setLink}
+            ${s === tipAfterSet ? tipHtml : ''}
           `;
         }
 
@@ -4652,6 +4700,9 @@
         `<button class="seg-btn ${key === progressMetric ? 'active' : ''}" onclick="selectProgressMetric('${key}')">${m.label}</button>`
       ).join('');
 
+      document.getElementById('progress-tip').innerHTML = names.length && !tipSeen('records')
+        ? coachTip('records', 'Reading the chart.', 'Gold dots mark records: heavier weight, more reps, or the same work on less rest. Switch to Rest to see your rest times trend down.')
+        : '';
       const metric = METRICS[progressMetric];
       const fmtVal = v => metric.fmt ? metric.fmt(v) : `${fmtNum(v)} ${metric.unit}`;
       const rows = exerciseSessions(progressExercise, history);
@@ -5487,7 +5538,8 @@ Reply with ONLY valid JSON in exactly this format, no other text:
           ${tile(ROW_ICONS.ai, '#9085e9', 'Create with AI', 'ChatGPT, Claude, Gemini', 'openAiSheet()')}
           ${tile(ROW_ICONS.backup, '#636366', 'Import a file', '.json or .txt plan', "document.getElementById('plan-file').click()")}
         </div>
-        <div class="plan-foot">Switching plans keeps your workout history and records.</div>`;
+        <div class="plan-foot">Switching plans keeps your workout history and records.</div>
+        <button class="guide-link" onclick="openGuide()">${icon('infoCircle', 1.8)}How Recomp works</button>`;
     }
 
     function openPlanSheet() {
@@ -5675,6 +5727,10 @@ Reply with ONLY valid JSON in exactly this format, no other text:
         <div class="group-label">Training</div>
         <div class="group">
           ${settingsRow({ iconName: ROW_ICONS.plan, color: '#3987e5', title: 'Workout plan', sub: `${escapeHtml(getPlanName())} · ${programData.length} days · ${totalEx} exercises`, onclick: "switchView('plan')" })}
+        </div>
+
+        <div class="group">
+          ${settingsRow({ iconName: icon('infoCircle', 2.2), color: '#0a84ff', title: 'How Recomp works', sub: 'A quick guide to every feature', onclick: 'openGuide()' })}
         </div>
 
         <div class="group-label">Data</div>
@@ -6181,6 +6237,67 @@ Reply with ONLY valid JSON in exactly this format, no other text:
     /* First-workout guide: shown until the first workout is saved or it's dismissed */
     const TIP_KEY = 'recomp_tip_logging';
 
+    /* Coach tips: one short hint at the moment a feature becomes useful, each shown once.
+       People who already have workouts saved start with all of them marked seen. */
+    const TIPS_KEY = 'recomp_tips_seen';
+    const TIP_IDS = ['rest', 'drop', 'swap', 'records'];
+
+    function tipsSeen() {
+      return readJSON(TIPS_KEY, []);
+    }
+
+    function tipSeen(id) {
+      return tipsSeen().includes(id);
+    }
+
+    function dismissTip(id) {
+      localStorage.setItem(TIPS_KEY, JSON.stringify([...new Set([...tipsSeen(), id])]));
+      haptic('light');
+      if (id === 'records') renderExerciseProgress();
+      else renderWorkout();
+    }
+
+    function coachTip(id, title, text, pointLeft = false) {
+      return `
+        <div class="coach ${pointLeft ? 'left' : ''}" role="note">
+          <div class="coach-text"><strong>${title}</strong> ${text}</div>
+          <button class="coach-ok" onclick="event.stopPropagation(); dismissTip('${id}')">Got it</button>
+        </div>`;
+    }
+
+    function initTips() {
+      if (localStorage.getItem(TIPS_KEY) === null && getHistory().length) localStorage.setItem(TIPS_KEY, JSON.stringify(TIP_IDS));
+    }
+
+    function replayTips() {
+      localStorage.setItem(TIPS_KEY, '[]');
+      localStorage.removeItem(PLAN_TIP_KEY);
+      localStorage.removeItem(TIP_KEY);
+      closeSheet('guide-sheet');
+      renderWorkout();
+      showToast('Tips will show again as you train');
+    }
+
+    const GUIDE = [
+      ['plan', 'Your plan', 'The <strong>Plan</strong> tab holds your training days. Tap a day to change its exercises, sets, reps, rest or warm-ups, or tap <strong>Start</strong> to train it. You can build your own plan, pick a starter plan or create one with AI at any time. Your history is always kept.'],
+      ['check', 'Logging a set', 'Type the weight and reps, then tap <strong>✓</strong>. Grey numbers are suggestions from last time; tap ✓ with them empty to accept them. Tap a logged set to edit it, or swipe it left to delete it.'],
+      ['clock', 'Rest', 'The rest timer starts on its own after each set. Use <strong>− / +</strong> under a set to change the rest after it, or the rest chip to change it for every set. Doing the same weight and reps on less rest is progress too, and earns a <strong>Less rest</strong> record.'],
+      ['plus', 'Drop sets, warm-ups and swaps', 'Tap <strong>+ Drop set</strong> under any set to add a lighter set straight after it. Warm-up chips show suggested ramp-up sets. Machine taken? Open <strong>ⓘ</strong> on an exercise and swap to its alternative.'],
+      ['arrowUp', 'Getting stronger', 'When you hit the top of the rep range, the green tip suggests adding weight or cutting rest. Gold <strong>PR</strong> badges mark records: heavier weight, best estimated 1RM, more reps, or less rest.'],
+      ['chevronUp', 'Finishing', 'When an exercise is done you get a summary and a <strong>Next exercise</strong> button. Tap <strong>Finish Workout</strong> at the bottom to save. Mixing days? <strong>Save to Today\'s Log</strong> keeps going with exercises from another day.'],
+      ['infoCircle', 'History and Progress', '<strong>History</strong> shows every workout on a calendar. <strong>Progress</strong> charts each exercise (top set, 1RM, volume, reps and rest) and your bodyweight trend.'],
+      ['check', 'Your data', 'Everything stays on this phone. Back up from <strong>Settings</strong> now and then, especially before deleting the app.']
+    ];
+
+    function openGuide() {
+      document.getElementById('guide-body').innerHTML = GUIDE.map(([ic, title, text]) => `
+        <div class="guide-item">
+          <span class="guide-ico">${ic === 'plan' ? ROW_ICONS.plan : icon(ic, 2.4)}</span>
+          <div><div class="guide-title">${title}</div><div class="guide-text">${text}</div></div>
+        </div>`).join('');
+      openSheet('guide-sheet');
+    }
+
     const PLAN_TIP_KEY = 'recomp_tip_plan';
 
     function planTipHtml() {
@@ -6506,6 +6623,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
 
     // Init App
     migrateExistingUserPlan();
+    initTips();
     loadActivePlan();
     currentDayIdx = initialDayIdx();
     initNav();
