@@ -499,13 +499,25 @@
     /* Line under each set: add a drop set on the left, rest before the next set on the right */
     .set-link { display: flex; align-items: center; gap: 8px; min-height: 36px; margin: 0 4px 2px; }
     .set-link-line { flex: 1; height: 0; border-top: 1px dashed var(--separator); }
-    .set-link button { display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 10px; border: none; border-radius: 999px; background: none; font-size: var(--t-footnote); font-weight: 600; font-variant-numeric: tabular-nums; }
-    .set-link button:active { background: var(--surface-2); transform: none; }
+    .set-link { margin-top: 6px; margin-bottom: 8px; }
+    .set-link button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: none; background: none; font-size: var(--t-footnote); font-weight: 600; font-variant-numeric: tabular-nums; }
     .set-link svg { width: 14px; height: 14px; }
-    .link-drop { color: var(--orange); margin-left: -10px; }
-    .link-rest { color: var(--text-2); margin-right: -10px; }
-    .link-rest.faster { color: var(--accent); }
-    .link-rest.record { color: var(--gold); }
+    .link-drop { height: 32px; padding: 0 12px 0 9px; border-radius: 999px; color: var(--orange) !important; border: 1px dashed rgba(255, 159, 10, 0.55) !important; }
+    .link-drop:active { background: rgba(255, 159, 10, 0.12) !important; }
+    /* Rest stepper: − time + ; the time itself opens the full picker */
+    .rs-label { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-right: -2px; }
+    .rest-stepper { display: inline-flex; align-items: center; height: 34px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--separator); color: var(--text); }
+    .rest-stepper .rs-btn { width: 34px; height: 32px; border-radius: 999px; color: var(--text-2); }
+    .rest-stepper .rs-btn svg { width: 15px; height: 15px; }
+    .rest-stepper .rs-btn:active { background: var(--surface-3); transform: none; }
+    .rest-stepper .rs-btn:disabled { opacity: 0.3; }
+    .rest-stepper .rs-val { height: 26px; min-width: 66px; padding: 0 8px; border-radius: 999px; background: var(--surface-3) !important; color: inherit; font-size: var(--t-subhead, 15px); font-weight: 700; }
+    .rest-stepper .rs-val svg { color: var(--text-2); }
+    .rest-stepper .rs-val.bump span { animation: setPop 0.3s ease-out; display: inline-block; }
+    .rest-stepper.faster { border-color: rgba(48, 209, 88, 0.45); color: var(--accent); }
+    .rest-stepper.faster .rs-val svg { color: var(--accent); }
+    .rest-stepper.record { border-color: rgba(255, 214, 10, 0.55); color: var(--gold); }
+    .rest-stepper.record .rs-val svg { color: var(--gold); }
     .drop-row input[type="number"] { height: 40px; }
     /* Sticky bar while a workout is in progress */
     .session-bar {
@@ -1875,6 +1887,8 @@
       chevronDown: '<path d="M6 9l6 6 6-6"/>',
       clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
       arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+      minus: '<path d="M6 12h12"/>',
+      plus: '<path d="M12 6v12M6 12h12"/>',
       more: '<path d="M5.5 12h.01M12 12h.01M18.5 12h.01" stroke-width="3.2"/>'
     };
 
@@ -2734,7 +2748,21 @@
       const lastSet = lastSetFor(getLastPerformance(ex.name, getHistory()), setNum);
       const lastRest = lastSet && lastSet.restSec > 0 ? Number(lastSet.restSec) : 0;
       const choice = await actionSheet(`Rest after set ${setNum}`, ex.name, restChoices(ex, current, lastRest), { grid: true });
-      if (!choice) return;
+      if (choice) setSetRest(exIdx, setNum, choice);
+    }
+
+    // − / + on the rest stepper under a set: 15 s at a time
+    let restBump = null;
+    function nudgeSetRest(exIdx, setNum, delta) {
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+      const next = Math.min(600, Math.max(15, getSetRest(currentDayIdx, exIdx, setNum, ex) + delta));
+      restBump = `${exIdx}:${setNum}`;
+      setSetRest(exIdx, setNum, next);
+      restBump = null;
+    }
+
+    function setSetRest(exIdx, setNum, choice) {
+      const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
       const key = f => setKey(currentDayIdx, exIdx, setNum, f);
       if (choice === getExerciseRest(currentDayIdx, exIdx, ex)) localStorage.removeItem(key('rest'));
       else localStorage.setItem(key('rest'), String(choice));
@@ -3367,9 +3395,14 @@
           const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr')) === 'rest';
           const setLink = `
             <div class="set-link">
-              <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">+ Drop set</button>
+              <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
               <span class="set-link-line"></span>
-              <button class="link-rest ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" onclick="pickSetRest(${exIdx}, ${s})" aria-label="Rest after set ${s}: ${fmtClock(setRest)}. Change">${icon('clock', 2)}${fmtClock(setRest)} rest</button>
+              <span class="rs-label" aria-hidden="true">Rest</span>
+              <div class="rest-stepper ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" role="group" aria-label="Rest after set ${s}">
+                <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, -15)" ${setRest <= 15 ? 'disabled' : ''} aria-label="15 seconds less rest after set ${s}">${icon('minus', 2.6)}</button>
+                <button class="rs-val ${restBump === `${exIdx}:${s}` ? 'bump' : ''}" onclick="pickSetRest(${exIdx}, ${s})" aria-label="Rest after set ${s}: ${fmtClock(setRest)}. Choose a time">${icon('clock', 2)}<span>${fmtClock(setRest)}</span></button>
+                <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, 15)" ${setRest >= 600 ? 'disabled' : ''} aria-label="15 seconds more rest after set ${s}">${icon('plus', 2.6)}</button>
+              </div>
             </div>`;
 
           if (isDone) {
