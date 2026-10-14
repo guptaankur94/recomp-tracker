@@ -74,6 +74,10 @@
       touch-action: manipulation;
     }
     body.resting { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
+    /* While typing, the floating bars would sit on top of the fields; they come back when the keyboard closes */
+    body.kb-open .bottom-tab-bar, body.kb-open .rest-pill { visibility: hidden; }
+    body.kb-open .sheet { padding-bottom: 12px; }
+    body.kb-open .onb-foot { padding-bottom: 12px; }
     button { font-family: inherit; cursor: pointer; }
     strong { font-weight: 600; color: var(--text); }
 
@@ -954,7 +958,7 @@
       padding: 0 20px calc(20px + env(safe-area-inset-bottom));
       width: 100%;
       max-width: 520px;
-      max-height: 88vh;
+      max-height: min(88vh, calc(var(--vvh, 100vh) - 12px));
       overflow-y: auto;
       overscroll-behavior: contain;
       transform: translateY(100%);
@@ -1004,7 +1008,7 @@
     .choice.selected .choice-tag { color: rgba(0, 0, 0, 0.6); }
 
     /* Add exercise sheet */
-    .sheet.tall { height: 88vh; }
+    .sheet.tall { height: min(88vh, calc(var(--vvh, 100vh) - 12px)); }
     .search-field { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: var(--r-sm); padding: 0 12px; margin: 14px 0 12px; }
     .search-field svg { width: 18px; height: 18px; color: var(--text-2); flex-shrink: 0; }
     .search-field input[type="text"] { flex: 1; min-width: 0; height: 44px; background: none; padding: 0; font-size: var(--t-headline); border: none; }
@@ -2058,6 +2062,7 @@
       openSheets.splice(idx, 1);
       const sheet = overlay.querySelector('.sheet');
       sheet.style.transform = '';
+      overlay.style.top = overlay.style.height = overlay.style.bottom = '';
       overlay.classList.remove('open');
       if (overlay.onSheetClose) overlay.onSheetClose();
       const done = () => { if (!overlay.classList.contains('open')) overlay.style.display = 'none'; };
@@ -2065,13 +2070,84 @@
       else setTimeout(done, 320);
     }
 
-    // Keep a sheet with a text field above the iPhone keyboard
-    function fitSheetsToKeyboard() {
+    /* iPhone keyboard. The keyboard shrinks only the visible area (visualViewport), not the page, so
+       full-screen layers (sheets, setup) are pinned to the visible area and sized to it, the floating
+       bars step aside, and the field being typed in is scrolled clear of the keyboard and any sticky header. */
+    function visibleBox() {
       const vv = window.visualViewport;
-      const inset = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
-      openSheets.forEach(o => { o.style.paddingBottom = `${inset}px`; });
+      return vv ? { top: vv.offsetTop, height: vv.height } : { top: 0, height: window.innerHeight };
     }
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitSheetsToKeyboard);
+
+    let keyboardOpen = false;
+    let scrollBeforeKeyboard = 0;
+
+    function fitSheetsToKeyboard() {
+      const { top, height } = visibleBox();
+      const open = window.innerHeight - height > 120;
+      if (open && !keyboardOpen) scrollBeforeKeyboard = window.scrollY;
+      // Keyboard closed while a full-screen layer is up: undo any page scroll iOS made to reach the field
+      if (!open && keyboardOpen && (openSheets.length || !document.getElementById('onboarding').hidden)) window.scrollTo(0, scrollBeforeKeyboard);
+      keyboardOpen = open;
+      document.body.classList.toggle('kb-open', open);
+      document.documentElement.style.setProperty('--vvh', `${Math.round(height)}px`);
+      [...openSheets, document.getElementById('onboarding')].forEach(layer => {
+        layer.style.top = open ? `${top}px` : '';
+        layer.style.height = open ? `${height}px` : '';
+        layer.style.bottom = open ? 'auto' : '';
+      });
+      if (open && isTypingField(document.activeElement)) keepFieldInView(document.activeElement);
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitSheetsToKeyboard);
+      window.visualViewport.addEventListener('scroll', fitSheetsToKeyboard);
+    }
+
+    function isTypingField(el) {
+      return !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'file', 'button', 'submit'].includes(el.type)));
+    }
+
+    // Scroll the field's own container (a sheet, the setup screen, or the page) so it sits in the clear area
+    function keepFieldInView(el) {
+      if (!el || document.activeElement !== el) return;
+      const { top, height } = visibleBox();
+      const scroller = el.closest('.sheet, .onb-scroll');
+      let minTop = 12;
+      let maxBottom = height - 12;
+      if (scroller && scroller.classList.contains('sheet')) {
+        const head = scroller.querySelector('.sheet-head');
+        if (head) minTop = head.getBoundingClientRect().bottom - top + 8;
+        const foot = scroller.querySelector('#templates-sheet .sheet-actions');
+        if (foot) maxBottom = Math.min(maxBottom, foot.getBoundingClientRect().top - top - 8);
+      } else if (!scroller) {
+        document.querySelectorAll('.session-bar, .app-header').forEach(bar => {
+          const b = bar.getBoundingClientRect();
+          if (getComputedStyle(bar).position !== 'static' && b.top <= 1) minTop = Math.max(minTop, b.bottom - top + 8);
+        });
+        if (!keyboardOpen) {
+          // No keyboard (yet): stay above the tab bar and the rest timer
+          document.querySelectorAll('.bottom-tab-bar, .rest-pill').forEach(bar => {
+            const b = bar.getBoundingClientRect();
+            if (b.height && getComputedStyle(bar).display !== 'none') maxBottom = Math.min(maxBottom, b.top - top - 8);
+          });
+        }
+      }
+      const r = el.getBoundingClientRect();
+      const elTop = r.top - top;
+      const elBottom = Math.min(r.bottom, r.top + 140) - top; // tall text boxes: keep their top part in view
+      let delta = 0;
+      if (elBottom > maxBottom) delta = elBottom - maxBottom;
+      if (elTop - delta < minTop) delta = elTop - minTop;
+      if (Math.abs(delta) < 2) return;
+      (scroller || window).scrollBy({ top: delta, behavior: 'smooth' });
+    }
+
+    document.addEventListener('focusin', e => {
+      if (!isTypingField(e.target)) return;
+      const el = e.target;
+      // Once now for hardware keyboards, again after the iPhone keyboard has slid up
+      requestAnimationFrame(() => keepFieldInView(el));
+      setTimeout(() => keepFieldInView(el), 400);
+    });
 
     document.querySelectorAll('.sheet-overlay').forEach(overlay => {
       const sheet = overlay.querySelector('.sheet');
@@ -6011,6 +6087,7 @@ Reply with ONLY valid JSON in exactly this format, no other text:
       void el.offsetWidth;
       el.classList.add('open');
       renderOnboarding();
+      fitSheetsToKeyboard();
     }
 
     function closeOnboarding() {
