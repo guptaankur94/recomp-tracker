@@ -39,7 +39,15 @@
       "expo-font",
       "expo-sqlite",
       "expo-sharing",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/chime.wav"
+          ]
+        }
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 
-import { dayExercises, dayProgress, hasDraft, removeExtra } from '@/core/draft';
+import { dayExercises, dayProgress, draftSets, hasDraft, removeExtra } from '@/core/draft';
 import { fmtClock } from '@/core/format';
 import { daysDoneThisWeek, todaysSession } from '@/core/history';
 import { isRestDay, nextScheduled, planSchedule, scheduledDay, upNextDayIdx, weekdayIdx, weekdaysFor, WEEKDAY_NAMES } from '@/core/schedule';
@@ -13,7 +13,9 @@ import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 import { Button } from '@/ui/button';
 import { nowMs } from '@/ui/clock';
+import { CoachTip, useTips, type TipId } from '@/ui/coach-tip';
 import { ExerciseCard } from '@/ui/exercise-card';
+import { WeekHero } from '@/ui/week-hero';
 import { haptic } from '@/ui/haptics';
 import { Header } from '@/ui/parts';
 import { Card, Screen } from '@/ui/screen';
@@ -55,6 +57,25 @@ export default function WorkoutScreen() {
   const rest = isRestDay(schedule, days.length) && picked === null && !unsaved;
   const upcoming = rest ? nextScheduled(schedule, days.length) : null;
   const wd = isCustom ? [] : weekdaysFor(dayIdx, schedule, days.length);
+
+  // One coach tip at a time: rest after the first logged set, drop sets once an exercise is done, then swaps
+  const { unseen } = useTips();
+  let tip: { at: number; id: TipId } | null = null;
+  for (let i = 0; i < exercises.length && !tip; i++) {
+    const sets = draftSets(draft, i, exercises[i]);
+    if (unseen('rest') && sets.some(x => x.done)) tip = { at: i, id: 'rest' };
+    else if (unseen('drop') && sets.every(x => x.done)) tip = { at: i, id: 'drop' };
+  }
+  if (!tip && !unseen('rest') && unseen('swap')) {
+    const i = exercises.findIndex(e => e.otherName && !e.swapped);
+    if (i !== -1) tip = { at: i, id: 'swap' };
+  }
+  const TIPS: Record<TipId, [string, string]> = {
+    rest: ['Logged. Rest timer started.', 'Tap − or + under a set to change the rest after it. The same weight on less rest is progress too.'],
+    drop: ['One more push?', '+ Drop under any set adds a lighter set straight after it, to squeeze out the last reps.'],
+    swap: ['Machine taken?', `Tap ⇄ to swap ${tip ? exercises[tip.at].name : ''} for ${tip ? exercises[tip.at].otherName : ''}. It has its own targets and history, and you can swap back any time.`],
+    records: ['', '']
+  };
 
   const pick = (i: number) => { setPicked(i); haptic('light'); };
   const toggleSwap = (exIdx: number) => {
@@ -106,6 +127,7 @@ export default function WorkoutScreen() {
       {(unsaved || restTimer) && <KeepAwake />}
       <Header eyebrow={`Workout · ${activePlan.planName}`} title={day.title}
         sub={isCustom ? 'Build it from any exercises. It saves to History without changing your plan.' : `${day.day}${wd.length ? ` · ${wd.join(' / ')}` : ''} · ${exercises.length} exercises`} />
+      {!unsaved && <WeekHero />}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ marginHorizontal: -20, flexGrow: 0 }}>
         {[...days, null].map((d, i) => {
           const on = i === dayIdx;
@@ -138,8 +160,14 @@ export default function WorkoutScreen() {
       )}
       {progress.done > 0 && <Progress done={progress.done} total={progress.total} startedAt={draft?.startedAt ?? null} />}
       {exercises.map((ex, i) => (
-        <ExerciseCard key={`${dayIdx}-${i}-${ex.name}`} dayIdx={dayIdx} exIdx={i} ex={ex} exercises={exercises} draft={draft} history={history}
-          onSwap={() => toggleSwap(i)} onRemove={ex.isExtra ? () => removeExercise(i) : undefined} />
+        <View key={`${dayIdx}-${i}-${ex.name}`} style={{ gap: 8 }}>
+          {tip && tip.at === i && tip.id === 'swap' && <CoachTip id="swap" title={TIPS.swap[0]} text={TIPS.swap[1]} />}
+          <ExerciseCard dayIdx={dayIdx} exIdx={i} ex={ex} exercises={exercises} draft={draft} history={history}
+            onSwap={() => toggleSwap(i)} onRemove={ex.isExtra ? () => removeExercise(i) : undefined}
+            coachTip={tip && tip.at === i && tip.id === 'rest' ? { node: <CoachTip id="rest" title={TIPS.rest[0]} text={TIPS.rest[1]} />, afterSet: draftSets(draft, i, ex).findIndex(x => x.done) + 1 } : null} />
+          {/* A finished exercise is folded to one line, so the drop-set tip sits under it */}
+          {tip && tip.at === i && tip.id === 'drop' && <CoachTip id="drop" title={TIPS.drop[0]} text={TIPS.drop[1]} />}
+        </View>
       ))}
       {isCustom && !exercises.length && (
         <Card>

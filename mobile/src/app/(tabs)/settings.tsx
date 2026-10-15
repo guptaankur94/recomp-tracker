@@ -9,6 +9,7 @@ import { GOAL_TYPES } from '@/core/profile';
 import type { GoalType } from '@/core/types';
 import { nowMs } from '@/ui/clock';
 import { haptic } from '@/ui/haptics';
+import { Choices } from '@/ui/fields';
 import { Targets } from '@/ui/targets';
 import { localDateStr } from '@/core/format';
 import { pickTextFile, shareTextFile } from '@/data/files';
@@ -33,6 +34,9 @@ export default function SettingsScreen() {
       <SectionLabel>Appearance</SectionLabel>
       <Body color={theme.colors.inkSoft}>Pick a theme. Layout stays the same; colours, type, motion and sound change.</Body>
       <ThemePicker />
+      <SoundSetting />
+      <SectionLabel>Help</SectionLabel>
+      <Button label="How Recomp works" onPress={() => router.push('/guide')} />
       <ResetAll />
       <Mono color={theme.colors.muted} style={{ textAlign: 'center', marginTop: 12 }}>Recomp keeps everything on this phone. Nothing is uploaded.{'\n'}Version {Constants.expoConfig?.version ?? ''}</Mono>
     </Screen>
@@ -59,6 +63,15 @@ function ProfileRow() {
       </View>
       <Body color={c.muted}>›</Body>
     </Pressable>
+  );
+}
+
+function SoundSetting() {
+  const { settings, updateSettings } = useData();
+  const on = settings.sound !== false;
+  return (
+    <Choices label="Rest timer sound" value={on ? 'on' : 'off'} onChange={v => updateSettings({ sound: v === 'on' })}
+      options={[{ value: 'on', label: 'Tick and chime' }, { value: 'off', label: 'Off' }]} />
   );
 }
 

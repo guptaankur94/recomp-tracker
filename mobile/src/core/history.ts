@@ -117,3 +117,17 @@ export function volumeChangePct(session: Session, history: Session[]): { pct: nu
   const vol = sessionStats(session).volume;
   return prev > 0 && vol > 0 ? { pct: Math.round((vol - prev) / prev * 100), previous } : null;
 }
+
+export interface WeekSummary {
+  done: number;
+  target: number;
+  streak: number;
+  workouts: number;
+}
+
+/** Workouts this week against the plan's (scheduled days, or every day in a rotation) */
+export function weekSummary(history: Session[], dayCount: number, schedule: (number | null)[] | null, now: Date = new Date()): WeekSummary {
+  const weekStart = startOfWeek(now).getTime();
+  const target = schedule ? schedule.filter(v => Number.isInteger(v) && (v as number) < dayCount).length : dayCount;
+  return { done: history.filter(s => s.id >= weekStart).length, target, streak: calcWeekStreak(history, now), workouts: history.length };
+}

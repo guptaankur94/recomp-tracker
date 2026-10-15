@@ -79,3 +79,33 @@ test('backup reminder matches the web app', () => {
     expect(backupStatus(n, age)).toBe(age === null ? (n ? 'Never backed up' : 'Nothing to back up yet') : age === 0 ? 'Last backup today' : `Last backup ${age} day${age === 1 ? '' : 's'} ago`);
   }));
 });
+
+test('week summary and weight change match the web app header', () => {
+  const { weekSummary } = jest.requireActual('../history');
+  const { weightChange } = jest.requireActual('../progress');
+  const { templatePlan, TEMPLATES } = jest.requireActual('../templates');
+  const { sampleBodyweight } = jest.requireActual('../testing/fixtures');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { loadWebApp } = require('../../../scripts/web-app');
+  const bw = sampleBodyweight();
+  [null, [0, null, 1, null, 2, null, null]].forEach(sched => [0, 5, 20].forEach(cut => [80, 90, null].forEach(goal => {
+    const plan = { ...templatePlan(TEMPLATES[0]), ...(sched ? { schedule: sched } : { schedule: undefined }) };
+    const hist = history.slice(cut);
+    const entries = bw.slice(0, bw.length - cut);
+    const hero = { id: 'hero', innerHTML: '' };
+    const web = loadWebApp({
+      store: { recomp_history: JSON.stringify(hist), recomp_bodyweight: JSON.stringify(entries), recomp_plan: JSON.stringify(plan), ...(goal ? { recomp_profile: JSON.stringify({ goalKg: goal }) } : {}) },
+      now: NOW, fields: { hero }, stubs: { icon: () => '' }
+    });
+    web.run('loadActivePlan()');
+    web.original('updateStats')();
+    const html = hero.innerHTML;
+    const s = weekSummary(hist, plan.days.length, sched, new Date(NOW));
+    expect(html).toContain(`${s.done}<span>/${s.target}</span>`);
+    expect(html).toContain(`<div class="hero-val">${s.streak}<small>wk</small>`);
+    expect(html).toContain(`<div class="hero-val">${s.workouts}</div>`);
+    const w = weightChange(entries, goal);
+    const label = !w ? 'Log weight' : w.diff === null ? 'Weight' : w.diff === 0 ? '±0 · 7d' : `${w.diff > 0 ? '↑' : '↓'}${Math.abs(w.diff).toFixed(1).replace(/\.0$/, '')} · 7d`;
+    expect(html).toContain(`<div class="hero-lbl ${w?.tone ?? ''}">${label}</div>`);
+  })));
+});

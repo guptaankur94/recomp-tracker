@@ -131,3 +131,15 @@ export function bodyweightSummary(entries: BodyweightEntry[], goalKg: number | n
   const rateLabel = rate == null ? 'Need 1 week of data' : rateTone === 'good' ? '↗ Toward goal' : rateTone === 'bad' ? '↘ Away from goal' : 'Last 4 weeks';
   return { trend, rate, rateTone, rateLabel, goalLabel };
 }
+
+/** Latest weight and its change against the closest weigh-in at least 7 days older; tone is whether that's toward the goal */
+export function weightChange(entries: BodyweightEntry[], goalKg: number | null): { kg: number; diff: number | null; tone: 'good' | 'bad' | null } | null {
+  const latest = entries[entries.length - 1];
+  if (!latest) return null;
+  const cutoff = dateStrMs(latest.dateStr) - 7 * DAY_MS;
+  const earlier = [...entries].reverse().find(e => dateStrMs(e.dateStr) <= cutoff);
+  if (!earlier) return { kg: latest.kg, diff: null, tone: null };
+  const diff = Math.round((latest.kg - earlier.kg) * 10) / 10;
+  const tone = goalKg && diff !== 0 ? ((goalKg < latest.kg) === (diff < 0) ? 'good' : 'bad') : null;
+  return { kg: latest.kg, diff, tone };
+}

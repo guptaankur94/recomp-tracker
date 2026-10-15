@@ -48,11 +48,14 @@ function loadWebApp({ store = {}, now = Date.now(), fields = {}, stubs = {} } = 
   vm.runInContext(source, ctx, { filename: 'web-app.js' });
   // UI calls made by logic functions (saving history refreshes the header, for example). Applied after
   // loading, so they win over the web app's own definitions.
-  Object.assign(ctx, {
+  const replaced = {
     updateStats: stub, renderBackupBadge: stub, haptic: stub, showToast: stub, initNav: stub, renderWorkout: stub,
-    updateHeader: stub, renderSettings: stub, reportTextError: stub
-  }, stubs);
-  return { ctx, get: name => ctx.__eval(name), run: code => ctx.__eval(code), store };
+    updateHeader: stub, renderSettings: stub, reportTextError: stub, ...stubs
+  };
+  // The web app's own versions stay reachable through original(name), e.g. to test what a screen shows
+  const originals = Object.fromEntries(Object.keys(replaced).map(k => [k, ctx[k]]));
+  Object.assign(ctx, replaced);
+  return { ctx, get: name => ctx.__eval(name), run: code => ctx.__eval(code), original: name => originals[name], store };
 }
 
 module.exports = { loadWebApp };

@@ -102,6 +102,7 @@ export default function PlanScreen() {
       </View>
       <Button label="Copy plan for a chatbot to change" onPress={copyForChatbot} />
       <Mono color={c.muted} style={{ textAlign: 'center', fontSize: 12 }}>Switching plans keeps your workout history and records.</Mono>
+      <Button label="How Recomp works" onPress={() => router.push('/guide')} />
     </Screen>
   );
 }

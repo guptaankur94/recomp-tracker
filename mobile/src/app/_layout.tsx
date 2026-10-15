@@ -42,6 +42,7 @@ function Screens() {
         <Stack.Screen name="templates" />
         <Stack.Screen name="setup" options={{ gestureEnabled: false }} />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="guide" />
       </Stack>
     </>
   );

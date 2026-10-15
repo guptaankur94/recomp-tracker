@@ -1,6 +1,6 @@
 // One exercise on the Workout screen: targets, last time, warm-ups, and a row per set to log weight and
 // reps, with its rest and drop sets underneath. A finished exercise folds into a one-line summary.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
 import {
@@ -33,9 +33,11 @@ interface Props {
   history: Session[];
   onSwap: () => void;
   onRemove?: () => void;
+  /** A coach tip shown right under one of the sets */
+  coachTip?: { node: ReactNode; afterSet: number } | null;
 }
 
-export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onSwap, onRemove }: Props) {
+export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onSwap, onRemove, coachTip }: Props) {
   const { setDraft, setRestTimer } = useData();
   const { theme } = useTheme();
   const toast = useToast();
@@ -182,12 +184,15 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
         const setNum = i + 1;
         const sug = suggestSet(ex, lastSetFor(last, setNum));
         return (
-          <SetRow key={i} setNum={setNum} set={s} suggestion={sug} rest={setRest(draft, exIdx, setNum, ex)} canDelete={sets.length > 1}
+          <View key={i} style={{ gap: 8 }}>
+          <SetRow setNum={setNum} set={s} suggestion={sug} rest={setRest(draft, exIdx, setNum, ex)} canDelete={sets.length > 1}
             onField={(f, v) => setField(setNum, f, v)} onTick={() => tick(setNum)} onEdit={() => edit(setNum)} onDelete={() => deleteSet(setNum)}
             onRest={d => bumpSetRest(setNum, d)}
             onAddDrop={() => setDrops(setNum, d => [...d, { w: '', r: '' }])}
             onDrop={(j, f, v) => setDrops(setNum, d => { d[j] = { ...d[j], [f]: v }; return d; })}
             onRemoveDrop={j => setDrops(setNum, d => d.filter((_, k) => k !== j))} />
+          {coachTip && coachTip.afterSet === setNum ? coachTip.node : null}
+          </View>
         );
       })}
       <SmallButton label="+ Add set" onPress={() => { save(addSet(draft, exIdx, ex, now())); haptic('light'); }} />

@@ -6,6 +6,7 @@ import { RANGES, rangeStartMs, type RangeKey } from '@/core/chart';
 import { dateStrMs, fmtNum, fmtVolume, localDateStr, shortDate } from '@/core/format';
 import { bestSet, bodyweightSummary, exerciseSessions, liftSummaries, markRecords, METRICS, movingAverage, type LiftSummary, type MetricKey } from '@/core/progress';
 import { fmtSetLine } from '@/core/workout';
+import { CoachTip, useTips } from '@/ui/coach-tip';
 import { Choices } from '@/ui/fields';
 import { LineChart } from '@/ui/line-chart';
 import { nowMs } from '@/ui/clock';
@@ -22,6 +23,7 @@ export default function ProgressScreen() {
   const { theme } = useTheme();
   const c = theme.colors;
   const [range, setRange] = useState<RangeKey>('3m');
+  const { unseen } = useTips();
   const [exercise, setExercise] = useState<string | null>(null);
   const [start] = useState(() => nowMs());
   const from = rangeStartMs(range, start);
@@ -51,6 +53,9 @@ export default function ProgressScreen() {
       </Card>
       <WeighIns />
       <SectionLabel>Lifts</SectionLabel>
+      {history.length > 0 && unseen('records') && (
+        <CoachTip id="records" title="Reading the chart." text="Gold dots mark records: heavier weight, more reps, or the same work on less rest. Switch to Rest to see your rest times trend down." />
+      )}
       <ExerciseChart name={exercise} onName={setExercise} from={from} />
       {lifts.length > 0 && <SectionLabel right="tap to chart">Most trained</SectionLabel>}
       {lifts.length ? lifts.map(l => <LiftCard key={l.name} lift={l} onPress={() => setExercise(l.name)} />) : (

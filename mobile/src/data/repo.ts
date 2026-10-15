@@ -38,6 +38,10 @@ export interface Settings {
   setup?: SetupAnswers;
   /** When a backup was last exported, in ms */
   lastBackupAt?: number;
+  /** Coach tips already dismissed (missing: none yet, or all when there were workouts before tips existed) */
+  tipsSeen?: string[];
+  /** Sound when rest ends (on unless turned off) */
+  sound?: boolean;
 }
 
 export interface SetupAnswers {

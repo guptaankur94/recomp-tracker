@@ -32,14 +32,14 @@ function allowed(): Promise<boolean> {
   return ready;
 }
 
-export async function syncRestAlert(timer: RestTimer | null): Promise<void> {
+export async function syncRestAlert(timer: RestTimer | null, sound = true): Promise<void> {
   if (!native) return;
   try {
     await Notifications.cancelScheduledNotificationAsync(ID);
     if (!timer || timer.endAt <= Date.now() + 1000 || !(await allowed())) return;
     await Notifications.scheduleNotificationAsync({
       identifier: ID,
-      content: { title: 'Rest over', body: timer.next.replace(/^Next: /, 'Next up: '), sound: true },
+      content: { title: 'Rest over', body: timer.next.replace(/^Next: /, 'Next up: '), sound: sound ? 'chime.wav' : false },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: timer.endAt, channelId: CHANNEL }
     });
   } catch {
