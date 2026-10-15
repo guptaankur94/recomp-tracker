@@ -5,7 +5,8 @@ A single-page workout tracker installed on an iPhone home screen. Plain HTML, CS
 ## Files
 
 - `index.html`: the page structure (header, screens, sheets, tab bar), `APP_VERSION`, and the list of style and script files.
-- `styles/`: the look, split by area. `themes/classic.css` holds the design tokens (colours, sizes) that themes override. Order in `index.html` matters (later files win).
+- `styles/`: the look, split by area. `themes/classic.css` holds the design tokens (colours, type, sizes) with the original look; `themes/themes.css` overrides them for Vitruvian Machine (the default), Neon District and Codex, chosen in Settings → Appearance (`js/themes.js`, saved as `recomp_theme`). Use tokens (`var(--accent)`, `var(--on-fill)`, `color-mix(…)`), never fixed colours, so every theme works. Order in `index.html` matters (later files win).
+- `fonts/`: the themes' fonts (licences in `fonts/LICENSE.md`). Only the default theme's fonts are in `ASSETS`; others are cached on first use.
 - `js/`: the behaviour, one file per feature (workout, rest timer, history, progress, plan, AI plan, setup, settings…). `js/data/` holds the exercise library, ready-made plans and the creator's original plan. `js/app.js` starts the app and loads last.
   - These are classic scripts sharing one global scope (inline `onclick` handlers call their functions), loaded in the order listed in `index.html`. Code that runs at load time may only use things from its own file or files listed before it.
 - `sw.js`: offline support. `manifest.json`: home-screen name and icons. `images/`: icons and launch screens. `plans/`: saved plan files (not loaded by the app).

@@ -1,7 +1,7 @@
 /* Page basics, header, home card, day tabs and buttons. */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: var(--t-body);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
@@ -117,12 +117,12 @@ button:active:not(:disabled), .history-card:active, .cal-date.active-logged:acti
   font-size: var(--t-body);
   white-space: nowrap;
 }
-.tab-btn.active { background: var(--text); color: #000; }
+.tab-btn.active { background: var(--text); color: var(--on-fill); }
 .tab-title { font-weight: 500; }
-.tab-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #000; display: inline-flex; align-items: center; justify-content: center; }
+.tab-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: var(--on-fill); display: inline-flex; align-items: center; justify-content: center; }
 .tab-check svg { width: 10px; height: 10px; }
 .tab-next { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
-.tab-btn.active .tab-next { color: #1E8E3E; }
+.tab-btn.active .tab-next { color: color-mix(in srgb, var(--accent) 60%, var(--on-fill)); }
 .tab-dot {
   display: inline-block;
   width: 6px;
@@ -149,8 +149,8 @@ button:active:not(:disabled), .history-card:active, .cal-date.active-logged:acti
   text-decoration: none;
 }
 .btn + .btn { margin-top: 8px; }
-.btn-primary { background: var(--text); color: #000; }
-.btn-positive { background: var(--accent); color: #000; }
+.btn-primary { background: var(--text); color: var(--on-fill); }
+.btn-positive { background: var(--accent); color: var(--on-fill); }
 .btn-secondary { background: var(--surface-2); color: var(--text); }
 .btn-plain { background: none; color: var(--text-2); }
 .btn-danger { background: var(--danger-soft); color: var(--danger); }
@@ -179,3 +179,16 @@ button:active:not(:disabled), .history-card:active, .cal-date.active-logged:acti
 }
 .icon-btn svg { width: 18px; height: 18px; }
 .icon-btn.plain { background: none; color: var(--text-3); }
+
+/* Theme type and backdrop: Classic leaves these on the system font; other themes set the tokens */
+body { background: var(--backdrop), var(--bg); }
+.header-title, .day-title, .sheet-title, .summary-title, .ex-name, .plan-hero-name, .tpl-name, .onb-title {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  text-transform: var(--display-case);
+  letter-spacing: var(--display-tracking);
+}
+input[type="number"], .rest-pill-time, .rest-full-time, .hero-ring-num, .hero-val, .stat-tile-val, .detail-tile-val,
+.summary-tile-val, .detail-set-val, .locked-val, .lift-val, .target-val, .session-time {
+  font-family: var(--font-numbers);
+}

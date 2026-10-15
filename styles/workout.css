@@ -42,10 +42,10 @@
 .ex-last strong { color: var(--text); font-weight: 600; }
 .ex-card { scroll-margin-top: 76px; }
 /* Exercise complete banner */
-.ex-complete { position: relative; overflow: hidden; margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--accent-soft); border: 1px solid rgba(48, 209, 88, 0.35); }
+.ex-complete { position: relative; overflow: hidden; margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .ex-complete.pop { animation: setPop 0.45s ease-out; }
 .ex-complete-title { display: flex; align-items: center; gap: 8px; font-size: var(--t-headline); font-weight: 700; color: var(--accent); }
-.ex-complete-title svg { width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: var(--accent); color: #000; }
+.ex-complete-title svg { width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: var(--accent); color: var(--on-fill); }
 .ex-complete-stats { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: var(--t-footnote); color: var(--text-2); }
 .ex-complete-stats strong { color: var(--text); font-weight: 600; }
 .ex-next-btn { margin-top: 10px; width: 100%; }
@@ -124,8 +124,8 @@ input[type="number"] {
 }
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-2); }
-input::placeholder, textarea::placeholder { color: #8E8E93; }
-.set-row input::placeholder { color: #98989D; }
+input::placeholder, textarea::placeholder { color: var(--text-2); }
+.set-row input::placeholder { color: color-mix(in srgb, var(--text-2) 80%, var(--text)); }
 .unit-label { font-size: var(--t-caption); color: var(--text-2); }
 
 .delete-set-btn {
@@ -201,9 +201,9 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
   flex-shrink: 0;
   height: 48px;
   border-radius: var(--r-sm);
-  border: 1.5px solid rgba(48, 209, 88, 0.3);
-  background: rgba(48, 209, 88, 0.07);
-  color: rgba(48, 209, 88, 0.8);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: color-mix(in srgb, var(--accent) 80%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -212,11 +212,11 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
 }
 .check-btn svg { width: 22px; height: 22px; }
 /* The next set to do in each exercise stands out a little more */
-.check-btn.next { background: rgba(48, 209, 88, 0.16); border-color: rgba(48, 209, 88, 0.6); color: var(--accent); }
-.check-btn:active { background: var(--accent); border-color: var(--accent); color: #000; }
+.check-btn.next { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); color: var(--accent); }
+.check-btn:active { background: var(--accent); border-color: var(--accent); color: var(--on-fill); }
 .set-block.completed {
-  background: #1F3526; /* opaque mix of surface and green, so the swipe action can't show through */
-  border-color: rgba(48, 209, 88, 0.35);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface)); /* opaque, so the swipe action can't show through */
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
   cursor: pointer;
 }
 .locked-row { display: flex; align-items: center; gap: 8px; min-height: 30px; }
@@ -225,7 +225,7 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
   height: 26px;
   border-radius: 50%;
   background: var(--accent);
-  color: #000;
+  color: var(--on-fill);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,7 +247,7 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
   margin-left: 6px;
   vertical-align: middle;
 }
-.ex-progress.all-done { background: var(--accent); color: #000; }
+.ex-progress.all-done { background: var(--accent); color: var(--on-fill); }
 
 /* Drop sets */
 .drop-row {
@@ -265,8 +265,8 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
 .set-link { margin-top: 6px; margin-bottom: 8px; }
 .set-link button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: none; background: none; font-size: var(--t-footnote); font-weight: 600; font-variant-numeric: tabular-nums; }
 .set-link svg { width: 14px; height: 14px; }
-.link-drop { height: 32px; padding: 0 12px 0 9px; border-radius: 999px; color: var(--orange) !important; border: 1px dashed rgba(255, 159, 10, 0.55) !important; }
-.link-drop:active { background: rgba(255, 159, 10, 0.12) !important; }
+.link-drop { height: 32px; padding: 0 12px 0 9px; border-radius: 999px; color: var(--orange) !important; border: 1px dashed color-mix(in srgb, var(--orange) 55%, transparent) !important; }
+.link-drop:active { background: color-mix(in srgb, var(--orange) 12%, transparent) !important; }
 /* Rest stepper: − time + ; the time itself opens the full picker */
 .rs-label { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); margin-right: -2px; }
 .rest-stepper { display: inline-flex; align-items: center; height: 34px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--separator); color: var(--text); }
@@ -277,9 +277,9 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
 .rest-stepper .rs-val { height: 26px; min-width: 66px; padding: 0 8px; border-radius: 999px; background: var(--surface-3) !important; color: inherit; font-size: var(--t-subhead, 15px); font-weight: 700; }
 .rest-stepper .rs-val svg { color: var(--text-2); }
 .rest-stepper .rs-val.bump span { animation: setPop 0.3s ease-out; display: inline-block; }
-.rest-stepper.faster { border-color: rgba(48, 209, 88, 0.45); color: var(--accent); }
+.rest-stepper.faster { border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); }
 .rest-stepper.faster .rs-val svg { color: var(--accent); }
-.rest-stepper.record { border-color: rgba(255, 214, 10, 0.55); color: var(--gold); }
+.rest-stepper.record { border-color: color-mix(in srgb, var(--gold) 55%, transparent); color: var(--gold); }
 .rest-stepper.record .rs-val svg { color: var(--gold); }
 .drop-row input[type="number"] { height: 40px; }
 /* Sticky bar while a workout is in progress */
@@ -292,7 +292,7 @@ input::placeholder, textarea::placeholder { color: #8E8E93; }
   gap: 12px;
   margin: 0 -16px 12px;
   padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.92);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 0.5px solid var(--separator);

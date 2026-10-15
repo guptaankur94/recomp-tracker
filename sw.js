@@ -2,7 +2,7 @@
 // Each request also refreshes the cache in the background. When a newer index.html arrives, every
 // file the app needs is fetched again before open pages are told they can reload, so a reload never
 // mixes old and new files.
-const CACHE = 'recomp-v5';
+const CACHE = 'recomp-v6';
 // Every file the app needs offline. Add new files here.
 const ASSETS = [
   './',
@@ -15,6 +15,13 @@ const ASSETS = [
   './styles/setup-plan.css',
   './styles/sheets.css',
   './styles/themes/classic.css',
+  './styles/themes/themes.css',
+  // The default theme's fonts; other themes' fonts are cached the first time they're used
+  './fonts/CormorantGaramond_600SemiBold.woff2',
+  './fonts/SpaceGrotesk_400Regular.woff2',
+  './fonts/SpaceGrotesk_700Bold.woff2',
+  './fonts/JetBrainsMono_400Regular.woff2',
+  './fonts/JetBrainsMono_700Bold.woff2',
   './styles/workout.css',
   './js/data/default-plan.js',
   './js/data/exercises.js',
@@ -38,6 +45,7 @@ const ASSETS = [
   './js/plan.js',
   './js/ai-plan.js',
   './js/settings.js',
+  './js/themes.js',
   './js/setup.js',
   './js/tips.js',
   './js/plan-editor.js',

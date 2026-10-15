@@ -9,8 +9,8 @@
 @keyframes checkIn { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 @keyframes savedPulse {
-  0% { border-color: var(--accent); box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.6); }
-  100% { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
+  0% { border-color: var(--accent); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+  100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-indicator.ready, .nav-indicator.moving::before, .nav-item.active svg, .view.enter-right, .view.enter-left { transition: none; animation: none; }

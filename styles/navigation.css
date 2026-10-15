@@ -35,7 +35,7 @@
   margin: 0 auto;
   padding: 6px;
   border-radius: 999px;
-  background: rgba(28, 28, 30, 0.82);
+  background: var(--bar);
   -webkit-backdrop-filter: saturate(180%) blur(28px);
   backdrop-filter: saturate(180%) blur(28px);
   border: 0.5px solid rgba(255, 255, 255, 0.12);
@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(235, 235, 245, 0.78);
+  color: var(--nav-label);
   font-size: 0;
   border: none;
   background: none;
@@ -98,9 +98,9 @@
 @keyframes viewInLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
 .nav-item.active .fill-active { fill: currentColor; }
 /* Workout keeps its green circle, sitting inside the capsule */
-.nav-item.center .nav-ico { width: 44px; height: 44px; max-width: none; background: var(--accent); color: #000; }
+.nav-item.center .nav-ico { width: 44px; height: 44px; max-width: none; background: var(--accent); color: var(--on-fill); }
 .nav-item.center svg { width: 24px; height: 24px; }
-.nav-item.center.active .nav-ico { background: var(--accent); box-shadow: 0 0 14px rgba(48, 209, 88, 0.45); }
+.nav-item.center.active .nav-ico { background: var(--accent); box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent); }
 
 /* Rest timer: floating pill + full-screen view */
 .rest-pill {
@@ -110,7 +110,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(44, 44, 46, 0.95);
+  background: var(--glass);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   padding: 8px 8px 8px 10px;
@@ -145,7 +145,7 @@
   position: fixed;
   inset: 0;
   z-index: 950;
-  background: rgba(0, 0, 0, 0.94);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
   display: flex;

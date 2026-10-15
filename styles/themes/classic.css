@@ -1,4 +1,5 @@
-/* Theme: colours, sizes and radii as design tokens. Other themes override these. */
+/* Classic theme (the original look): colours, type, sizes and radii as design tokens. The other themes in
+   themes.css override these when <html data-theme> names them. */
 
 /* Design tokens. Surfaces are separated by tone, not borders; green means "done / positive" only. */
 :root {
@@ -18,6 +19,23 @@
   --orange: #FF9F0A;
   --orange-soft: rgba(255, 159, 10, 0.12);
   --gold: #FFD60A;
+  /* Text on a filled button or badge (accent, ink or gold) */
+  --on-fill: #000000;
+  /* Floating tab bar, sheets and toasts (frosted) */
+  --bar: rgba(28, 28, 30, 0.82);
+  --glass: rgba(44, 44, 46, 0.95);
+  --nav-label: rgba(235, 235, 245, 0.78);
+
+  /* Type: body text, big titles and exercise names, numbers (weights, reps, timers), pasted code */
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-body);
+  --font-numbers: var(--font-body);
+  --font-code: ui-monospace, Menlo, monospace;
+  --display-case: none;
+  --display-weight: 700;
+  --display-tracking: -0.02em;
+  /* Background motif (none in Classic) */
+  --backdrop: none;
 
   /* Type ramp */
   --t-large: 34px;

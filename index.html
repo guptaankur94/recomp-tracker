@@ -25,7 +25,12 @@
   <link rel="apple-touch-startup-image" href="images/splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="images/splash/splash-1080x2340.png" media="(device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="images/splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+  <script>
+    // The chosen theme, set before anything draws (js/themes.js has the list); Vitruvian Machine by default
+    try { document.documentElement.dataset.theme = localStorage.getItem('recomp_theme') || 'vitruvian'; } catch (e) { document.documentElement.dataset.theme = 'vitruvian'; }
+  </script>
   <link rel="stylesheet" href="styles/themes/classic.css">
+  <link rel="stylesheet" href="styles/themes/themes.css">
   <link rel="stylesheet" href="styles/base.css">
   <link rel="stylesheet" href="styles/workout.css">
   <link rel="stylesheet" href="styles/history-progress.css">
@@ -271,6 +276,19 @@
     </div>
   </div>
 
+  <!-- Appearance: theme picker -->
+  <div class="sheet-overlay" id="theme-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="theme-sheet-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="theme-sheet-title">Appearance</div>
+        <div class="sheet-sub">Pick a theme. Your workouts and layout stay the same; colours and type change.</div>
+      </div>
+      <div class="theme-list" id="theme-list" role="radiogroup" aria-label="Theme"></div>
+      <div class="sheet-sub sheet-foot">More themes are on the way: Spartan HUD, Alchemist and Cubist.</div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="backup-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="backup-sheet-title">
       <div class="sheet-head">
@@ -510,7 +528,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.10.16b';
+    const APP_VERSION = '2026.10.17';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -534,6 +552,7 @@
   <script src="js/plan.js"></script>
   <script src="js/ai-plan.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/themes.js"></script>
   <script src="js/setup.js"></script>
   <script src="js/tips.js"></script>
   <script src="js/plan-editor.js"></script>

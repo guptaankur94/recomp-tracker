@@ -1,0 +1,126 @@
+/* Themes beyond Classic. Each overrides the tokens in classic.css; picked in Settings → Appearance and set as
+   <html data-theme="…"> before the page draws. Vitruvian Machine is the default. Fonts load only when a theme
+   uses them (licences in fonts/LICENSE.md). */
+
+@font-face { font-family: 'Cormorant Garamond'; src: url('../../fonts/CormorantGaramond_600SemiBold.woff2') format('woff2'); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url('../../fonts/SpaceGrotesk_400Regular.woff2') format('woff2'); font-weight: 300 500; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url('../../fonts/SpaceGrotesk_700Bold.woff2') format('woff2'); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('../../fonts/JetBrainsMono_400Regular.woff2') format('woff2'); font-weight: 300 500; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('../../fonts/JetBrainsMono_700Bold.woff2') format('woff2'); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: 'Chakra Petch'; src: url('../../fonts/ChakraPetch_400Regular.woff2') format('woff2'); font-weight: 300 500; font-display: swap; }
+@font-face { font-family: 'Chakra Petch'; src: url('../../fonts/ChakraPetch_700Bold.woff2') format('woff2'); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('../../fonts/IBMPlexMono_400Regular.ttf') format('truetype'); font-weight: 300 500; font-display: swap; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('../../fonts/IBMPlexMono_700Bold.ttf') format('truetype'); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('../../fonts/Cinzel_600SemiBold.woff2') format('woff2'); font-weight: 400 650; font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url('../../fonts/Cinzel_700Bold.woff2') format('woff2'); font-weight: 651 900; font-display: swap; }
+@font-face { font-family: 'EB Garamond'; src: url('../../fonts/EBGaramond_400Regular.woff2') format('woff2'); font-weight: 300 500; font-display: swap; }
+@font-face { font-family: 'EB Garamond'; src: url('../../fonts/EBGaramond_600SemiBold.woff2') format('woff2'); font-weight: 600 900; font-display: swap; }
+
+/* Vitruvian Machine: Leonardo's notebook drawn by a machine. Obsidian, warm ink, a telemetry-cyan accent for
+   anything live, gold leaf for records, and a faint blueprint grid. */
+:root[data-theme="vitruvian"] {
+  --bg: #0B0C0E;
+  --surface: #131519;
+  --surface-2: #1B1E23;
+  --surface-3: #262A31;
+  --separator: rgba(237, 230, 214, 0.13);
+  --text: #EDE6D6;
+  --text-2: #B9B3A5;
+  --text-3: #8F8A7D;
+  --accent: #5EE7F0;
+  --accent-soft: rgba(94, 231, 240, 0.13);
+  --blue: #6FB3F2;
+  --danger: #F2685C;
+  --danger-soft: rgba(242, 104, 92, 0.14);
+  --orange: #E9A64B;
+  --orange-soft: rgba(233, 166, 75, 0.12);
+  --gold: #D9B45A;
+  --on-fill: #0B0C0E;
+  --bar: rgba(19, 21, 25, 0.84);
+  --glass: rgba(27, 30, 35, 0.96);
+  --nav-label: rgba(237, 230, 214, 0.74);
+  --font-body: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-numbers: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --display-weight: 600;
+  --display-tracking: 0;
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  --backdrop: linear-gradient(rgba(94, 231, 240, 0.035) 1px, transparent 1px) 0 0 / 24px 24px,
+              linear-gradient(90deg, rgba(94, 231, 240, 0.035) 1px, transparent 1px) 0 0 / 24px 24px;
+}
+
+/* Neon District: a rain-slick city at 2 a.m. Ice-cyan for anything live, hot pink for records, square-cut
+   type in capitals with a slight colour split. */
+:root[data-theme="neon"] {
+  --bg: #07060D;
+  --surface: #110F1C;
+  --surface-2: #1A1729;
+  --surface-3: #262238;
+  --separator: rgba(242, 240, 255, 0.12);
+  --text: #F2F0FF;
+  --text-2: #BDB8D6;
+  --text-3: #918CAE;
+  --accent: #19F0FF;
+  --accent-soft: rgba(25, 240, 255, 0.12);
+  --blue: #8C7BFF;
+  --danger: #FF5470;
+  --danger-soft: rgba(255, 84, 112, 0.14);
+  --orange: #FFB347;
+  --orange-soft: rgba(255, 179, 71, 0.12);
+  --gold: #FF2E88;
+  --on-fill: #07060D;
+  --bar: rgba(17, 15, 28, 0.84);
+  --glass: rgba(26, 23, 41, 0.96);
+  --nav-label: rgba(242, 240, 255, 0.74);
+  --font-body: 'Chakra Petch', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Chakra Petch', -apple-system, sans-serif;
+  --font-numbers: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --display-case: uppercase;
+  --display-tracking: 0.02em;
+  --r-lg: 8px;
+  --r-md: 6px;
+  --r-sm: 4px;
+  --backdrop: radial-gradient(120% 60% at 100% 0%, rgba(255, 46, 136, 0.10), transparent 60%),
+              radial-gradient(100% 50% at 0% 100%, rgba(25, 240, 255, 0.06), transparent 60%);
+}
+:root[data-theme="neon"] .header-title { text-shadow: 1.5px 0 rgba(255, 46, 136, 0.55), -1.5px 0 rgba(25, 240, 255, 0.55); }
+:root[data-theme="neon"] .check-btn.done, :root[data-theme="neon"] .nav-item.center .nav-ico { box-shadow: 0 0 14px rgba(25, 240, 255, 0.45); }
+
+/* Codex: a Renaissance master's training journal. Walnut and vellum, red chalk for anything live, gold leaf
+   for records, carved capitals and a red drop capital on page titles. */
+:root[data-theme="codex"] {
+  --bg: #1A140D;
+  --surface: #241B12;
+  --surface-2: #2E2418;
+  --surface-3: #3B2F21;
+  --separator: rgba(234, 217, 180, 0.17);
+  --text: #EAD9B4;
+  --text-2: #CDBB96;
+  --text-3: #AA9A7B;
+  --accent: #DB7552;
+  --accent-soft: rgba(219, 117, 82, 0.15);
+  --blue: #8FB0C9;
+  --danger: #E0605A;
+  --danger-soft: rgba(224, 96, 90, 0.15);
+  --orange: #D99A4A;
+  --orange-soft: rgba(217, 154, 74, 0.13);
+  --gold: #D4AD52;
+  --on-fill: #1A140D;
+  --bar: rgba(36, 27, 18, 0.86);
+  --glass: rgba(46, 36, 24, 0.97);
+  --nav-label: rgba(234, 217, 180, 0.76);
+  --font-body: 'EB Garamond', Georgia, serif;
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-numbers: 'EB Garamond', Georgia, serif;
+  --display-weight: 600;
+  --display-tracking: 0.01em;
+  --r-lg: 10px;
+  --r-md: 8px;
+  --r-sm: 6px;
+  --t-body: 16px;
+  --backdrop: radial-gradient(90% 50% at 10% 0%, rgba(201, 162, 74, 0.10), transparent 55%);
+}
+:root[data-theme="codex"] .header-title::first-letter { color: var(--accent); font-size: 1.25em; }
+:root[data-theme="codex"] input[type="number"] { font-weight: 600; font-variant-numeric: lining-nums tabular-nums; }
