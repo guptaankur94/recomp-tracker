@@ -12,6 +12,14 @@ the repository root, which keeps running until this one reaches the stores.
 - `src/theme`: themes (Vitruvian Machine by default, Neon District, Codex) and fonts.
 - `src/ui`: shared pieces (text styles, screen, tab bar).
 - `src/app`: the screens (Expo Router: one file per screen).
+- `src/widgets`: the iPhone home-screen widget (this week's ring, the next workout, the streak). Its layout is
+  compiled to text and runs inside the widget, so it may only use `@expo/ui/swift-ui` components and modifiers.
+  `src/core/widget.ts` works out what it shows.
+- Apple Health: `src/data/health.ios.ts` reads body weight into the app and saves weigh-ins logged here
+  (Settings → Apple Health, iPhone only). `src/core/health.ts` decides which readings to add.
+
+Files ending `.ios.ts` are used on iPhone only; the file without `.ios` is the stand-in for Android and the browser.
+The widget and Health only work in a real iPhone build (TestFlight), not in Expo Go or the browser preview.
 
 ## Commands
 

@@ -14,6 +14,11 @@ develop this app, which is why builds go through GitHub.
    follow the current guide at https://docs.expo.dev/build/setup/ and
    https://docs.expo.dev/submit/ios/ (an App Store Connect API key lets later builds run unattended).
 
+The app uses Apple Health and an App Group (shared with the home-screen widget, a second target with the ID
+`com.guptaankur.recomp.widget`). EAS registers both IDs and their capabilities when it creates the
+certificates; if a build complains about them, enable HealthKit and App Groups (`group.com.guptaankur.recomp`)
+for the IDs at developer.apple.com → Identifiers.
+
 Before the first build, settle the app's permanent ID (`ios.bundleIdentifier` and `android.package` in
 `app.json`). It can't change once the app is on the App Store.
 

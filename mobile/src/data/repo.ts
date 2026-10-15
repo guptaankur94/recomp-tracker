@@ -42,6 +42,8 @@ export interface Settings {
   tipsSeen?: string[];
   /** Sound when rest ends (on unless turned off) */
   sound?: boolean;
+  /** Weigh-ins sync with Apple Health (iPhone) */
+  healthSync?: boolean;
 }
 
 export interface SetupAnswers {

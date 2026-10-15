@@ -13,6 +13,7 @@ import { Choices } from '@/ui/fields';
 import { Targets } from '@/ui/targets';
 import { localDateStr } from '@/core/format';
 import { pickTextFile, shareTextFile } from '@/data/files';
+import { connectHealth, healthAvailable } from '@/data/health';
 import { useData } from '@/data/store';
 import { COMING_THEMES, THEME_ORDER, THEMES, type Theme } from '@/theme/themes';
 import { useTheme } from '@/theme/theme-context';
@@ -37,6 +38,7 @@ export default function SettingsScreen() {
       <SectionLabel>Daily targets</SectionLabel>
       <Targets />
       <YourData />
+      {healthAvailable() && <AppleHealth />}
       <SectionLabel>Appearance</SectionLabel>
       <Body color={theme.colors.inkSoft}>Pick a theme. Layout stays the same; colours, type, motion and sound change.</Body>
       <ThemePicker />
@@ -69,6 +71,31 @@ function ProfileRow() {
       </View>
       <Body color={c.muted}>›</Body>
     </Pressable>
+  );
+}
+
+/** Weigh-ins sync with Apple Health: weights from a smart scale arrive here, and weights typed here go to Health */
+function AppleHealth() {
+  const { settings, updateSettings, importHealthWeights } = useData();
+  const toast = useToast();
+  const on = !!settings.healthSync;
+  const change = async (v: string) => {
+    if (v === 'off') return updateSettings({ healthSync: false });
+    try {
+      if (!(await connectHealth())) throw new Error();
+      await updateSettings({ healthSync: true });
+      const n = await importHealthWeights();
+      toast(n ? `Added ${n} weigh-in${n === 1 ? '' : 's'} from Apple Health` : 'Connected to Apple Health');
+    } catch {
+      toast("Couldn't connect to Apple Health. Check Settings → Health → Data Access.", { error: true, durationMs: 6000 });
+    }
+  };
+  return (
+    <>
+      <SectionLabel>Apple Health</SectionLabel>
+      <Choices label="Sync body weight" value={on ? 'on' : 'off'} onChange={change}
+        options={[{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }]} />
+    </>
   );
 }
 

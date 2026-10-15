@@ -1,16 +1,20 @@
 // The app's data in memory, loaded from the database at start-up. Screens read it with useData() and
 // change it through the actions here, which write to the database too.
 import { openDatabaseAsync } from 'expo-sqlite';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 
+import { mergeHealthWeights } from '@/core/health';
 import { buildBackupJson, restoreBackup, type AppData, type RestoreResult } from '@/core/backup';
 import { CUSTOM_DAY, dayExercises, saveDraft, type Draft } from '@/core/draft';
 import { sortHistory } from '@/core/history';
 import { sortBodyweight } from '@/core/progress';
 import { templatePlan, TEMPLATES } from '@/core/templates';
 import type { BodyweightEntry, Plan, PlanDay, Profile, Session } from '@/core/types';
+import { widgetSnapshot } from '@/core/widget';
+import { updateWidget } from '@/widgets/update-widget';
 
 import { migrate, type Db } from './db';
+import { OWN_SOURCE, readHealthWeights, saveHealthWeight } from './health';
 import * as repo from './repo';
 
 type State = AppData & repo.Workouts & { settings: repo.Settings };
@@ -25,6 +29,8 @@ interface DataContext extends State {
   /** Switches plan (null: back to the default). Workouts in progress are cleared, since days no longer line up. */
   choosePlan: (plan: Plan | null) => Promise<void>;
   logBodyweight: (entry: BodyweightEntry) => Promise<void>;
+  /** Adds weigh-ins from Apple Health on days with none here; returns how many were added */
+  importHealthWeights: () => Promise<number>;
   removeBodyweight: (dateStr: string) => Promise<BodyweightEntry | null>;
   removeSession: (id: number) => Promise<void>;
   restoreSession: (session: Session) => Promise<void>;
@@ -89,6 +95,13 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
     logBodyweight: async entry => {
       await repo.setBodyweight(db, entry);
       update(s => ({ ...s, bodyweight: sortBodyweight([...s.bodyweight.filter(e => e.dateStr !== entry.dateStr), entry]) }));
+      if (state.settings.healthSync) background(saveHealthWeight(entry));
+    },
+    importHealthWeights: async () => {
+      const added = mergeHealthWeights(state.bodyweight, await readHealthWeights(), OWN_SOURCE);
+      for (const entry of added) await repo.setBodyweight(db, entry);
+      if (added.length) update(s => ({ ...s, bodyweight: sortBodyweight([...s.bodyweight, ...added.filter(a => !s.bodyweight.some(e => e.dateStr === a.dateStr))]) }));
+      return added.length;
     },
     removeBodyweight: async dateStr => {
       const removed = state.bodyweight.find(e => e.dateStr === dateStr) ?? null;
@@ -155,7 +168,20 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       background(repo.setKv(db, repo.KEYS.restTimer, timer));
     }
   };
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={value}><Sync />{children}</Ctx.Provider>;
+}
+
+/** Keeps the home-screen widget current, and pulls new weigh-ins from Apple Health at start-up when sync is on */
+function Sync() {
+  const { activePlan, history, settings, importHealthWeights } = useData();
+  useEffect(() => {
+    updateWidget(widgetSnapshot(activePlan, history));
+  }, [activePlan, history]);
+  const healthImport = useEffectEvent(() => { importHealthWeights().catch(e => console.warn('Apple Health sync failed', e)); });
+  useEffect(() => {
+    if (settings.healthSync) healthImport();
+  }, [settings.healthSync]);
+  return null;
 }
 
 export function useData(): DataContext {

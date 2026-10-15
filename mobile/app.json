@@ -47,7 +47,34 @@
           ]
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Recomp reads your body weight from Apple Health, so weigh-ins from a smart scale show in your progress.",
+          "NSHealthUpdateUsageDescription": "Recomp saves the weigh-ins you log to Apple Health.",
+          "background": false
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.guptaankur.recomp.widget",
+          "groupIdentifier": "group.com.guptaankur.recomp",
+          "widgets": [
+            {
+              "name": "RecompWeek",
+              "displayName": "Recomp",
+              "description": "This week's workouts and what's next",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "accessoryCircular"
+              ]
+            }
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
