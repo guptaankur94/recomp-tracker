@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Recomp</title>
+  <script>
+    // GitHub Pages serves this for any address without a file. The new app's preview (preview/) has screens at
+    // addresses like preview/session/123: send those back into the preview, which opens the screen.
+    (function () {
+      var path = location.pathname;
+      var at = path.indexOf('/preview/');
+      if (at !== -1) location.replace(path.slice(0, at) + '/preview/?open=' + encodeURIComponent(path.slice(at + 9) + location.search));
+    })();
+  </script>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0B0C0E; color: #EDE6D6; font: 16px -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 24px; }
+    a { color: #5EE7F0; }
+  </style>
+</head>
+<body>
+  <div>
+    <p>That page doesn't exist.</p>
+    <p><a href="./">Open Recomp</a></p>
+  </div>
+</body>
+</html>

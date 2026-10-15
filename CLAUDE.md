@@ -9,7 +9,8 @@ A single-page workout tracker installed on an iPhone home screen. Plain HTML, CS
 - `fonts/`: the themes' fonts (licences in `fonts/LICENSE.md`). Only the default theme's fonts are in `ASSETS`; others are cached on first use.
 - `js/`: the behaviour, one file per feature (workout, rest timer, history, progress, plan, AI plan, setup, settings…). `js/data/` holds the exercise library, ready-made plans and the creator's original plan. `js/app.js` starts the app and loads last.
   - These are classic scripts sharing one global scope (inline `onclick` handlers call their functions), loaded in the order listed in `index.html`. Code that runs at load time may only use things from its own file or files listed before it.
-- `sw.js`: offline support. `manifest.json`: home-screen name and icons. `images/`: icons and launch screens. `plans/`: saved plan files (not loaded by the app).
+- `sw.js`: offline support (it leaves `preview/` alone). `manifest.json`: home-screen name and icons. `images/`: icons and launch screens. `plans/`: saved plan files (not loaded by the app).
+- `preview/`: the new app's browser build (generated, don't edit; see below). `404.html` sends reloaded `preview/…` addresses back into the preview. `.nojekyll` makes GitHub Pages serve its `_expo/` folder.
 
 ## How changes go live
 
@@ -38,4 +39,5 @@ The iPhone/Android rebuild in Expo (React Native) + TypeScript, headed for the A
 - Data lives in SQLite (`mobile/src/data`). Schema changes go in a new entry at the end of `MIGRATIONS` in `db.ts`; never edit one that has shipped.
 - Use `aria-*` props (`aria-checked`, `aria-selected`, `aria-expanded`) rather than `accessibilityState`, which the web build ignores.
 - Changes only inside `mobile/` don't touch the web app, so they don't bump `APP_VERSION`.
+- Browser preview on GitHub Pages (`/recomp-tracker/preview/`): `npm run build-preview` in `mobile/` rebuilds `../preview`; commit it when the app changes. It works without special headers through `mobile/public/coi-sw.js`; test it with `e2e/preview.js` against a server that behaves like Pages (plain files, `404.html` for missing paths).
 - GitHub runs `.github/workflows/app-checks.yml` (tests, typecheck, lint) on every push touching `mobile/` or `js/`. `ios-beta.yml` builds for TestFlight when started by hand (see `mobile/RELEASING.md`).

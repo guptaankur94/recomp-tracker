@@ -13,7 +13,7 @@ const check = (n, ok, x = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${n}${x ?
   p.on('dialog', d => { errors.push('DIALOG ' + d.message()); d.dismiss(); });
   const btn = (n, exact = true) => p.getByRole('button', { name: n, exact });
   const tab = n => p.getByRole('tab', { name: n, exact: true }).click();
-  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
+  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
   await btn('Skip for now').click(); await p.waitForTimeout(800);
   // Week summary for a new user
   check('week summary', await p.getByLabel('0 of 3 workouts this week').isVisible() && await p.getByText('3 workouts to go this week').isVisible());

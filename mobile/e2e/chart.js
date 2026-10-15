@@ -10,7 +10,7 @@ const check = (n, ok, x = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${n}${x ?
   p.on('pageerror', e => errors.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   p.on('dialog', d => { errors.push('DIALOG ' + d.message()); d.dismiss(); });
-  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
+  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
   // Empty state first
   await p.getByRole('button', { name: 'Skip for now' }).click(); await p.waitForTimeout(800);
   await p.getByRole('tab', { name: 'Progress', exact: true }).click(); await p.waitForTimeout(500);

@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT || 'playwright');
 const SP = process.argv[2];
 const results = [];
 const check = (n, ok, x = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${n}${x ? ` (${x})` : ''}`);
-const URL = 'http://127.0.0.1:' + (process.env.PORT || 8793) + '/';
+const URL = 'http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/';
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
   const errors = [];

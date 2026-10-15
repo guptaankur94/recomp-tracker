@@ -2,7 +2,7 @@
 // Each request also refreshes the cache in the background. When a newer index.html arrives, every
 // file the app needs is fetched again before open pages are told they can reload, so a reload never
 // mixes old and new files.
-const CACHE = 'recomp-v6';
+const CACHE = 'recomp-v7';
 // Every file the app needs offline. Add new files here.
 const ASSETS = [
   './',
@@ -80,7 +80,10 @@ self.addEventListener('message', event => {
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  // The new app's browser preview (preview/) is a separate app with its own service worker
+  if (url.pathname.includes('/preview/')) return;
   // The page's own update check asks for the latest version straight from the network
   if (req.cache === 'no-store') return;
   event.respondWith(cacheFirst(event));

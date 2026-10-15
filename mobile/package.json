@@ -60,7 +60,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "export-web-data": "node scripts/export-web-data.js"
+    "export-web-data": "node scripts/export-web-data.js",
+    "build-preview": "rm -rf dist-preview && EXPO_BASE_URL=/recomp-tracker/preview expo export --platform web --output-dir dist-preview && rm -rf ../preview && cp -r dist-preview ../preview"
   },
   "private": true,
   "jest": {

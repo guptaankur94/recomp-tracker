@@ -12,7 +12,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   p.on('dialog', d => { errors.push('NATIVE DIALOG ' + d.message()); d.dismiss(); });
   const tab = name => p.getByRole('tab', { name, exact: true }).click();
   const shot = name => p.screenshot({ path: `${SP}/${name}.png` });
-  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + '/', { waitUntil: 'networkidle' });
+  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
   if (await p.getByRole('button', { name: 'Skip for now' }).isVisible().catch(() => false)) { await p.getByRole('button', { name: 'Skip for now' }).click(); await p.waitForTimeout(1200); }
   check('opens on Workout with the default plan', await p.getByText('Full Body A').first().isVisible());

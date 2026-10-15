@@ -1,9 +1,9 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 import { DataProvider } from '@/data/store';
 import { FONTS } from '@/theme/fonts';
@@ -28,6 +28,12 @@ export default function RootLayout() {
 function Screens() {
   const { theme } = useTheme();
   useEffect(() => { SplashScreen.hideAsync(); }, []);
+  // Browser preview: an inner address reloaded on GitHub Pages comes back as ?open=<screen> (see 404.html)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const open = new URLSearchParams(window.location.search).get('open');
+    if (open && /^[\w\-/[\]?=&%.]*$/.test(open)) router.replace(`/${open.replace(/^\/+/, '')}` as never);
+  }, []);
   return (
     <>
       <StatusBar style="light" />

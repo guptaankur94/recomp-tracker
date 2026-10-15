@@ -12,7 +12,7 @@ const check = (n, ok, x = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${n}${x ?
   p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   p.on('dialog', d => { errors.push('DIALOG ' + d.message()); d.dismiss(); });
   const btn = (n, exact = true) => p.getByRole('button', { name: n, exact });
-  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
+  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(1500);
   const chooser = p.waitForEvent('filechooser');
   await btn('I have a backup from the web app').click();
   await (await chooser).setFiles(`${SP}/backup.json`); await p.waitForTimeout(1500);

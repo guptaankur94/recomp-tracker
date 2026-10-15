@@ -2,7 +2,7 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Platform, Pressable, TextInput, View } from 'react-native';
 
 import { backupAgeDays, backupOverdue, backupStatus, restoreMessage } from '@/core/backup';
 import { GOAL_TYPES } from '@/core/profile';
@@ -27,6 +27,12 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <Header eyebrow="Settings" title="Settings" />
+      {Platform.OS === 'web' && (
+        <Card accent>
+          <Body bold>Browser preview</Body>
+          <Body color={theme.colors.inkSoft} style={{ fontSize: 14 }}>This is a preview of the new Recomp app. What you log here stays in this browser, separate from your Recomp app. To try it with your history, export a backup in your Recomp app and import it below.</Body>
+        </Card>
+      )}
       <ProfileRow />
       <SectionLabel>Daily targets</SectionLabel>
       <Targets />
