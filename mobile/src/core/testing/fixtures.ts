@@ -40,7 +40,7 @@ export function sampleHistory(seed = 1): Session[] {
       })
     }));
     sessions.push({
-      id: t, dateStr: localDateStr(new Date(t)), displayDate: '', day: day.day, title: day.title, exercises,
+      id: t, dateStr: localDateStr(new Date(t)), displayDate: new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), day: day.day, title: day.title, exercises,
       ...(rand() < 0.7 ? { durationSec: 2400 + Math.floor(rand() * 2400) } : {})
     });
     dayIdx += rand() < 0.85 ? 1 : 2;

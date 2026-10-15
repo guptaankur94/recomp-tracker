@@ -1,25 +1,52 @@
 import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Text, View } from 'react-native';
 
+import { DataProvider } from '@/data/store';
 import { FONTS } from '@/theme/fonts';
-import { ThemeProvider } from '@/theme/theme-context';
-import { AppTabs } from '@/ui/tab-bar';
+import { useTheme } from '@/theme/theme-context';
+import { ToastProvider } from '@/ui/toast';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts(FONTS);
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
+  const [fontsLoaded, fontError] = useFonts(FONTS);
   // A font that fails to load falls back to the system font rather than blocking the app
-  if (!loaded && !error) return null;
+  if (!fontsLoaded && !fontError) return null;
   return (
-    <ThemeProvider>
+    <DataProvider fallback={error => <Loading error={error} />}>
+      <ToastProvider>
+        <Screens />
+      </ToastProvider>
+    </DataProvider>
+  );
+}
+
+function Screens() {
+  const { theme } = useTheme();
+  useEffect(() => { SplashScreen.hideAsync(); }, []);
+  return (
+    <>
       <StatusBar style="light" />
-      <AppTabs />
-    </ThemeProvider>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.bg } }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="session/[id]" />
+      </Stack>
+    </>
+  );
+}
+
+/** Shown while the database opens (normally hidden by the splash screen), or if it can't */
+function Loading({ error }: { error: Error | null }) {
+  useEffect(() => { if (error) SplashScreen.hideAsync(); }, [error]);
+  if (!error) return null;
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0B0C0E', justifyContent: 'center', padding: 24 }}>
+      <Text style={{ color: '#EDE6D6', fontSize: 17, marginBottom: 8 }}>Couldn&apos;t open your data</Text>
+      <Text style={{ color: '#8A8578', fontSize: 14 }}>{error.message}</Text>
+    </View>
   );
 }

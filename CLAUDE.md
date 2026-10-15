@@ -32,5 +32,7 @@ The iPhone/Android rebuild in Expo (React Native) + TypeScript, headed for the A
 - Logic lives in `mobile/src/core` with no screens or storage. `npm test` there runs parity tests that load the web app's own `js/` files and check the new core gives the same answers. Keep them passing; when web app logic changes, change the core to match.
 - Data in `mobile/src/core/data` is generated from `js/data` with `npm run export-web-data`; don't edit it by hand.
 - Expo changes every SDK: follow `mobile/AGENTS.md`. Install packages with `npx expo install` (add `EXPO_OFFLINE=1` here, since api.expo.dev is blocked). Run `npx tsc --noEmit` and `npx expo lint` before pushing.
-- Preview: `npx expo export --platform web`, serve `mobile/dist`, and drive it at 390×844 in Playwright.
+- Preview: `npx expo export --platform web`, serve it with `python3 scripts/serve-web.py dist 8792` (plain `http.server` won't do: browser SQLite needs extra headers), and drive it at 390×844 in Playwright.
+- Data lives in SQLite (`mobile/src/data`). Schema changes go in a new entry at the end of `MIGRATIONS` in `db.ts`; never edit one that has shipped.
+- Use `aria-*` props (`aria-checked`, `aria-selected`, `aria-expanded`) rather than `accessibilityState`, which the web build ignores.
 - Changes only inside `mobile/` don't touch the web app, so they don't bump `APP_VERSION`.

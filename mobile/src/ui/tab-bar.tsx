@@ -51,7 +51,7 @@ function TabButton({ tab, isFocused, ...props }: TabTriggerSlotProps & { tab: Ta
   const centre = tab.name === 'index';
   const color = centre ? theme.colors.onAccent : isFocused ? theme.colors.accent : theme.colors.muted;
   return (
-    <Pressable {...props} accessibilityRole="tab" accessibilityLabel={tab.label} accessibilityState={{ selected: !!isFocused }}
+    <Pressable {...props} accessibilityRole="tab" accessibilityLabel={tab.label} aria-selected={!!isFocused}
       style={({ pressed }) => [styles.tab, pressed && { opacity: 0.7 }]}>
       <View style={centre
         ? [styles.centre, { backgroundColor: theme.colors.accent, borderColor: isFocused ? theme.colors.ink : 'transparent' }]

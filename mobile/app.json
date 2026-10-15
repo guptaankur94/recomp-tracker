@@ -31,7 +31,9 @@
           "imageWidth": 120
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sqlite",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

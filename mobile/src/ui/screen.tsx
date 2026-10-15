@@ -17,13 +17,14 @@ const Grid = memo(function Grid({ color }: { color: string }) {
   );
 });
 
-export function Screen({ children }: { children: ReactNode }) {
+/** tabBar: leave room for the floating tab bar (off for pages opened over the tabs) */
+export function Screen({ children, tabBar = true }: { children: ReactNode; tabBar?: boolean }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, overflow: 'hidden' }}>
       {theme.grid && <Grid color={theme.grid} />}
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + TAB_BAR_SPACE, paddingHorizontal: 20, gap: 14 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + (tabBar ? TAB_BAR_SPACE : 32), paddingHorizontal: 20, gap: 14 }}>
         {children}
       </ScrollView>
     </View>

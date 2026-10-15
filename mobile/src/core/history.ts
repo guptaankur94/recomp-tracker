@@ -74,3 +74,46 @@ export function daysDoneThisWeek(planDays: PlanDay[], history: Session[], now: D
   });
   return done;
 }
+
+/** One colour per plan day, as in the web app's calendar */
+export const DAY_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9'];
+
+export function dayColor(dayLabel: string): string | null {
+  const m = String(dayLabel).match(/(\d+)/);
+  return m ? DAY_COLORS[(parseInt(m[1], 10) - 1) % DAY_COLORS.length] : null;
+}
+
+export interface WeekGroup {
+  /** Monday 00:00, ms */
+  key: number;
+  label: string;
+  sessions: Session[];
+  volume: number;
+}
+
+/** Sessions grouped by week (Mon–Sun), newest first, labelled "This week", "Last week" or by dates */
+export function groupByWeek(history: Session[], now: Date = new Date(), fmtDate: (ms: number) => string): WeekGroup[] {
+  const thisWeek = startOfWeek(now).getTime();
+  const lastWeek = startOfWeek(new Date(now.getTime() - 7 * 864e5)).getTime();
+  const groups: WeekGroup[] = [];
+  history.forEach(s => {
+    const key = startOfWeek(new Date(s.id)).getTime();
+    let g = groups[groups.length - 1];
+    if (!g || g.key !== key) {
+      const label = key === thisWeek ? 'This week' : key === lastWeek ? 'Last week' : `${fmtDate(key)} – ${fmtDate(key + 6 * 864e5)}`;
+      groups.push(g = { key, label, sessions: [], volume: 0 });
+    }
+    g.sessions.push(s);
+    g.volume += sessionStats(s).volume;
+  });
+  return groups;
+}
+
+/** Volume change against the previous session of the same day, in whole percent (null when there's nothing to compare) */
+export function volumeChangePct(session: Session, history: Session[]): { pct: number; previous: Session } | null {
+  const previous = previousSameDay(session, history);
+  if (!previous) return null;
+  const prev = sessionStats(previous).volume;
+  const vol = sessionStats(session).volume;
+  return prev > 0 && vol > 0 ? { pct: Math.round((vol - prev) / prev * 100), previous } : null;
+}

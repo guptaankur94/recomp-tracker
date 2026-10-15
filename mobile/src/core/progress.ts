@@ -1,5 +1,5 @@
 // Progress: bodyweight trend and exercise charts.
-import { dateStrMs, fmtClock } from './format';
+import { dateStrMs, fmtClock, fmtNum } from './format';
 import { estOneRepMax } from './records';
 import { avgRest, setVolume } from './workout';
 import type { BodyweightEntry, SavedExercise, SavedSet, Session } from './types';
@@ -74,4 +74,60 @@ export function markRecords<P extends { y: number; pr?: boolean }>(points: P[], 
 /** The heaviest set (most reps breaks a tie) */
 export function bestSet(sets: SavedSet[]): SavedSet {
   return sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
+}
+
+export interface LiftSummary {
+  name: string;
+  /** Estimated 1RM per session (or best reps for bodyweight work), oldest first */
+  values: number[];
+  usesWeight: boolean;
+  latest: SavedSet;
+  /** Latest minus first value */
+  change: number;
+}
+
+/** Main lifts: the six most-logged exercises (at least two sessions each) */
+export function liftSummaries(history: Session[]): LiftSummary[] {
+  const counts = new Map<string, number>();
+  history.forEach(s => s.exercises.forEach(e => counts.set(e.name, (counts.get(e.name) || 0) + 1)));
+  return [...counts.entries()].filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => {
+    const rows = exerciseSessions(name, history);
+    const usesWeight = rows.some(r => r.ex.sets.some(s => s.weight > 0));
+    const values = rows.map(r => (usesWeight ? METRICS.e1rm : METRICS.reps).calc(r.ex.sets) as number);
+    return { name, values, usesWeight, latest: bestSet(rows[rows.length - 1].ex.sets), change: values[values.length - 1] - values[0] };
+  });
+}
+
+export interface BodyweightSummary {
+  /** Latest 7-day average */
+  trend: number | null;
+  /** kg per week over the last 4 weeks */
+  rate: number | null;
+  /** 'good' toward the goal, 'bad' away from it, null when flat or no goal */
+  rateTone: 'good' | 'bad' | null;
+  rateLabel: string;
+  goalLabel: string;
+}
+
+/** The three bodyweight tiles, as the web app words them */
+export function bodyweightSummary(entries: BodyweightEntry[], goalKg: number | null, now: Date = new Date()): BodyweightSummary {
+  const avg = movingAverage(entries);
+  const trend = avg.length ? avg[avg.length - 1].y : null;
+  const rate = weeklyRate(entries);
+  const towardGoal = (r: number) => !!goalKg && trend != null && r !== 0 && Math.sign(goalKg - trend) === Math.sign(r);
+  let goalLabel = goalKg ? 'Goal' : 'Set a goal in your profile';
+  if (goalKg && trend != null) {
+    const left = Math.round((goalKg - trend) * 10) / 10;
+    if (Math.abs(left) <= 0.2) {
+      goalLabel = 'At goal';
+    } else if (rate && towardGoal(rate) && (goalKg - trend) / rate < 104) {
+      const weeks = (goalKg - trend) / rate;
+      goalLabel = `~${new Date(now.getTime() + weeks * 7 * DAY_MS).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at this rate`;
+    } else {
+      goalLabel = `${fmtNum(Math.abs(left))} kg to go`;
+    }
+  }
+  const rateTone = rate == null || Math.abs(rate) < 0.05 ? null : towardGoal(rate) ? 'good' : goalKg ? 'bad' : null;
+  const rateLabel = rate == null ? 'Need 1 week of data' : rateTone === 'good' ? '↗ Toward goal' : rateTone === 'bad' ? '↘ Away from goal' : 'Last 4 weeks';
+  return { trend, rate, rateTone, rateLabel, goalLabel };
 }

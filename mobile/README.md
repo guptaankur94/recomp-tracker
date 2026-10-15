@@ -7,6 +7,8 @@ the repository root, which keeps running until this one reaches the stores.
   plan import, backups). No screens or storage, so it is easy to test.
 - `src/core/data`: the exercise library, ready-made plans and the creator's plan, exported from the web
   app with `npm run export-web-data`.
+- `src/data`: the on-device database (SQLite): workouts, weigh-ins, profile, plan and settings,
+  plus backup import and export. Backups use the web app's format, so either app can read the other's.
 - `src/theme`: themes (Vitruvian Machine by default, Neon District, Codex) and fonts.
 - `src/ui`: shared pieces (text styles, screen, tab bar).
 - `src/app`: the screens (Expo Router: one file per screen).
@@ -20,6 +22,7 @@ npm test                     # core tests, including parity with the web app
 npx tsc --noEmit             # typecheck
 npx expo lint                # lint
 npx expo export --platform web   # browser build in dist/
+python3 scripts/serve-web.py dist 8792   # serve it (adds the headers browser SQLite needs)
 ```
 
 `src/core/__tests__/parity.test.ts` runs the web app's own code (`../js`) on the same inputs as the new
