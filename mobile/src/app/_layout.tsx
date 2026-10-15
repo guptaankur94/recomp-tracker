@@ -36,6 +36,10 @@ function Screens() {
         <Stack.Screen name="session/[id]" />
         <Stack.Screen name="add-exercise" options={{ presentation: 'modal' }} />
         <Stack.Screen name="summary/[id]" options={{ presentation: 'modal', gestureEnabled: false }} />
+        <Stack.Screen name="plan-editor" options={{ presentation: 'modal', gestureEnabled: false }} />
+        <Stack.Screen name="ai-plan" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="plan-preview" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="templates" />
       </Stack>
     </>
   );

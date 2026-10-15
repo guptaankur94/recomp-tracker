@@ -8,7 +8,7 @@ import { CUSTOM_DAY, dayExercises, saveDraft, type Draft } from '@/core/draft';
 import { sortHistory } from '@/core/history';
 import { sortBodyweight } from '@/core/progress';
 import { templatePlan, TEMPLATES } from '@/core/templates';
-import type { BodyweightEntry, Plan, PlanDay, Session } from '@/core/types';
+import type { BodyweightEntry, Plan, PlanDay, Profile, Session } from '@/core/types';
 
 import { migrate, type Db } from './db';
 import * as repo from './repo';
@@ -35,6 +35,10 @@ interface DataContext extends State {
   /** Saves a day's sets to history and clears its draft; null when nothing was logged */
   saveDay: (dayIdx: number) => Promise<Session | null>;
   setRestTimer: (timer: repo.RestTimer | null) => void;
+  updateProfile: (patch: Partial<Profile>) => Promise<void>;
+  /** A plan read from a file or chatbot, waiting to be previewed and used (not saved until chosen) */
+  pendingPlan: Plan | null;
+  setPendingPlan: (plan: Plan | null) => void;
 }
 
 const Ctx = createContext<DataContext | null>(null);
@@ -45,6 +49,7 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
   const [db, setDb] = useState<Db | null>(null);
   const [state, setState] = useState<State | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [pendingPlan, setPendingPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -132,6 +137,13 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       });
       return saved.session;
     },
+    updateProfile: async patch => {
+      const profile = { ...(state.profile || {}), ...patch };
+      await repo.setKv(db, repo.KEYS.profile, profile);
+      update(s => ({ ...s, profile }));
+    },
+    pendingPlan,
+    setPendingPlan,
     setRestTimer: timer => {
       update(s => ({ ...s, restTimer: timer }));
       background(repo.setKv(db, repo.KEYS.restTimer, timer));

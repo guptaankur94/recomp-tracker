@@ -1,6 +1,6 @@
 // Workout: pick the day (today's or the next one is picked for you), log each set, then save.
 import { useKeepAwake } from 'expo-keep-awake';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 
@@ -34,6 +34,13 @@ export default function WorkoutScreen() {
     for (let i = 0; i <= days.length; i++) if (hasDraft(drafts[i] ?? null)) return i;
     return null;
   });
+  // Plan → Start opens a given day
+  const { day: dayParam } = useLocalSearchParams<{ day?: string }>();
+  const [lastParam, setLastParam] = useState<string | undefined>(undefined);
+  if (dayParam !== lastParam) {
+    setLastParam(dayParam);
+    if (dayParam !== undefined && Number(dayParam) <= customIdx) setPicked(Number(dayParam));
+  }
   const dayIdx = picked !== null && picked <= customIdx ? picked : next;
   const day = dayAt(dayIdx);
   const isCustom = dayIdx === customIdx;
