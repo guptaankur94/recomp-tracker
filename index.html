@@ -862,23 +862,29 @@
     /* One glass pill glides between tabs with a soft spring; icons sit above it */
     .nav-indicator {
       position: absolute;
-      top: 6px; left: 0;
-      height: calc(100% - 12px);
+      top: 0; left: 0;
+      height: 52px;
       width: 64px;
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform;
+    }
+    /* The glass itself lives on an inner layer, so its stretch never shifts the pill's position */
+    .nav-indicator::before {
+      content: '';
+      position: absolute;
+      inset: 0;
       border-radius: 999px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 55%, rgba(255, 255, 255, 0.14) 100%);
       border: 0.5px solid rgba(255, 255, 255, 0.28);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 6px 16px rgba(0, 0, 0, 0.35);
       -webkit-backdrop-filter: blur(6px) saturate(170%);
       backdrop-filter: blur(6px) saturate(170%);
-      opacity: 0;
-      pointer-events: none;
-      will-change: transform, width;
     }
-    .nav-indicator.ready { opacity: 1; transition: transform 0.5s cubic-bezier(0.34, 1.18, 0.64, 1), width 0.5s cubic-bezier(0.34, 1.18, 0.64, 1), opacity 0.2s ease; }
-    /* Stretch while travelling, like a drop of liquid */
-    .nav-indicator.moving { animation: navStretch 0.5s ease-out; }
-    @keyframes navStretch { 0% { scale: 1 1; } 35% { scale: 1.18 0.88; } 70% { scale: 0.97 1.03; } 100% { scale: 1 1; } }
+    .nav-indicator.ready { opacity: 1; transition: transform var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), width var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), height var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease; }
+    /* A gentle stretch while travelling, timed with the move */
+    .nav-indicator.moving::before { animation: navStretch var(--nav-ms, 0ms) ease-in-out; }
+    @keyframes navStretch { 0% { transform: scale(1, 1); } 45% { transform: scale(1.1, 0.92); } 100% { transform: scale(1, 1); } }
     .nav-item { position: relative; z-index: 1; }
     .nav-item.active svg { animation: navPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
     @keyframes navPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
@@ -889,9 +895,9 @@
     @keyframes viewInLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
     .nav-item.active .fill-active { fill: currentColor; }
     /* Workout keeps its green circle, sitting inside the capsule */
-    .nav-item.center .nav-ico { width: 48px; height: 48px; max-width: none; background: var(--accent); color: #000; }
-    .nav-item.center svg { width: 26px; height: 26px; }
-    .nav-item.center.active .nav-ico { background: var(--accent); box-shadow: 0 0 0 3px rgba(48, 209, 88, 0.25), 0 6px 18px rgba(48, 209, 88, 0.4); }
+    .nav-item.center .nav-ico { width: 44px; height: 44px; max-width: none; background: var(--accent); color: #000; }
+    .nav-item.center svg { width: 24px; height: 24px; }
+    .nav-item.center.active .nav-ico { background: var(--accent); box-shadow: 0 0 14px rgba(48, 209, 88, 0.45); }
 
     /* Rest timer: floating pill + full-screen view */
     .rest-pill {
@@ -1446,7 +1452,7 @@
       100% { box-shadow: 0 0 0 6px rgba(48, 209, 88, 0); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .nav-indicator.ready, .nav-indicator.moving, .nav-item.active svg, .view.enter-right, .view.enter-left { transition: none; animation: none; }
+      .nav-indicator.ready, .nav-indicator.moving::before, .nav-item.active svg, .view.enter-right, .view.enter-left { transition: none; animation: none; }
       .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
       .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
       .rest-pill, .just-collapsed, .ex-complete.pop, .summary-badge, .just-completed .pr-badge, .chart-area.fade, .saved-tick.pop { animation: none; }
@@ -4332,20 +4338,31 @@
 
     const VIEW_ORDER = ['plan', 'history', 'workout', 'progress', 'settings'];
 
-    // Glide the glass pill under the current tab (instantly the first time)
+    /* Glide the glass pill under the current tab (instantly the first time).
+       Speed stays even: the time grows with the distance travelled, so a one-tab hop and a
+       four-tab jump move at the same pace. Under Workout the pill becomes a ring sized from
+       the green button (button × 1.18), never taller than the bar's inner height. */
+    let navPillX = null;
     function moveNavIndicator(animate = true) {
       const bar = document.querySelector('.bottom-tab-bar');
       const pill = bar.querySelector('.nav-indicator');
       const tab = document.getElementById(`tab-nav-${currentView}`);
       if (!tab || !bar.offsetWidth) return;
-      const ico = tab.querySelector('.nav-ico');
+      const inner = bar.clientHeight - 12; // 6px padding top and bottom
       const barBox = bar.getBoundingClientRect();
-      const box = (tab.classList.contains('center') ? tab : ico).getBoundingClientRect();
-      const width = Math.min(68, box.width);
-      const x = box.left - barBox.left + (box.width - width) / 2 - bar.clientLeft;
+      const isCenter = tab.classList.contains('center');
+      const target = (isCenter ? tab.querySelector('.nav-ico') : tab).getBoundingClientRect();
+      const w = isCenter ? Math.min(inner, Math.round(target.width * 1.18)) : Math.min(68, target.width);
+      const h = isCenter ? w : inner;
+      const x = target.left - barBox.left - bar.clientLeft + (target.width - w) / 2;
+      const y = (bar.clientHeight - h) / 2;
+      const ms = animate && navPillX !== null ? Math.round(Math.min(560, 220 + Math.abs(x - navPillX) * 1.1)) : 0;
+      navPillX = x;
       if (!animate) pill.classList.remove('ready');
-      pill.style.width = `${width}px`;
-      pill.style.transform = `translateX(${x}px)`;
+      pill.style.setProperty('--nav-ms', `${ms}ms`);
+      pill.style.width = `${w}px`;
+      pill.style.height = `${h}px`;
+      pill.style.transform = `translate(${x}px, ${y}px)`;
       if (animate) {
         pill.classList.remove('moving');
         void pill.offsetWidth;
@@ -4378,6 +4395,12 @@
         else tab.removeAttribute('aria-current');
       });
       moveNavIndicator(from !== viewName);
+      // Fill the section once the pill is moving, so building it can't stall the first frames
+      if (from !== viewName) return requestAnimationFrame(() => requestAnimationFrame(() => renderViewContent(viewName)));
+      renderViewContent(viewName);
+    }
+
+    function renderViewContent(viewName) {
 
       if (viewName === 'history') {
         renderCalendarAndHistory();
@@ -7034,7 +7057,7 @@ The file must be valid JSON in exactly this format:
     }
 
     // Shown in Settings and compared on update checks; bump with every change
-    const APP_VERSION = '2026.10.15c';
+    const APP_VERSION = '2026.10.15d';
 
     // Init App
     requestAnimationFrame(() => moveNavIndicator(false));
