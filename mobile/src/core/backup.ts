@@ -3,6 +3,7 @@ import { localDateStr } from './format';
 import { normalizePlan } from './plan-import';
 import { sortBodyweight } from './progress';
 import { sortHistory } from './history';
+import { TEMPLATES } from './templates';
 import type { BodyweightEntry, Plan, Profile, Session } from './types';
 
 export interface AppData {
@@ -84,7 +85,10 @@ export function restoreBackup(text: string, current: AppData, { hasUnsavedSets =
   }
   if (parsed && parsed.plan && !plan && !hasUnsavedSets) {
     try {
-      plan = normalizePlan(parsed.plan);
+      const restored = normalizePlan(parsed.plan);
+      // Keep which ready-made plan it came from, so the plan list still marks it as in use
+      if (TEMPLATES.some(t => t.id === parsed.plan.templateId)) restored.templateId = parsed.plan.templateId;
+      plan = restored;
       extras.push('workout plan');
     } catch {
       // A broken plan in the backup doesn't stop the workouts restoring

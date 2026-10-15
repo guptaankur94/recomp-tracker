@@ -46,10 +46,9 @@ test('a web app backup restores into the database and reads back exactly', async
   expect(plain(loaded.history)).toEqual(plain(history));
   expect(loaded.bodyweight).toEqual(bodyweight);
   expect(loaded.profile).toEqual({ name: 'Ankur', sex: 'male', heightCm: 178 });
-  // As in the web app, a restored plan is re-read from scratch, so which ready-made plan it came from isn't kept
-  const { templateId, ...rest } = plan;
-  expect(templateId).toBe('full-body-2');
-  expect(plain(loaded.plan)).toEqual(plain(rest));
+  // Including which ready-made plan it came from
+  expect(loaded.plan?.templateId).toBe('full-body-2');
+  expect(plain(loaded.plan)).toEqual(plain(plan));
   // Restoring the same backup again adds nothing
   const again = restoreBackup(backup, loaded);
   expect(again.added).toBe(0);

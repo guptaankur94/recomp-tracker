@@ -157,7 +157,10 @@ function restoreBackupText(text) {
   }
   if (data && data.plan && !getCustomPlan() && !anyUnsavedSets()) {
     try {
-      localStorage.setItem(PLAN_KEY, JSON.stringify(normalizePlan(data.plan)));
+      const plan = normalizePlan(data.plan);
+      // Keep which ready-made plan it came from, so Plan → Starter plans still marks it as in use
+      if (TEMPLATES.some(t => t.id === data.plan.templateId)) plan.templateId = data.plan.templateId;
+      localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
       loadActivePlan();
       extras.push('workout plan');
     } catch (e) {}
