@@ -23,7 +23,12 @@ npx tsc --noEmit             # typecheck
 npx expo lint                # lint
 npx expo export --platform web   # browser build in dist/
 python3 scripts/serve-web.py dist 8792   # serve it (adds the headers browser SQLite needs)
+sh e2e/run.sh                # browser checks at iPhone size (after the export above)
 ```
+
+`e2e/` drives the browser build like a person would: setup, logging a workout, backups, plans and charts
+(about 120 checks, with screenshots). Set `PLAYWRIGHT` and `CHROMIUM` if Playwright isn't installed in the
+usual place.
 
 `src/core/__tests__/parity.test.ts` runs the web app's own code (`../js`) on the same inputs as the new
 core and checks they agree, so behaviour carries over exactly.
