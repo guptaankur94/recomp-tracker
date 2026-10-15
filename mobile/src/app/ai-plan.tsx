@@ -1,7 +1,7 @@
 // Create a plan with AI: your details go into a prompt for ChatGPT, Claude or Gemini, and the plan file it
 // gives back is read in. The details are saved to your profile as you go.
 import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Platform, Pressable, TextInput, View } from 'react-native';
 
@@ -30,7 +30,14 @@ const CHATBOTS = [
 const num = (v: string) => { const n = parseFloat(v.replace(',', '.')); return isNaN(n) ? null : Math.round(n * 10) / 10; };
 
 export default function AiPlanScreen() {
-  const { profile, bodyweight, updateProfile, choosePlan } = useData();
+  const { setup } = useLocalSearchParams<{ setup?: string }>();
+  const { profile, bodyweight, settings, updateProfile, choosePlan } = useData();
+  // From setup, both using a plan and backing out go on to setup's finish screen
+  const close = (uploaded = false) => {
+    if (setup !== undefined) router.replace({ pathname: '/setup', params: { finish: uploaded ? 'uploaded' : 'fallback' } });
+    else if (router.canGoBack()) router.back();
+    else router.replace('/plan');
+  };
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -38,10 +45,10 @@ export default function AiPlanScreen() {
   const [age, setAge] = useState(String(profileAge(profile) ?? ''));
   const [height, setHeight] = useState(String(profile?.heightCm ?? ''));
   const [weight, setWeight] = useState(String(currentWeightKg(profile, bodyweight) ?? ''));
-  const [goal, setGoal] = useState<AiGoal>((profile?.goalType as AiGoal) || 'recomp');
-  const [days, setDays] = useState('3');
-  const [level, setLevel] = useState('Intermediate');
-  const [equipment, setEquipment] = useState('');
+  const [goal, setGoal] = useState<AiGoal>((settings.setup?.goal as AiGoal) || (profile?.goalType as AiGoal) || 'recomp');
+  const [days, setDays] = useState(String(Math.min(7, Math.max(2, settings.setup?.days ?? 3))));
+  const [level, setLevel] = useState(settings.setup?.level || 'Intermediate');
+  const [equipment, setEquipment] = useState(({ gym: 'Full commercial gym', dumbbells: 'A pair of adjustable dumbbells and a bench', bodyweight: 'No equipment, bodyweight at home' } as Record<string, string>)[settings.setup?.equipment || ''] || '');
   const [notes, setNotes] = useState('');
   const [copied, setCopied] = useState(false);
   const [reply, setReply] = useState('');
@@ -98,7 +105,7 @@ export default function AiPlanScreen() {
     await choosePlan(plan);
     haptic('success');
     toast(`“${plan.planName}” is now your plan`);
-    if (router.canGoBack()) router.back(); else router.replace('/plan');
+    close(true);
   };
 
   const step = (n: number, done: boolean, title: string) => (
@@ -112,8 +119,8 @@ export default function AiPlanScreen() {
 
   return (
     <Screen tabBar={false}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Cancel" hitSlop={10} style={{ alignSelf: 'flex-start', paddingVertical: 4 }}>
-        <Body color={c.accent}>‹ Cancel</Body>
+      <Pressable onPress={() => close()} accessibilityRole="button" accessibilityLabel={setup !== undefined ? 'Skip' : 'Cancel'} hitSlop={10} style={{ alignSelf: 'flex-start', paddingVertical: 4 }}>
+        <Body color={c.accent}>‹ {setup !== undefined ? 'Skip for now' : 'Cancel'}</Body>
       </Pressable>
       <Header eyebrow="New plan" title="Create with AI" sub="Your details go into a prompt. The chatbot writes the plan; you upload it here." />
       {step(1, !!(sex && age && height && weight), 'About you')}

@@ -40,17 +40,27 @@ export function Stepper({ label, value, onMinus, onPlus, minusDisabled, plusDisa
   );
 }
 
-export function Choices<T extends string | number>({ label, options, value, onChange }: {
-  label?: string; options: { value: T; label: string }[]; value: T | null | undefined; onChange: (v: T) => void;
+/** Choice chips; options with a second line (sub) show as cards, `columns` to a row */
+export function Choices<T extends string | number>({ label, options, value, onChange, columns }: {
+  label?: string; options: { value: T; label: string; sub?: string }[]; value: T | null | undefined; onChange: (v: T) => void; columns?: number;
 }) {
   const { theme } = useTheme();
   const c = theme.colors;
   return (
     <View style={{ gap: 6 }}>
       {label && <Mono style={{ fontSize: 11, letterSpacing: 1 }} color={c.muted}>{label.toUpperCase()}</Mono>}
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: columns ? 8 : 6 }}>
         {options.map(o => {
           const on = o.value === value;
+          if (columns) {
+            return (
+              <Pressable key={String(o.value)} onPress={() => onChange(o.value)} accessibilityRole="radio" aria-checked={on} accessibilityLabel={o.sub ? `${o.label}. ${o.sub}` : o.label}
+                style={{ flexBasis: `${100 / columns - 3}%`, flexGrow: 1, minHeight: 56, padding: columns >= 3 ? 8 : 12, gap: 2, justifyContent: 'center', borderRadius: theme.radius, borderWidth: on ? 2 : 1, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface }}>
+                <Body bold style={{ fontSize: columns >= 3 ? 13 : 15 }} color={c.ink} numberOfLines={1} adjustsFontSizeToFit>{o.label}</Body>
+                {o.sub ? <Body style={{ fontSize: 12 }} color={c.inkSoft}>{o.sub}</Body> : null}
+              </Pressable>
+            );
+          }
           return (
             <Pressable key={String(o.value)} onPress={() => onChange(o.value)} accessibilityRole="radio" aria-checked={on}
               style={{ paddingHorizontal: 14, minHeight: 38, justifyContent: 'center', borderRadius: 19, borderWidth: 1, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : 'transparent' }}>

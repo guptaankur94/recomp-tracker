@@ -36,7 +36,7 @@ function summary(ex: PlanExerciseBase & { alt?: PlanExerciseBase }) {
 }
 
 export default function PlanEditorScreen() {
-  const params = useLocalSearchParams<{ day?: string; build?: string }>();
+  const params = useLocalSearchParams<{ day?: string; build?: string; setup?: string }>();
   const { activePlan, drafts, history, choosePlan } = useData();
   const { theme } = useTheme();
   const toast = useToast();
@@ -50,7 +50,13 @@ export default function PlanEditorScreen() {
 
   const change = (fn: (p: EditablePlan) => EditablePlan) => { setPlan(fn); setDirty(true); setConfirmDiscard(false); };
   const go = (v: View_) => { setView(v); setConfirmDiscard(false); };
-  const close = () => (router.canGoBack() ? router.back() : router.replace('/plan'));
+  // From setup, both saving and backing out go on to setup's finish screen
+  const fromSetup = params.setup !== undefined;
+  const close = (saved = false) => {
+    if (fromSetup) router.replace({ pathname: '/setup', params: { finish: saved ? 'saved' : 'fallback' } });
+    else if (router.canGoBack()) router.back();
+    else router.replace('/plan');
+  };
 
   const save = async () => {
     const checked = finishPlan(plan);
@@ -63,7 +69,7 @@ export default function PlanEditorScreen() {
     await choosePlan(checked.plan);
     haptic('success');
     toast(building ? `“${checked.plan.planName}” is now your plan` : 'Plan saved');
-    close();
+    close(true);
   };
 
   const cancel = () => {
@@ -201,7 +207,7 @@ export default function PlanEditorScreen() {
           <Body bold>Discard your changes?</Body>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
             <Button label="Keep editing" onPress={() => setConfirmDiscard(false)} style={{ flex: 1 }} />
-            <Button label="Discard" kind="danger" onPress={close} style={{ flex: 1 }} />
+            <Button label="Discard" kind="danger" onPress={() => close()} style={{ flex: 1 }} />
           </View>
         </Card>
       ) : (

@@ -32,6 +32,18 @@ export interface Workouts {
 
 export interface Settings {
   theme?: string;
+  /** Setup has been done (or skipped) */
+  onboarded?: boolean;
+  /** Setup answers, used to recommend plans and prefill the AI form */
+  setup?: SetupAnswers;
+}
+
+export interface SetupAnswers {
+  age?: number | null;
+  goal?: string;
+  level?: string;
+  days?: number;
+  equipment?: 'gym' | 'dumbbells' | 'bodyweight';
 }
 
 function parse<T>(text: string | undefined | null, fallback: T): T {
