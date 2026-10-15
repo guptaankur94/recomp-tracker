@@ -34,7 +34,7 @@ usual place.
 `src/core/__tests__/parity.test.ts` runs the web app's own code (`../js`) on the same inputs as the new
 core and checks they agree, so behaviour carries over exactly.
 
-Icons and sounds are generated: `node scripts/icon/make-icons.js` (from `scripts/icon/mark.js`) and
+Icons and sounds are generated: `node scripts/icon/make-icons.js` (Vitruvian mark in `scripts/icon/mark-vitruvian.js`) and
 `python3 scripts/make-sounds.py`.
 
 Getting the app onto phones (TestFlight, the stores): see `RELEASING.md`.

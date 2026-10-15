@@ -1,8 +1,9 @@
-// Renders the app icons from mark.js with Chromium:
+// Renders the app icons with Chromium:
 //   node scripts/icon/make-icons.js   (PLAYWRIGHT / CHROMIUM as for e2e)
 const path = require('path');
 const { chromium } = require(process.env.PLAYWRIGHT || 'playwright');
-const mark = require('./mark');
+// The Vitruvian Machine mark; mark-classic.js is the original green design (still the web app's icon)
+const mark = require('./mark-vitruvian');
 
 const OUT = path.join(__dirname, '..', '..', 'assets', 'images');
 // name, size, content scale (Android's adaptive icon keeps the art inside its safe zone), background
