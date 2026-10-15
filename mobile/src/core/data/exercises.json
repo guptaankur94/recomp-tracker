@@ -1,0 +1,716 @@
+{
+  "muscles": [
+    "Chest",
+    "Back",
+    "Shoulders",
+    "Legs",
+    "Hamstrings",
+    "Glutes",
+    "Calves",
+    "Biceps",
+    "Triceps",
+    "Core"
+  ],
+  "exercises": [
+    {
+      "name": "Barbell Bench Press",
+      "muscle": "Chest",
+      "equipment": "Barbell",
+      "warmup": 2,
+      "alt": "Dumbbell Bench Press",
+      "reps": "6–10",
+      "rest": 150,
+      "cue": "Shoulder blades pinched, bar to the lower chest"
+    },
+    {
+      "name": "Dumbbell Bench Press",
+      "muscle": "Chest",
+      "equipment": "Dumbbell",
+      "warmup": 2,
+      "alt": "Push-ups",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Full stretch at the bottom, press in a slight arc"
+    },
+    {
+      "name": "Incline Barbell Bench Press",
+      "muscle": "Chest",
+      "equipment": "Barbell",
+      "warmup": 2,
+      "alt": "Incline Dumbbell Press",
+      "reps": "6–10",
+      "rest": 150,
+      "cue": "Bench at 30°, bar to the upper chest"
+    },
+    {
+      "name": "Incline Dumbbell Press",
+      "muscle": "Chest",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Incline Barbell Bench Press",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Bench at 30°, elbows about 45° from the body"
+    },
+    {
+      "name": "Machine Chest Press",
+      "muscle": "Chest",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Dumbbell Bench Press",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Handles at mid-chest, control the return"
+    },
+    {
+      "name": "Pec Deck Machine Flyes",
+      "muscle": "Chest",
+      "equipment": "Machine",
+      "warmup": 0,
+      "alt": "Cable Fly",
+      "reps": "10–15",
+      "rest": 90,
+      "cue": "Soft elbows, squeeze for a second"
+    },
+    {
+      "name": "Cable Fly",
+      "muscle": "Chest",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Pec Deck Machine Flyes",
+      "reps": "10–15",
+      "rest": 90,
+      "cue": "Slight forward lean, hug a big tree"
+    },
+    {
+      "name": "Dumbbell Fly",
+      "muscle": "Chest",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Cable Fly",
+      "reps": "10–15",
+      "rest": 90,
+      "cue": "Deep stretch, stop before the shoulders strain"
+    },
+    {
+      "name": "Push-ups",
+      "muscle": "Chest",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Knee Push-ups",
+      "reps": "8–15",
+      "rest": 90,
+      "cue": "Body straight, chest to the floor"
+    },
+    {
+      "name": "Knee Push-ups",
+      "muscle": "Chest",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Push-ups",
+      "reps": "10–20",
+      "rest": 60,
+      "cue": "Hips in line with the shoulders"
+    },
+    {
+      "name": "Decline Push-ups",
+      "muscle": "Chest",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Push-ups",
+      "reps": "8–15",
+      "rest": 90,
+      "cue": "Feet on a chair, slow on the way down"
+    },
+    {
+      "name": "Dips",
+      "muscle": "Chest",
+      "equipment": "Bar",
+      "warmup": 1,
+      "alt": "Bench Dips",
+      "reps": "6–12",
+      "rest": 120,
+      "cue": "Slight forward lean, stop at 90° at the elbow"
+    },
+    {
+      "name": "Lat Pulldown",
+      "muscle": "Back",
+      "equipment": "Machine",
+      "warmup": 2,
+      "alt": "Assisted Pull-ups",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Pull elbows down to the ribs, chest up"
+    },
+    {
+      "name": "Pull-ups",
+      "muscle": "Back",
+      "equipment": "Bar",
+      "warmup": 1,
+      "alt": "Lat Pulldown",
+      "reps": "5–10",
+      "rest": 150,
+      "cue": "Full hang at the bottom, chin over the bar"
+    },
+    {
+      "name": "Chin-ups",
+      "muscle": "Back",
+      "equipment": "Bar",
+      "warmup": 1,
+      "alt": "Assisted Pull-ups",
+      "reps": "5–10",
+      "rest": 150,
+      "cue": "Palms facing you, chest to the bar"
+    },
+    {
+      "name": "Assisted Pull-ups",
+      "muscle": "Back",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Lat Pulldown",
+      "reps": "6–10",
+      "rest": 120,
+      "cue": "Use the least assistance you can control"
+    },
+    {
+      "name": "Seated Cable Row",
+      "muscle": "Back",
+      "equipment": "Cable",
+      "warmup": 1,
+      "alt": "Chest-Supported Dumbbell Row",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Tall chest, pull to the belly button"
+    },
+    {
+      "name": "Barbell Bent-Over Row",
+      "muscle": "Back",
+      "equipment": "Barbell",
+      "warmup": 1,
+      "alt": "Single-Arm Dumbbell Row",
+      "reps": "6–10",
+      "rest": 150,
+      "cue": "Hinge to 45°, bar to the lower ribs"
+    },
+    {
+      "name": "Single-Arm Dumbbell Row",
+      "muscle": "Back",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Seated Cable Row",
+      "reps": "8–12 / arm",
+      "rest": 90,
+      "cue": "Pull to the hip, pause at the top"
+    },
+    {
+      "name": "Chest-Supported Dumbbell Row",
+      "muscle": "Back",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Seated Cable Row",
+      "reps": "10–12",
+      "rest": 90,
+      "cue": "Chest on an incline bench, squeeze the shoulder blades"
+    },
+    {
+      "name": "Inverted Row",
+      "muscle": "Back",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Towel Door Row",
+      "reps": "6–12",
+      "rest": 90,
+      "cue": "Under a sturdy table or bar, body straight"
+    },
+    {
+      "name": "Towel Door Row",
+      "muscle": "Back",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Inverted Row",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Towel around a door handle, lean back and row"
+    },
+    {
+      "name": "Face Pull",
+      "muscle": "Back",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Rear Delt Dumbbell Fly",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Rope to the forehead, elbows high"
+    },
+    {
+      "name": "Rear Delt Dumbbell Fly",
+      "muscle": "Shoulders",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Face Pull",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Hinged over, lead with the elbows"
+    },
+    {
+      "name": "Barbell Overhead Press",
+      "muscle": "Shoulders",
+      "equipment": "Barbell",
+      "warmup": 2,
+      "alt": "Seated Dumbbell Shoulder Press",
+      "reps": "6–10",
+      "rest": 150,
+      "cue": "Squeeze glutes, head through at the top"
+    },
+    {
+      "name": "Seated Dumbbell Shoulder Press",
+      "muscle": "Shoulders",
+      "equipment": "Dumbbell",
+      "warmup": 2,
+      "alt": "Machine Shoulder Press",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Lower to ear level, press straight up"
+    },
+    {
+      "name": "Machine Shoulder Press",
+      "muscle": "Shoulders",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Seated Dumbbell Shoulder Press",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Handles at shoulder height, no back arch"
+    },
+    {
+      "name": "Dumbbell Lateral Raise",
+      "muscle": "Shoulders",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Cable Lateral Raise",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Lead with the elbows, stop at shoulder height"
+    },
+    {
+      "name": "Cable Lateral Raise",
+      "muscle": "Shoulders",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Dumbbell Lateral Raise",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Cable behind you, slow on the way down"
+    },
+    {
+      "name": "Pike Push-ups",
+      "muscle": "Shoulders",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Push-ups",
+      "reps": "6–12",
+      "rest": 90,
+      "cue": "Hips high, head to the floor between the hands"
+    },
+    {
+      "name": "Barbell Back Squat",
+      "muscle": "Legs",
+      "equipment": "Barbell",
+      "warmup": 3,
+      "alt": "Leg Press",
+      "reps": "5–8",
+      "rest": 180,
+      "cue": "Brace, sit between the hips, knees track the toes"
+    },
+    {
+      "name": "Goblet Squat",
+      "muscle": "Legs",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Bodyweight Squat",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Dumbbell at the chest, elbows inside the knees"
+    },
+    {
+      "name": "Leg Press",
+      "muscle": "Legs",
+      "equipment": "Machine",
+      "warmup": 2,
+      "alt": "Goblet Squat",
+      "reps": "10–12",
+      "rest": 150,
+      "cue": "Lower until the hips start to lift, then drive"
+    },
+    {
+      "name": "Bodyweight Squat",
+      "muscle": "Legs",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Goblet Squat",
+      "reps": "15–25",
+      "rest": 60,
+      "cue": "Slow down, pause at the bottom"
+    },
+    {
+      "name": "Bodyweight Lunge",
+      "muscle": "Legs",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Bodyweight Squat",
+      "reps": "10–15 / leg",
+      "rest": 60,
+      "cue": "Step back, back knee just above the floor"
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "muscle": "Legs",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Reverse Lunge",
+      "reps": "8–12 / leg",
+      "rest": 90,
+      "cue": "Back foot on a bench, front shin near vertical"
+    },
+    {
+      "name": "Reverse Lunge",
+      "muscle": "Legs",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Bulgarian Split Squat",
+      "reps": "8–12 / leg",
+      "rest": 90,
+      "cue": "Step back, back knee just above the floor"
+    },
+    {
+      "name": "Walking Lunge",
+      "muscle": "Legs",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Reverse Lunge",
+      "reps": "10–12 / leg",
+      "rest": 90,
+      "cue": "Long steps, torso upright"
+    },
+    {
+      "name": "Step-ups",
+      "muscle": "Legs",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Reverse Lunge",
+      "reps": "10–12 / leg",
+      "rest": 90,
+      "cue": "Drive through the heel of the top foot"
+    },
+    {
+      "name": "Leg Extension",
+      "muscle": "Legs",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Goblet Squat",
+      "reps": "12–15",
+      "rest": 90,
+      "cue": "Pause at the top, slow down"
+    },
+    {
+      "name": "Romanian Deadlift",
+      "muscle": "Hamstrings",
+      "equipment": "Barbell",
+      "warmup": 2,
+      "alt": "Dumbbell Romanian Deadlift",
+      "reps": "8–10",
+      "rest": 150,
+      "cue": "Soft knees, push the hips back, bar close"
+    },
+    {
+      "name": "Dumbbell Romanian Deadlift",
+      "muscle": "Hamstrings",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Romanian Deadlift",
+      "reps": "10–12",
+      "rest": 120,
+      "cue": "Hips back until you feel the hamstrings stretch"
+    },
+    {
+      "name": "Single-Leg Romanian Deadlift",
+      "muscle": "Hamstrings",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Dumbbell Romanian Deadlift",
+      "reps": "10–12 / leg",
+      "rest": 60,
+      "cue": "Hips square, reach long with the back leg"
+    },
+    {
+      "name": "Trap Bar Deadlift",
+      "muscle": "Hamstrings",
+      "equipment": "Barbell",
+      "warmup": 3,
+      "alt": "Romanian Deadlift",
+      "reps": "5–8",
+      "rest": 180,
+      "cue": "Push the floor away, stand tall"
+    },
+    {
+      "name": "Lying Leg Curl",
+      "muscle": "Hamstrings",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Seated Leg Curl",
+      "reps": "10–12",
+      "rest": 90,
+      "cue": "Hips down, slow on the way back"
+    },
+    {
+      "name": "Seated Leg Curl",
+      "muscle": "Hamstrings",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Lying Leg Curl",
+      "reps": "10–12",
+      "rest": 90,
+      "cue": "Lean forward slightly for a bigger stretch"
+    },
+    {
+      "name": "Hip Thrust",
+      "muscle": "Glutes",
+      "equipment": "Barbell",
+      "warmup": 2,
+      "alt": "Glute Bridge",
+      "reps": "8–12",
+      "rest": 120,
+      "cue": "Chin tucked, pause with the hips locked out"
+    },
+    {
+      "name": "Glute Bridge",
+      "muscle": "Glutes",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Hip Thrust",
+      "reps": "12–20",
+      "rest": 60,
+      "cue": "Drive through the heels, squeeze at the top"
+    },
+    {
+      "name": "Single-Leg Glute Bridge",
+      "muscle": "Glutes",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Glute Bridge",
+      "reps": "10–15 / leg",
+      "rest": 60,
+      "cue": "Hips level, pause at the top"
+    },
+    {
+      "name": "Standing Calf Raise",
+      "muscle": "Calves",
+      "equipment": "Machine",
+      "warmup": 1,
+      "alt": "Single-Leg Calf Raise",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Pause in the stretch and at the top"
+    },
+    {
+      "name": "Single-Leg Calf Raise",
+      "muscle": "Calves",
+      "equipment": "Bodyweight",
+      "warmup": 1,
+      "alt": "Standing Calf Raise",
+      "reps": "12–20 / leg",
+      "rest": 60,
+      "cue": "On a step, full range, hold for balance"
+    },
+    {
+      "name": "Calf Raise on a Step",
+      "muscle": "Calves",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Single-Leg Calf Raise",
+      "reps": "15–25",
+      "rest": 60,
+      "cue": "Both feet on a step: full stretch at the bottom, 2s squeeze at the top"
+    },
+    {
+      "name": "Barbell Curl",
+      "muscle": "Biceps",
+      "equipment": "Barbell",
+      "warmup": 1,
+      "alt": "Dumbbell Curl",
+      "reps": "8–12",
+      "rest": 90,
+      "cue": "Elbows still, no swinging"
+    },
+    {
+      "name": "Dumbbell Curl",
+      "muscle": "Biceps",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Cable Curl",
+      "reps": "10–12",
+      "rest": 60,
+      "cue": "Turn the palm up as you curl"
+    },
+    {
+      "name": "Hammer Curl",
+      "muscle": "Biceps",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Dumbbell Curl",
+      "reps": "10–12",
+      "rest": 60,
+      "cue": "Neutral grip, elbows by your sides"
+    },
+    {
+      "name": "Incline Dumbbell Curl",
+      "muscle": "Biceps",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Dumbbell Curl",
+      "reps": "10–12",
+      "rest": 60,
+      "cue": "Arms hang straight, full stretch"
+    },
+    {
+      "name": "Cable Curl",
+      "muscle": "Biceps",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Dumbbell Curl",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Constant tension, squeeze at the top"
+    },
+    {
+      "name": "Triceps Pushdown",
+      "muscle": "Triceps",
+      "equipment": "Cable",
+      "warmup": 1,
+      "alt": "Overhead Dumbbell Extension",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Elbows pinned, lock out fully"
+    },
+    {
+      "name": "Overhead Dumbbell Extension",
+      "muscle": "Triceps",
+      "equipment": "Dumbbell",
+      "warmup": 1,
+      "alt": "Triceps Pushdown",
+      "reps": "10–12",
+      "rest": 60,
+      "cue": "Elbows in, deep stretch behind the head"
+    },
+    {
+      "name": "Skull Crushers",
+      "muscle": "Triceps",
+      "equipment": "Barbell",
+      "warmup": 1,
+      "alt": "Overhead Dumbbell Extension",
+      "reps": "8–12",
+      "rest": 90,
+      "cue": "Lower to just behind the head"
+    },
+    {
+      "name": "Close-Grip Bench Press",
+      "muscle": "Triceps",
+      "equipment": "Barbell",
+      "warmup": 1,
+      "alt": "Dips",
+      "reps": "6–10",
+      "rest": 120,
+      "cue": "Hands shoulder-width, elbows tucked"
+    },
+    {
+      "name": "Bench Dips",
+      "muscle": "Triceps",
+      "equipment": "Bodyweight",
+      "warmup": 1,
+      "alt": "Diamond Push-ups",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Shoulders down, stop at 90°"
+    },
+    {
+      "name": "Diamond Push-ups",
+      "muscle": "Triceps",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Bench Dips",
+      "reps": "6–15",
+      "rest": 60,
+      "cue": "Hands close, elbows brush the ribs"
+    },
+    {
+      "name": "Plank",
+      "muscle": "Core",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Dead Bug",
+      "reps": "30–60s hold",
+      "rest": 60,
+      "cue": "Squeeze glutes, ribs down"
+    },
+    {
+      "name": "Dead Bug",
+      "muscle": "Core",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Plank",
+      "reps": "8–12 / side",
+      "rest": 60,
+      "cue": "Lower back pressed into the floor"
+    },
+    {
+      "name": "Hanging Knee Raise",
+      "muscle": "Core",
+      "equipment": "Bar",
+      "warmup": 0,
+      "alt": "Reverse Crunch",
+      "reps": "10–15",
+      "rest": 60,
+      "cue": "Curl the pelvis up, no swinging"
+    },
+    {
+      "name": "Reverse Crunch",
+      "muscle": "Core",
+      "equipment": "Bodyweight",
+      "warmup": 0,
+      "alt": "Hanging Knee Raise",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Roll the hips off the floor slowly"
+    },
+    {
+      "name": "Cable Crunch",
+      "muscle": "Core",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Reverse Crunch",
+      "reps": "12–15",
+      "rest": 60,
+      "cue": "Crunch the ribs to the hips, hips still"
+    },
+    {
+      "name": "Pallof Press",
+      "muscle": "Core",
+      "equipment": "Cable",
+      "warmup": 0,
+      "alt": "Dead Bug",
+      "reps": "10–12 / side",
+      "rest": 60,
+      "cue": "Resist the twist, press straight out"
+    },
+    {
+      "name": "Farmer's Carry",
+      "muscle": "Core",
+      "equipment": "Dumbbell",
+      "warmup": 0,
+      "alt": "Plank",
+      "reps": "30–45s walk",
+      "rest": 90,
+      "cue": "Tall posture, short quick steps"
+    }
+  ]
+}

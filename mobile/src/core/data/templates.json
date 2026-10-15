@@ -1,0 +1,930 @@
+[
+  {
+    "id": "full-body-3",
+    "name": "Full Body 3×",
+    "days": 3,
+    "level": "Beginner friendly",
+    "equipment": "gym",
+    "minutes": 50,
+    "blurb": "Every muscle three times a week. The best start for most people.",
+    "plan": [
+      {
+        "title": "Full Body A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Plank"
+          }
+        ]
+      },
+      {
+        "title": "Full Body B",
+        "exercises": [
+          {
+            "name": "Leg Press"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press"
+          },
+          {
+            "name": "Seated Cable Row"
+          },
+          {
+            "name": "Lying Leg Curl"
+          },
+          {
+            "name": "Dumbbell Curl"
+          },
+          {
+            "name": "Triceps Pushdown"
+          }
+        ]
+      },
+      {
+        "title": "Full Body C",
+        "exercises": [
+          {
+            "name": "Bulgarian Split Squat",
+            "warmup": 2
+          },
+          {
+            "name": "Incline Dumbbell Press"
+          },
+          {
+            "name": "Assisted Pull-ups"
+          },
+          {
+            "name": "Hip Thrust"
+          },
+          {
+            "name": "Face Pull"
+          },
+          {
+            "name": "Hanging Knee Raise"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "full-body-2",
+    "name": "Full Body 2×",
+    "days": 2,
+    "level": "Beginner friendly",
+    "equipment": "gym",
+    "minutes": 55,
+    "blurb": "Two full-body sessions a week for a busy schedule. Every muscle twice a week.",
+    "plan": [
+      {
+        "title": "Full Body A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Plank"
+          }
+        ]
+      },
+      {
+        "title": "Full Body B",
+        "exercises": [
+          {
+            "name": "Leg Press"
+          },
+          {
+            "name": "Incline Dumbbell Press"
+          },
+          {
+            "name": "Seated Cable Row"
+          },
+          {
+            "name": "Hip Thrust"
+          },
+          {
+            "name": "Dumbbell Curl"
+          },
+          {
+            "name": "Triceps Pushdown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "strength-5x5-3",
+    "name": "Strength 5×5",
+    "days": 3,
+    "level": "Beginner to intermediate",
+    "equipment": "gym",
+    "minutes": 60,
+    "type": "strength",
+    "blurb": "The classic strength builder: five heavy sets of five on the big barbell lifts. Add a little weight every session.",
+    "plan": [
+      {
+        "title": "Workout A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 3
+          },
+          {
+            "name": "Barbell Bench Press",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 3
+          },
+          {
+            "name": "Barbell Bent-Over Row",
+            "sets": 5,
+            "reps": "5",
+            "rest": 150,
+            "warmup": 2
+          },
+          {
+            "name": "Plank",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Workout B",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 3
+          },
+          {
+            "name": "Barbell Overhead Press",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 2
+          },
+          {
+            "name": "Trap Bar Deadlift",
+            "sets": 3,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 2
+          },
+          {
+            "name": "Chin-ups",
+            "reps": "5–8",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Workout A2",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 3
+          },
+          {
+            "name": "Barbell Bench Press",
+            "sets": 5,
+            "reps": "5",
+            "rest": 180,
+            "warmup": 3
+          },
+          {
+            "name": "Barbell Bent-Over Row",
+            "sets": 5,
+            "reps": "5",
+            "rest": 150,
+            "warmup": 2
+          },
+          {
+            "name": "Hanging Knee Raise",
+            "warmup": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "glutes-legs-4",
+    "name": "Glutes & Legs 4×",
+    "days": 4,
+    "level": "Beginner to intermediate",
+    "equipment": "gym",
+    "minutes": 55,
+    "type": "split",
+    "blurb": "Two lower-body days built around the glutes and hamstrings, plus two upper-body days to keep things balanced.",
+    "plan": [
+      {
+        "title": "Glutes & Hamstrings",
+        "exercises": [
+          {
+            "name": "Hip Thrust",
+            "warmup": 2
+          },
+          {
+            "name": "Romanian Deadlift",
+            "warmup": 1
+          },
+          {
+            "name": "Bulgarian Split Squat",
+            "warmup": 0
+          },
+          {
+            "name": "Lying Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Single-Leg Glute Bridge",
+            "reps": "12–15"
+          },
+          {
+            "name": "Standing Calf Raise"
+          }
+        ]
+      },
+      {
+        "title": "Upper A",
+        "exercises": [
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1
+          },
+          {
+            "name": "Seated Cable Row",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Triceps Pushdown",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Curl",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Quads & Glutes",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Walking Lunge",
+            "warmup": 0
+          },
+          {
+            "name": "Step-ups",
+            "warmup": 0
+          },
+          {
+            "name": "Leg Extension",
+            "warmup": 0
+          },
+          {
+            "name": "Seated Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Plank"
+          }
+        ]
+      },
+      {
+        "title": "Upper B",
+        "exercises": [
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 2
+          },
+          {
+            "name": "Single-Arm Dumbbell Row",
+            "warmup": 0
+          },
+          {
+            "name": "Face Pull"
+          },
+          {
+            "name": "Cable Lateral Raise",
+            "warmup": 0
+          },
+          {
+            "name": "Hammer Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Cable Crunch"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "upper-lower-4",
+    "name": "Upper / Lower 4×",
+    "days": 4,
+    "level": "Beginner to intermediate",
+    "equipment": "gym",
+    "minutes": 55,
+    "blurb": "Two upper and two lower days. Each muscle twice a week with more volume.",
+    "plan": [
+      {
+        "title": "Upper A",
+        "exercises": [
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Barbell Bent-Over Row"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1
+          },
+          {
+            "name": "Lat Pulldown",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Curl"
+          },
+          {
+            "name": "Triceps Pushdown",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Lower A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Leg Extension",
+            "warmup": 0
+          },
+          {
+            "name": "Lying Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Standing Calf Raise"
+          },
+          {
+            "name": "Hanging Knee Raise"
+          }
+        ]
+      },
+      {
+        "title": "Upper B",
+        "exercises": [
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 2
+          },
+          {
+            "name": "Seated Cable Row"
+          },
+          {
+            "name": "Lat Pulldown",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Hammer Curl",
+            "warmup": 1
+          },
+          {
+            "name": "Overhead Dumbbell Extension"
+          }
+        ]
+      },
+      {
+        "title": "Lower B",
+        "exercises": [
+          {
+            "name": "Leg Press"
+          },
+          {
+            "name": "Hip Thrust",
+            "warmup": 1
+          },
+          {
+            "name": "Bulgarian Split Squat",
+            "warmup": 0
+          },
+          {
+            "name": "Seated Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Standing Calf Raise"
+          },
+          {
+            "name": "Cable Crunch"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ppl-3",
+    "name": "Push / Pull / Legs 3×",
+    "days": 3,
+    "level": "Intermediate",
+    "equipment": "gym",
+    "minutes": 60,
+    "blurb": "Pushing, pulling and legs on separate days. Run it twice a week for 6 days.",
+    "plan": [
+      {
+        "title": "Push A",
+        "exercises": [
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1
+          },
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Triceps Pushdown"
+          },
+          {
+            "name": "Overhead Dumbbell Extension",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Pull A",
+        "exercises": [
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Barbell Bent-Over Row"
+          },
+          {
+            "name": "Seated Cable Row",
+            "warmup": 0
+          },
+          {
+            "name": "Face Pull"
+          },
+          {
+            "name": "Barbell Curl"
+          },
+          {
+            "name": "Hammer Curl"
+          }
+        ]
+      },
+      {
+        "title": "Legs A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Leg Press",
+            "warmup": 0
+          },
+          {
+            "name": "Lying Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Standing Calf Raise"
+          },
+          {
+            "name": "Hanging Knee Raise"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ppl-6",
+    "name": "Push / Pull / Legs 6×",
+    "days": 6,
+    "level": "Intermediate to advanced",
+    "equipment": "gym",
+    "minutes": 60,
+    "blurb": "The classic split, twice a week. High frequency for experienced lifters.",
+    "plan": [
+      {
+        "title": "Push A",
+        "exercises": [
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1
+          },
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Triceps Pushdown"
+          },
+          {
+            "name": "Overhead Dumbbell Extension",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Pull A",
+        "exercises": [
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Barbell Bent-Over Row"
+          },
+          {
+            "name": "Seated Cable Row",
+            "warmup": 0
+          },
+          {
+            "name": "Face Pull"
+          },
+          {
+            "name": "Barbell Curl"
+          },
+          {
+            "name": "Hammer Curl"
+          }
+        ]
+      },
+      {
+        "title": "Legs A",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Leg Press",
+            "warmup": 0
+          },
+          {
+            "name": "Lying Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Standing Calf Raise"
+          },
+          {
+            "name": "Hanging Knee Raise"
+          }
+        ]
+      },
+      {
+        "title": "Push B",
+        "exercises": [
+          {
+            "name": "Barbell Bench Press"
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1
+          },
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Triceps Pushdown"
+          },
+          {
+            "name": "Overhead Dumbbell Extension",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Pull B",
+        "exercises": [
+          {
+            "name": "Lat Pulldown"
+          },
+          {
+            "name": "Barbell Bent-Over Row"
+          },
+          {
+            "name": "Seated Cable Row",
+            "warmup": 0
+          },
+          {
+            "name": "Face Pull"
+          },
+          {
+            "name": "Barbell Curl"
+          },
+          {
+            "name": "Hammer Curl"
+          }
+        ]
+      },
+      {
+        "title": "Legs B",
+        "exercises": [
+          {
+            "name": "Barbell Back Squat",
+            "reps": "6–8"
+          },
+          {
+            "name": "Romanian Deadlift"
+          },
+          {
+            "name": "Leg Press",
+            "warmup": 0
+          },
+          {
+            "name": "Lying Leg Curl",
+            "warmup": 0
+          },
+          {
+            "name": "Standing Calf Raise"
+          },
+          {
+            "name": "Hanging Knee Raise"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dumbbell-3",
+    "name": "Dumbbell Full Body 3×",
+    "days": 3,
+    "level": "Beginner friendly",
+    "equipment": "dumbbells",
+    "minutes": 45,
+    "blurb": "Just a pair of dumbbells and a bench. Works at home or in a busy gym.",
+    "plan": [
+      {
+        "title": "Full Body A",
+        "exercises": [
+          {
+            "name": "Goblet Squat",
+            "warmup": 2
+          },
+          {
+            "name": "Dumbbell Bench Press"
+          },
+          {
+            "name": "Single-Arm Dumbbell Row",
+            "alt": "Chest-Supported Dumbbell Row"
+          },
+          {
+            "name": "Dumbbell Romanian Deadlift",
+            "warmup": 0
+          },
+          {
+            "name": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Dead Bug"
+          }
+        ]
+      },
+      {
+        "title": "Full Body B",
+        "exercises": [
+          {
+            "name": "Bulgarian Split Squat",
+            "warmup": 2
+          },
+          {
+            "name": "Seated Dumbbell Shoulder Press",
+            "warmup": 1,
+            "alt": "Pike Push-ups"
+          },
+          {
+            "name": "Chest-Supported Dumbbell Row",
+            "alt": "Single-Arm Dumbbell Row"
+          },
+          {
+            "name": "Glute Bridge",
+            "alt": "Single-Leg Glute Bridge"
+          },
+          {
+            "name": "Dumbbell Curl"
+          },
+          {
+            "name": "Overhead Dumbbell Extension",
+            "warmup": 0
+          }
+        ]
+      },
+      {
+        "title": "Full Body C",
+        "exercises": [
+          {
+            "name": "Reverse Lunge",
+            "warmup": 1
+          },
+          {
+            "name": "Incline Dumbbell Press",
+            "warmup": 2
+          },
+          {
+            "name": "Single-Arm Dumbbell Row",
+            "alt": "Chest-Supported Dumbbell Row"
+          },
+          {
+            "name": "Single-Leg Romanian Deadlift"
+          },
+          {
+            "name": "Rear Delt Dumbbell Fly",
+            "alt": "Dumbbell Lateral Raise"
+          },
+          {
+            "name": "Farmer's Carry"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bodyweight-3",
+    "name": "Bodyweight at Home 3×",
+    "days": 3,
+    "level": "Beginner friendly",
+    "equipment": "bodyweight",
+    "minutes": 35,
+    "blurb": "No equipment needed. Make it harder by slowing down and adding reps.",
+    "plan": [
+      {
+        "title": "Full Body A",
+        "exercises": [
+          {
+            "name": "Bodyweight Squat",
+            "warmup": 1,
+            "alt": "Bodyweight Lunge"
+          },
+          {
+            "name": "Push-ups",
+            "warmup": 1
+          },
+          {
+            "name": "Inverted Row"
+          },
+          {
+            "name": "Glute Bridge",
+            "alt": "Single-Leg Glute Bridge"
+          },
+          {
+            "name": "Pike Push-ups"
+          },
+          {
+            "name": "Plank"
+          }
+        ]
+      },
+      {
+        "title": "Full Body B",
+        "exercises": [
+          {
+            "name": "Bodyweight Lunge",
+            "warmup": 1
+          },
+          {
+            "name": "Decline Push-ups",
+            "warmup": 1
+          },
+          {
+            "name": "Towel Door Row"
+          },
+          {
+            "name": "Single-Leg Romanian Deadlift",
+            "alt": "Single-Leg Glute Bridge"
+          },
+          {
+            "name": "Bench Dips",
+            "warmup": 0
+          },
+          {
+            "name": "Dead Bug"
+          }
+        ]
+      },
+      {
+        "title": "Full Body C",
+        "exercises": [
+          {
+            "name": "Bodyweight Squat",
+            "warmup": 1,
+            "reps": "20–30"
+          },
+          {
+            "name": "Push-ups",
+            "warmup": 1
+          },
+          {
+            "name": "Inverted Row"
+          },
+          {
+            "name": "Single-Leg Calf Raise",
+            "warmup": 0,
+            "alt": "Calf Raise on a Step"
+          },
+          {
+            "name": "Diamond Push-ups"
+          },
+          {
+            "name": "Reverse Crunch",
+            "alt": "Dead Bug"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "recomp-5",
+    "name": "Recomposition Split 5×",
+    "days": 5,
+    "level": "Intermediate",
+    "equipment": "gym",
+    "minutes": 60,
+    "creator": true,
+    "blurb": "The plan this app was built around: five focused days with extra arm work. Progress by adding weight, adding reps, or cutting rest at the same weight.",
+    "plan": null
+  }
+]
