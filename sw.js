@@ -1,8 +1,52 @@
 // Offline support: cache-first so the app opens instantly even on weak gym signal.
-// Each request also refreshes the cache in the background; when a newer index.html
-// arrives, open pages are told so they can offer a reload.
-const CACHE = 'recomp-v4';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
+// Each request also refreshes the cache in the background. When a newer index.html arrives, every
+// file the app needs is fetched again before open pages are told they can reload, so a reload never
+// mixes old and new files.
+const CACHE = 'recomp-v5';
+// Every file the app needs offline. Add new files here.
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './styles/base.css',
+  './styles/history-progress.css',
+  './styles/motion.css',
+  './styles/navigation.css',
+  './styles/setup-plan.css',
+  './styles/sheets.css',
+  './styles/themes/classic.css',
+  './styles/workout.css',
+  './js/data/default-plan.js',
+  './js/data/exercises.js',
+  './js/data/plans.js',
+  './js/state.js',
+  './js/helpers.js',
+  './js/ui.js',
+  './js/storage.js',
+  './js/workout-data.js',
+  './js/add-exercise.js',
+  './js/workout.js',
+  './js/rest-timer.js',
+  './js/sound.js',
+  './js/records.js',
+  './js/navigation.js',
+  './js/history.js',
+  './js/progress.js',
+  './js/charts.js',
+  './js/backup.js',
+  './js/profile.js',
+  './js/plan.js',
+  './js/ai-plan.js',
+  './js/settings.js',
+  './js/setup.js',
+  './js/tips.js',
+  './js/plan-editor.js',
+  './js/app.js',
+  './images/icons/icon-180.png',
+  './images/icons/icon-192.png',
+  './images/icons/icon-512.png',
+  './images/icons/icon-maskable-512.png'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -21,6 +65,11 @@ self.addEventListener('activate', event => {
   })());
 });
 
+// The page's update check asks for every file to be fetched again
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'refresh') event.waitUntil(refreshAll().then(notifyUpdate));
+});
+
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
@@ -28,6 +77,16 @@ self.addEventListener('fetch', event => {
   if (req.cache === 'no-store') return;
   event.respondWith(cacheFirst(event));
 });
+
+async function refreshAll() {
+  const cache = await caches.open(CACHE);
+  await Promise.all(ASSETS.map(async url => {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) await cache.put(url, res);
+    } catch (e) {}
+  }));
+}
 
 async function cacheFirst(event) {
   const req = event.request;
@@ -42,7 +101,7 @@ async function cacheFirst(event) {
     if (cachedCopy) {
       const [oldText, newText] = await Promise.all([cachedCopy.text(), res.clone().text()]);
       if (oldText !== newText) {
-        await cache.put(req, res.clone());
+        await refreshAll();
         notifyUpdate();
         return res;
       }

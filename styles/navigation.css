@@ -1,0 +1,179 @@
+/* Forms, the floating tab bar and the rest timer. */
+
+/* Settings forms */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: var(--t-footnote);
+  font-weight: 600;
+  color: var(--text-2);
+  min-width: 0;
+}
+.form-grid .full { grid-column: 1 / -1; }
+.form-grid input, .form-grid select { width: 100%; height: 42px; text-align: left; padding: 0 10px; font-size: var(--t-body); }
+.steps { margin: 4px 0 8px; padding-left: 20px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.5; }
+.targets-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; }
+.target-tile { background: var(--surface-2); border-radius: var(--r-sm); padding: 10px 4px; text-align: center; }
+.target-val { font-weight: 700; font-size: var(--t-body); }
+.target-lbl { font-size: var(--t-caption); color: var(--text-2); text-transform: uppercase; margin-top: 2px; }
+.btn-stack { margin-top: 12px; }
+.file-input { display: none; }
+
+/* Inline validation */
+.invalid, .invalid:focus { border-color: var(--danger) !important; }
+.field-error { font-size: var(--t-footnote); color: var(--danger); margin-top: 6px; }
+
+/* Bottom tab bar: a floating frosted capsule, icons only; the current tab sits on a soft pill */
+.bottom-tab-bar {
+  position: fixed;
+  left: 14px; right: 14px;
+  bottom: var(--tab-bar-bottom);
+  height: var(--tab-bar-h);
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(28, 28, 30, 0.82);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 900;
+}
+.nav-item {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(235, 235, 245, 0.78);
+  font-size: 0;
+  border: none;
+  background: none;
+  padding: 0;
+}
+.nav-item svg { width: 25px; height: 25px; }
+.nav-ico { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 68px; height: 100%; border-radius: 999px; transition: background-color 0.25s ease, color 0.2s ease, transform 0.2s var(--ease-out); }
+.nav-item:active .nav-ico { transform: scale(0.9); }
+.nav-item .fill-active { fill: none; transition: fill 0.15s ease; }
+.nav-item.active { color: var(--text); }
+/* One glass pill glides between tabs with a soft spring; icons sit above it */
+.nav-indicator {
+  position: absolute;
+  top: 0; left: 0;
+  height: 52px;
+  width: 64px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+/* The glass itself lives on an inner layer, so its stretch never shifts the pill's position */
+.nav-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.10) 55%, rgba(255, 255, 255, 0.14) 100%);
+  border: 0.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(255, 255, 255, 0.08), 0 6px 16px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px) saturate(170%);
+  backdrop-filter: blur(6px) saturate(170%);
+}
+.nav-indicator.ready { opacity: 1; transition: transform var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), width var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), height var(--nav-ms, 0ms) cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease; }
+/* A gentle stretch while travelling, timed with the move */
+.nav-indicator.moving::before { animation: navStretch var(--nav-ms, 0ms) ease-in-out; }
+@keyframes navStretch { 0% { transform: scale(1, 1); } 45% { transform: scale(1.1, 0.92); } 100% { transform: scale(1, 1); } }
+.nav-item { position: relative; z-index: 1; }
+.nav-item.active svg { animation: navPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes navPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+/* New section slides in from the side you're heading to */
+.view.enter-right { animation: viewInRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.view.enter-left { animation: viewInLeft 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes viewInRight { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes viewInLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.nav-item.active .fill-active { fill: currentColor; }
+/* Workout keeps its green circle, sitting inside the capsule */
+.nav-item.center .nav-ico { width: 44px; height: 44px; max-width: none; background: var(--accent); color: #000; }
+.nav-item.center svg { width: 24px; height: 24px; }
+.nav-item.center.active .nav-ico { background: var(--accent); box-shadow: 0 0 14px rgba(48, 209, 88, 0.45); }
+
+/* Rest timer: floating pill + full-screen view */
+.rest-pill {
+  position: fixed;
+  bottom: calc(var(--tab-bar-h) + var(--tab-bar-bottom) + 10px);
+  left: 12px; right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(44, 44, 46, 0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  padding: 8px 8px 8px 10px;
+  border-radius: 999px;
+  z-index: 850;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  animation: pillIn 0.35s var(--ease-out);
+}
+.rest-ring { width: 44px; height: 44px; flex-shrink: 0; transform: rotate(-90deg); }
+.rest-ring-bg { fill: none; stroke: var(--surface-3); stroke-width: 4; }
+.rest-ring-fg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear, stroke 0.2s ease; }
+.rest-pill.ending .rest-ring-fg { stroke: var(--orange); }
+.rest-pill-text { flex: 1; min-width: 0; }
+.rest-pill-time { font-size: var(--t-title); font-weight: 700; line-height: 1.1; }
+.rest-pill-next { font-size: var(--t-footnote); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.timer-ctrl-btn {
+  background: var(--surface-3);
+  color: var(--text);
+  border: none;
+  min-width: 52px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: var(--t-body);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+@keyframes pillIn { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.rest-full {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  background: rgba(0, 0, 0, 0.94);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 24px);
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.25s ease, transform 0.3s var(--ease-out);
+}
+.rest-full.open { opacity: 1; transform: none; }
+.rest-full-close { position: absolute; top: calc(env(safe-area-inset-top) + 14px); left: 16px; width: 40px; height: 40px; }
+.rest-full-label { font-size: var(--t-footnote); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+.rest-full-ring { position: relative; width: min(72vw, 280px); aspect-ratio: 1; }
+.rest-full-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.rest-full-ring .rest-ring-bg, .rest-full-ring .rest-ring-fg { stroke-width: 10; }
+.rest-full-time { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: 700; letter-spacing: -0.02em; }
+.rest-full-next { font-size: var(--t-headline); color: var(--text-2); margin-top: 22px; text-align: center; min-height: 22px; }
+.rest-full-actions { display: flex; gap: 14px; margin: 28px 0 16px; }
+.rest-adjust {
+  width: 96px;
+  height: 64px;
+  border-radius: var(--r-lg);
+  border: none;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--t-headline);
+  font-weight: 600;
+}
+.rest-skip { max-width: 220px; }

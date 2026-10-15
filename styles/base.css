@@ -1,0 +1,181 @@
+/* Page basics, header, home card, day tabs and buttons. */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  font-size: var(--t-body);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: env(safe-area-inset-top) 16px calc(110px + env(safe-area-inset-bottom)) 16px;
+  touch-action: manipulation;
+}
+body.resting { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
+/* While typing, the floating bars would sit on top of the fields; they come back when the keyboard closes */
+body.kb-open .bottom-tab-bar, body.kb-open .rest-pill { visibility: hidden; }
+body.kb-open .sheet { padding-bottom: 12px; }
+body.kb-open .onb-foot { padding-bottom: 12px; }
+/* Same buttons on every iPhone: older iOS versions otherwise add their own styling (blue text, bevels) */
+button, input[type="button"], input[type="submit"] { -webkit-appearance: none; appearance: none; font-family: inherit; color: inherit; border-radius: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+a { -webkit-tap-highlight-color: transparent; }
+strong { font-weight: 600; color: var(--text); }
+
+/* Shared pressed state: every tappable control gives way slightly under the finger */
+button, .history-card, .cal-date.active-logged, .hero-stat.tappable {
+  transition: transform 0.1s ease, opacity 0.1s ease, background-color 0.15s ease;
+}
+button:active:not(:disabled), .history-card:active, .cal-date.active-logged:active, .hero-stat.tappable:active {
+  transform: scale(0.97);
+  opacity: 0.8;
+}
+
+/* Header: large title per view */
+.app-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 0 14px;
+}
+.header-text { min-width: 0; }
+.header-kicker { font-size: var(--t-footnote); font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.header-title { font-size: clamp(28px, 8.2vw, var(--t-large)); font-weight: 700; letter-spacing: -0.02em; line-height: 1.12; margin: 2px 0 0; overflow-wrap: anywhere; }
+.avatar-btn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--t-headline);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-bottom: 2px;
+}
+.avatar-btn svg { width: 20px; height: 20px; color: var(--text-2); }
+
+/* Hero card: this week, streak, total, weight trend */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.hero-ring { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
+.hero-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.hero-ring .rest-ring-bg, .hero-ring .rest-ring-fg { stroke-width: 7; }
+.hero-ring .rest-ring-fg { transition: stroke-dashoffset 0.8s var(--ease-out); }
+.hero-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; }
+.hero-ring-num { font-size: var(--t-title); font-weight: 700; }
+.hero-ring-num span { font-size: var(--t-footnote); color: var(--text-2); font-weight: 600; }
+.hero-ring-lbl { font-size: 9px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+.hero-body { flex: 1; min-width: 0; }
+.hero-heading { font-size: var(--t-body); font-weight: 600; margin-bottom: 10px; }
+.hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.hero-stat { min-width: 0; border-radius: var(--r-sm); }
+.hero-stat.tappable { cursor: pointer; }
+.hero-val { font-size: var(--t-headline); font-weight: 700; white-space: nowrap; }
+.hero-val small { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; margin-left: 1px; }
+.hero-lbl { font-size: var(--t-caption); color: var(--text-2); font-weight: 600; white-space: nowrap; margin-top: 1px; }
+.hero-lbl.good { color: var(--accent); }
+.hero-lbl.bad { color: var(--orange); }
+.hero-title { font-size: var(--t-headline); font-weight: 700; margin-bottom: 4px; }
+.hero-text { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.4; }
+.hero-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 0; border: none; background: none; color: var(--blue); font-size: var(--t-footnote); font-weight: 600; }
+.hero-link svg { width: 12px; height: 12px; }
+
+/* Day tabs */
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin: 0 -16px 10px;
+  padding-left: 16px;
+  padding-right: 16px;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: none;
+  color: var(--text-2);
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: var(--t-body);
+  white-space: nowrap;
+}
+.tab-btn.active { background: var(--text); color: #000; }
+.tab-title { font-weight: 500; }
+.tab-check { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: #000; display: inline-flex; align-items: center; justify-content: center; }
+.tab-check svg { width: 10px; height: 10px; }
+.tab-next { font-size: var(--t-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+.tab-btn.active .tab-next { color: #1E8E3E; }
+.tab-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+/* Buttons: four types (primary, secondary, plain, danger) plus a positive "finish" variant */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: var(--t-headline);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-2);
+  text-decoration: none;
+}
+.btn + .btn { margin-top: 8px; }
+.btn-primary { background: var(--text); color: #000; }
+.btn-positive { background: var(--accent); color: #000; }
+.btn-secondary { background: var(--surface-2); color: var(--text); }
+.btn-plain { background: none; color: var(--text-2); }
+.btn-danger { background: var(--danger-soft); color: var(--danger); }
+.btn-sm {
+  width: auto;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: var(--t-footnote);
+}
+.btn-sm + .btn-sm { margin-top: 0; }
+.btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.btn-sm svg { width: 14px; height: 14px; }
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0;
+  flex-shrink: 0;
+}
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn.plain { background: none; color: var(--text-3); }
