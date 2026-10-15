@@ -4,7 +4,7 @@ The iPhone and Android app, built with Expo (React Native) and TypeScript. It re
 the repository root, which keeps running until this one reaches the stores.
 
 - `src/core`: the app's logic (records, suggestions, warm-ups, rest, schedule, progress, nutrition,
-  plan import, backups). No screens or storage, so it is easy to test.
+  plan import, backups, and `draft.ts` for the workout in progress). No screens or storage, so it is easy to test.
 - `src/core/data`: the exercise library, ready-made plans and the creator's plan, exported from the web
   app with `npm run export-web-data`.
 - `src/data`: the on-device database (SQLite): workouts, weigh-ins, profile, plan and settings,

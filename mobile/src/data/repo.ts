@@ -3,12 +3,32 @@ import type { AppData } from '@/core/backup';
 import { sessionDateStr } from '@/core/format';
 import { sortHistory } from '@/core/history';
 import { validStoredPlan } from '@/core/plan-import';
+import type { Draft } from '@/core/draft';
 import type { BodyweightEntry, Plan, Profile, Session } from '@/core/types';
 
 import type { Db } from './db';
 
 /** Keys in the kv table. Profile and plan keep the web app's names. */
-export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings' } as const;
+export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings', restTimer: 'rest_timer' } as const;
+
+/** Per-day keys: the workout in progress, and which exercises are swapped for their alternative */
+export const draftKey = (dayIdx: number) => `draft_d${dayIdx}`;
+export const swapsKey = (dayIdx: number) => `swaps_d${dayIdx}`;
+
+export interface RestTimer {
+  /** When rest ends, in ms */
+  endAt: number;
+  /** Full length in seconds, for the progress ring */
+  total: number;
+  /** "Next: Set 2 · 50 kg × 8" */
+  next: string;
+}
+
+export interface Workouts {
+  drafts: Record<number, Draft>;
+  swaps: Record<number, number[]>;
+  restTimer: RestTimer | null;
+}
 
 export interface Settings {
   theme?: string;
@@ -30,6 +50,31 @@ export async function getKv<T>(db: Db, key: string, fallback: T): Promise<T> {
 export async function setKv(db: Db, key: string, value: unknown): Promise<void> {
   if (value === null || value === undefined) await db.runAsync('DELETE FROM kv WHERE key = ?', key);
   else await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', key, JSON.stringify(value));
+}
+
+/** Workouts in progress, swaps and a running rest timer */
+export async function loadWorkouts(db: Db): Promise<Workouts> {
+  const rows = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM kv WHERE key LIKE 'draft_d%' OR key LIKE 'swaps_d%'");
+  const drafts: Record<number, Draft> = {};
+  const swaps: Record<number, number[]> = {};
+  rows.forEach(({ key, value }) => {
+    const m = key.match(/^(draft|swaps)_d(\d+)$/);
+    if (!m) return;
+    if (m[1] === 'draft') {
+      const d = parse<Draft | null>(value, null);
+      if (d && typeof d === 'object' && d.exercises) drafts[Number(m[2])] = { ...d, extras: d.extras || [] };
+    } else {
+      const list = parse<unknown>(value, []);
+      if (Array.isArray(list)) swaps[Number(m[2])] = list.filter(Number.isInteger);
+    }
+  });
+  const restTimer = await getKv<RestTimer | null>(db, KEYS.restTimer, null);
+  return { drafts, swaps, restTimer: restTimer && restTimer.endAt > Date.now() ? restTimer : null };
+}
+
+/** Drops every workout in progress and swap (when the plan changes, day positions no longer match) */
+export async function clearWorkouts(db: Db): Promise<void> {
+  await db.runAsync("DELETE FROM kv WHERE key LIKE 'draft_d%' OR key LIKE 'swaps_d%'");
 }
 
 export async function loadAll(db: Db): Promise<AppData & { settings: Settings }> {

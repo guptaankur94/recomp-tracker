@@ -34,6 +34,8 @@ function Screens() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.bg } }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="session/[id]" />
+        <Stack.Screen name="add-exercise" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="summary/[id]" options={{ presentation: 'modal', gestureEnabled: false }} />
       </Stack>
     </>
   );

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 
 import { Body } from './text';
@@ -39,9 +40,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 function ToastView({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  // Above the rest timer bar while it shows
+  const { restTimer } = useData();
   const c = theme.colors;
   return (
-    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', alignItems: 'center', paddingBottom: Math.max(insets.bottom, 12) + 80 }]}>
+    <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { justifyContent: 'flex-end', alignItems: 'center', paddingBottom: Math.max(insets.bottom, 12) + (restTimer ? 150 : 80) }]}>
       <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutDown.duration(180)} accessibilityRole="alert" accessibilityLiveRegion="polite"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, maxWidth: '92%', paddingVertical: 12, paddingHorizontal: 16, borderRadius: theme.radius, backgroundColor: c.surfaceHigh, borderWidth: 1, borderColor: toast.error ? c.danger : c.line }}>
         <Body style={{ flexShrink: 1, fontSize: 14 }}>{toast.message}</Body>

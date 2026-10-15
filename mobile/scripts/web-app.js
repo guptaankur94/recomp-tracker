@@ -7,7 +7,8 @@ const vm = require('vm');
 const WEB = path.join(__dirname, '..', '..', 'js');
 const FILES = [
   'data/default-plan.js', 'data/exercises.js', 'data/plans.js', 'state.js', 'helpers.js', 'storage.js',
-  'workout-data.js', 'records.js', 'profile.js', 'history.js', 'progress.js', 'plan.js', 'ai-plan.js', 'backup.js'
+  'workout-data.js', 'records.js', 'profile.js', 'history.js', 'progress.js', 'plan.js', 'ai-plan.js', 'backup.js',
+  'add-exercise.js', 'workout.js'
 ];
 
 // A Date whose "now" is fixed, so date-dependent answers can be compared
@@ -37,7 +38,7 @@ function loadWebApp({ store = {}, now = Date.now(), fields = {}, stubs = {} } = 
   const element = new Proxy(function () {}, { get: (t, k) => (k === Symbol.toPrimitive ? () => '' : element), set: () => true, apply: () => element });
   const ctx = vm.createContext({
     localStorage,
-    document: { getElementById: id => fields[id] || element, querySelector: () => element, querySelectorAll: () => [], addEventListener: stub },
+    document: { getElementById: id => fields[id] || element, querySelector: () => element, querySelectorAll: () => [], addEventListener: stub, createElement: () => element, body: element },
     window: {}, navigator: {}, console, setTimeout: stub, clearTimeout: stub, setInterval: stub,
     Date: fixedDate(now)
   });
