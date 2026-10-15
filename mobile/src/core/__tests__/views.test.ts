@@ -62,3 +62,20 @@ test('bodyweight summary wording', () => {
   expect(bodyweightSummary(losing, null).rateLabel).toBe('Last 4 weeks');
   expect(bodyweightSummary(days(3, 80, 0), 80).goalLabel).toBe('At goal');
 });
+
+test('backup reminder matches the web app', () => {
+  const { backupAgeDays, backupOverdue, backupStatus } = jest.requireActual('../backup');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { loadWebApp } = require('../../../scripts/web-app');
+  const now = new Date(2026, 3, 15, 12).getTime();
+  [null, now - 3600e3, now - 864e5, now - 13 * 864e5, now - 14 * 864e5, now - 90 * 864e5].forEach(last => [0, 2, 3, 40].forEach(n => {
+    const store: Record<string, string> = { recomp_history: JSON.stringify(Array.from({ length: n }, (_, i) => ({ id: now - (i + 1) * 864e5, dateStr: '', day: 'Day 1', title: 'x', exercises: [] }))) };
+    if (last) store.recomp_last_backup = String(last);
+    const web = loadWebApp({ store, now });
+    const age = backupAgeDays(last, now);
+    expect(age).toBe(web.ctx.backupAgeDays());
+    expect(backupOverdue(n, age)).toBe(web.ctx.backupOverdue());
+    expect(backupAgeDays(now + 5000, now)).toBe(0);
+    expect(backupStatus(n, age)).toBe(age === null ? (n ? 'Never backed up' : 'Nothing to back up yet') : age === 0 ? 'Last backup today' : `Last backup ${age} day${age === 1 ? '' : 's'} ago`);
+  }));
+});

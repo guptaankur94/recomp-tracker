@@ -105,3 +105,21 @@ export function restoreMessage({ added, addedBw, alreadyHere, extras }: RestoreR
     (extras.length ? `, plus your ${extras.join(' and ')}` : '') + '.' +
     (alreadyHere > 0 ? ` ${alreadyHere} already here.` : '');
 }
+
+/** After this many days without a backup (and with a few workouts logged), Settings nudges */
+export const BACKUP_NUDGE_DAYS = 14;
+
+export function backupAgeDays(lastBackupAt: number | null | undefined, now: number): number | null {
+  // Never negative: the screen's "now" can be a moment older than a backup just made
+  return lastBackupAt && lastBackupAt > 0 ? Math.max(0, Math.floor((now - lastBackupAt) / 864e5)) : null;
+}
+
+export function backupOverdue(workouts: number, ageDays: number | null): boolean {
+  if (workouts < 3) return false;
+  return ageDays === null || ageDays >= BACKUP_NUDGE_DAYS;
+}
+
+export function backupStatus(workouts: number, ageDays: number | null): string {
+  if (ageDays === null) return workouts ? 'Never backed up' : 'Nothing to back up yet';
+  return ageDays === 0 ? 'Last backup today' : `Last backup ${ageDays} day${ageDays === 1 ? '' : 's'} ago`;
+}

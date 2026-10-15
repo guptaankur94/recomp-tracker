@@ -36,6 +36,8 @@ export interface Settings {
   onboarded?: boolean;
   /** Setup answers, used to recommend plans and prefill the AI form */
   setup?: SetupAnswers;
+  /** When a backup was last exported, in ms */
+  lastBackupAt?: number;
 }
 
 export interface SetupAnswers {
@@ -113,6 +115,15 @@ export async function setBodyweight(db: Db, entry: BodyweightEntry): Promise<voi
 
 export async function deleteBodyweight(db: Db, dateStr: string): Promise<void> {
   await db.runAsync('DELETE FROM bodyweight WHERE date_str = ?', dateStr);
+}
+
+/** Deletes everything: workouts, weigh-ins, profile, plan, settings and workouts in progress */
+export async function resetAll(db: Db): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM sessions');
+    await db.runAsync('DELETE FROM bodyweight');
+    await db.runAsync('DELETE FROM kv');
+  });
 }
 
 /** Writes merged data (after a backup restore) in one transaction: all of it lands, or none */

@@ -1,0 +1,26 @@
+# Checks for the new app on every push: unit and parity tests (against the web app in js/), typecheck and lint.
+name: App checks
+
+on:
+  push:
+    paths: ['mobile/**', 'js/**', '.github/workflows/app-checks.yml']
+  pull_request:
+    paths: ['mobile/**', 'js/**']
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm test -- --ci
+      - run: npx tsc --noEmit
+      - run: npx expo lint

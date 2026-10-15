@@ -1,9 +1,15 @@
 // Settings: your data (import from the web app, back up), appearance, and the app version.
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 
-import { restoreMessage } from '@/core/backup';
+import { backupAgeDays, backupOverdue, backupStatus, restoreMessage } from '@/core/backup';
+import { GOAL_TYPES } from '@/core/profile';
+import type { GoalType } from '@/core/types';
+import { nowMs } from '@/ui/clock';
+import { haptic } from '@/ui/haptics';
+import { Targets } from '@/ui/targets';
 import { localDateStr } from '@/core/format';
 import { pickTextFile, shareTextFile } from '@/data/files';
 import { useData } from '@/data/store';
@@ -20,21 +26,75 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <Header eyebrow="Settings" title="Settings" />
+      <ProfileRow />
+      <SectionLabel>Daily targets</SectionLabel>
+      <Targets />
       <YourData />
       <SectionLabel>Appearance</SectionLabel>
       <Body color={theme.colors.inkSoft}>Pick a theme. Layout stays the same; colours, type, motion and sound change.</Body>
       <ThemePicker />
-      <Mono color={theme.colors.muted} style={{ textAlign: 'center', marginTop: 12 }}>Recomp {Constants.expoConfig?.version ?? ''}</Mono>
+      <ResetAll />
+      <Mono color={theme.colors.muted} style={{ textAlign: 'center', marginTop: 12 }}>Recomp keeps everything on this phone. Nothing is uploaded.{'\n'}Version {Constants.expoConfig?.version ?? ''}</Mono>
     </Screen>
   );
 }
 
+function ProfileRow() {
+  const { profile } = useData();
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const name = profile?.name || '';
+  const sub = profile
+    ? [profile.goalKg ? `Goal ${profile.goalKg} kg` : '', (GOAL_TYPES[profile.goalType as GoalType] || GOAL_TYPES.recomp).label].filter(Boolean).join(' · ')
+    : 'Goal, body stats and nutrition targets';
+  return (
+    <Pressable onPress={() => router.push('/profile')} accessibilityRole="button" accessibilityLabel={`${name || 'Set up your profile'}. ${sub}`}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: theme.radius, borderWidth: 1, borderColor: c.line, backgroundColor: pressed ? c.surfaceHigh : c.surface })}>
+      <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+        <Title size={24} color={c.accent}>{name ? name[0].toUpperCase() : '?'}</Title>
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Body bold style={{ fontSize: 17 }}>{name || 'Set up your profile'}</Body>
+        <Body style={{ fontSize: 13 }} color={c.inkSoft}>{sub}</Body>
+      </View>
+      <Body color={c.muted}>›</Body>
+    </Pressable>
+  );
+}
+
+/** Reset needs RESET typed, as in the web app */
+function ResetAll() {
+  const { history, resetAll } = useData();
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  if (!open) return <Button label="Reset all data" kind="danger" onPress={() => setOpen(true)} style={{ marginTop: 16 }} />;
+  const n = history.length;
+  return (
+    <Card>
+      <Body bold>Reset all data?</Body>
+      <Body color={c.inkSoft} style={{ fontSize: 14 }}>This permanently deletes {n} workout{n === 1 ? '' : 's'}, every weight entry, your profile and your plan from this phone.{n ? ' Export a backup first if you want to keep them.' : ''}</Body>
+      <TextInput value={typed} onChangeText={setTyped} placeholder="Type RESET" placeholderTextColor={c.muted} autoCapitalize="characters" autoCorrect={false} accessibilityLabel="Type RESET to confirm"
+        style={{ height: 46, paddingHorizontal: 14, borderRadius: theme.radius, borderWidth: 1, borderColor: c.danger, backgroundColor: c.bg, color: c.ink, fontFamily: theme.fonts.mono, fontSize: 16, marginTop: 6 }} />
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+        <Button label="Cancel" onPress={() => { setOpen(false); setTyped(''); }} style={{ flex: 1 }} />
+        <Button label="Delete everything" kind="danger" disabled={typed.trim().toUpperCase() !== 'RESET'} style={{ flex: 1 }}
+          onPress={async () => { await resetAll(); haptic('success'); router.replace('/setup'); }} />
+      </View>
+    </Card>
+  );
+}
+
 function YourData() {
-  const { history, bodyweight, restore, backupJson } = useData();
+  const { history, bodyweight, restore, backupJson, settings, updateSettings } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [now] = useState(() => nowMs());
   const c = theme.colors;
+  const age = backupAgeDays(settings.lastBackupAt, now);
+  const overdue = backupOverdue(history.length, age);
   const importBackup = async () => {
     setBusy(true);
     try {
@@ -49,6 +109,7 @@ function YourData() {
   const exportBackup = async () => {
     try {
       await shareTextFile(`recomp-backup-${localDateStr(new Date())}.json`, backupJson());
+      await updateSettings({ lastBackupAt: nowMs() });
     } catch (e) {
       toast(e instanceof Error ? e.message : "Couldn't make the backup.", { error: true });
     }
@@ -58,12 +119,13 @@ function YourData() {
       <SectionLabel>Your data</SectionLabel>
       <Card>
         <Body bold>{history.length} workout{history.length === 1 ? '' : 's'} · {bodyweight.length} weigh-in{bodyweight.length === 1 ? '' : 's'}</Body>
+        <Mono style={{ fontSize: 12 }} color={overdue ? c.danger : c.inkSoft}>{backupStatus(history.length, age)}{overdue ? ' · back up now' : ''}</Mono>
         <Body color={c.inkSoft} style={{ fontSize: 14 }}>
           Stored on this phone. Coming from the web app? In its Settings tap Export Backup, then import that file here. Workouts already here are kept, so importing twice is safe.
         </Body>
         <View style={{ gap: 8, marginTop: 6 }}>
-          <Button label={busy ? 'Importing…' : 'Import backup'} kind="primary" onPress={importBackup} disabled={busy} />
-          <Button label="Export backup" onPress={exportBackup} disabled={!history.length && !bodyweight.length} />
+          <Button label={busy ? 'Importing…' : 'Import backup'} kind={history.length ? 'secondary' : 'primary'} onPress={importBackup} disabled={busy} />
+          <Button label="Export backup" kind={overdue ? 'primary' : 'secondary'} onPress={exportBackup} disabled={!history.length && !bodyweight.length} />
         </View>
       </Card>
     </>

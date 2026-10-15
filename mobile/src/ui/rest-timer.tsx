@@ -10,6 +10,7 @@ import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 
 import { nowMs } from './clock';
+import { syncRestAlert } from './rest-alert';
 import { haptic } from './haptics';
 import { Body, Mono } from './text';
 import { useToast } from './toast';
@@ -27,6 +28,9 @@ export function RestTimerBar() {
     const id = setInterval(() => setNow(nowMs()), 250);
     return () => clearInterval(id);
   }, [restTimer]);
+
+  // The lock-screen alert follows the timer: booked when it starts, moved by −15/+15, cancelled by Skip
+  useEffect(() => { syncRestAlert(restTimer); }, [restTimer]);
 
   const remaining = restTimer ? Math.max(0, restTimer.endAt - now) : 0;
   useEffect(() => {

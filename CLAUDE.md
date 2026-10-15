@@ -38,3 +38,4 @@ The iPhone/Android rebuild in Expo (React Native) + TypeScript, headed for the A
 - Data lives in SQLite (`mobile/src/data`). Schema changes go in a new entry at the end of `MIGRATIONS` in `db.ts`; never edit one that has shipped.
 - Use `aria-*` props (`aria-checked`, `aria-selected`, `aria-expanded`) rather than `accessibilityState`, which the web build ignores.
 - Changes only inside `mobile/` don't touch the web app, so they don't bump `APP_VERSION`.
+- GitHub runs `.github/workflows/app-checks.yml` (tests, typecheck, lint) on every push touching `mobile/` or `js/`. `ios-beta.yml` builds for TestFlight when started by hand (see `mobile/RELEASING.md`).

@@ -36,6 +36,8 @@ interface DataContext extends State {
   saveDay: (dayIdx: number) => Promise<Session | null>;
   setRestTimer: (timer: repo.RestTimer | null) => void;
   updateProfile: (patch: Partial<Profile>) => Promise<void>;
+  /** Deletes everything on this phone; setup runs again */
+  resetAll: () => Promise<void>;
   /** A plan read from a file or chatbot, waiting to be previewed and used (not saved until chosen) */
   pendingPlan: Plan | null;
   setPendingPlan: (plan: Plan | null) => void;
@@ -141,6 +143,10 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       const profile = { ...(state.profile || {}), ...patch };
       await repo.setKv(db, repo.KEYS.profile, profile);
       update(s => ({ ...s, profile }));
+    },
+    resetAll: async () => {
+      await repo.resetAll(db);
+      setState({ history: [], bodyweight: [], profile: null, plan: null, settings: {}, drafts: {}, swaps: {}, restTimer: null });
     },
     pendingPlan,
     setPendingPlan,

@@ -41,6 +41,7 @@ function Screens() {
         <Stack.Screen name="plan-preview" options={{ presentation: 'modal' }} />
         <Stack.Screen name="templates" />
         <Stack.Screen name="setup" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="profile" />
       </Stack>
     </>
   );

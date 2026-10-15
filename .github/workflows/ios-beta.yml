@@ -1,0 +1,38 @@
+# Builds the iPhone app on Expo's build service (EAS) and sends it to TestFlight.
+# Started by hand (Actions → iPhone beta → Run workflow). Needs, once:
+#   - EXPO_TOKEN: an access token from expo.dev (Account settings → Access tokens), saved as a repository secret
+#   - the Apple Developer account linked to the Expo project (see mobile/RELEASING.md)
+name: iPhone beta
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check the Expo token is set
+        working-directory: .
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add an EXPO_TOKEN repository secret first (see mobile/RELEASING.md)."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm test -- --ci
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: eas build --platform ios --profile production --non-interactive --auto-submit

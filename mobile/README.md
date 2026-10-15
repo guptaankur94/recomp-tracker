@@ -32,3 +32,5 @@ usual place.
 
 `src/core/__tests__/parity.test.ts` runs the web app's own code (`../js`) on the same inputs as the new
 core and checks they agree, so behaviour carries over exactly.
+
+Getting the app onto phones (TestFlight, the stores): see `RELEASING.md`.

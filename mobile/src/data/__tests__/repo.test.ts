@@ -83,3 +83,14 @@ test('a failed restore leaves the data as it was', async () => {
   await expect(repo.replaceAll(db, broken as never)).rejects.toThrow('boom');
   expect((await repo.loadAll(db)).history).toHaveLength(3);
 });
+
+test('reset deletes everything', async () => {
+  const db = nodeDb();
+  await migrate(db);
+  await repo.replaceAll(db, { history: sampleHistory().slice(0, 3), bodyweight: sampleBodyweight().slice(0, 3), profile: { name: 'A' }, plan: templatePlan(TEMPLATES[0]) });
+  await repo.setKv(db, repo.KEYS.settings, { theme: 'neon', onboarded: true });
+  await repo.setKv(db, repo.draftKey(0), { startedAt: 1, lastEditAt: 1, exercises: {}, extras: [] });
+  await repo.resetAll(db);
+  expect(await repo.loadAll(db)).toEqual({ history: [], bodyweight: [], profile: null, plan: null, settings: {} });
+  expect((await repo.loadWorkouts(db)).drafts).toEqual({});
+});
