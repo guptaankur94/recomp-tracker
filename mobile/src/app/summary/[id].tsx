@@ -11,6 +11,7 @@ import { avgRest, fmtSetLine } from '@/core/workout';
 import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 import { Button } from '@/ui/button';
+import { CaloriesField } from '@/ui/calories';
 import { Header, SectionLabel, Tiles } from '@/ui/parts';
 import { Card, Screen } from '@/ui/screen';
 import { Body, Mono } from '@/ui/text';
@@ -50,6 +51,7 @@ export default function SummaryScreen() {
           </Mono>
         )}
       </Animated.View>
+      <CaloriesField key={session.id} session={session} />
       {prs.length > 0 && (
         <>
           <SectionLabel>Personal records</SectionLabel>

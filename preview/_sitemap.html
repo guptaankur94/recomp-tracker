@@ -1,9 +1,10 @@
 <!DOCTYPE html><html  lang="en"><head><title data-rh="true"></title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="theme-color" content="#0B0C0E"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Recomp β"/><link rel="apple-touch-icon" href="/recomp-tracker/preview/apple-touch-icon.png"/><script>
 if (!window.crossOriginIsolated && 'serviceWorker' in navigator && !sessionStorage.getItem('coi-reloaded')) {
-  navigator.serviceWorker.register('/recomp-tracker/preview/coi-sw.js', { scope: '/recomp-tracker/preview/' }).then(function (reg) {
+  navigator.serviceWorker.register('/recomp-tracker/preview/coi-sw.js', { scope: '/recomp-tracker/preview/' }).then(function () {
+    function ours() { var c = navigator.serviceWorker.controller; return !!c && /\/coi-sw\.js$/.test(c.scriptURL); }
     function reload() { sessionStorage.setItem('coi-reloaded', '1'); location.reload(); }
-    if (navigator.serviceWorker.controller) reload();
-    else navigator.serviceWorker.addEventListener('controllerchange', reload);
+    if (ours()) reload();
+    else navigator.serviceWorker.addEventListener('controllerchange', function () { if (ours()) reload(); });
   });
 }</script><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style>body{background-color:#0B0C0E}</style><style id="react-native-stylesheet">[stylesheet-group="0"]{}
 body{margin:0;}
@@ -344,5 +345,5 @@ input::-webkit-search-cancel-button,input::-webkit-search-decoration,input::-web
 @keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
 @keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
 @keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
-@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><link rel="icon" href="/recomp-tracker/preview/favicon.ico"/><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"></div></div><script src="/recomp-tracker/preview/_expo/static/js/web/entry-4974d023a2e410a5ebb7ff470c4548aa.js" defer></script>
+@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><link rel="icon" href="/recomp-tracker/preview/favicon.ico"/><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"></div></div><script src="/recomp-tracker/preview/_expo/static/js/web/entry-2c202c64797a8c4c61aaa86fee75db0a.js" defer></script>
 </body></html>

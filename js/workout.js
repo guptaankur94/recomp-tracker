@@ -79,7 +79,7 @@ function sessionStartedToday(dayIdx) {
 function sessionElapsedSec() {
   const today = todaysSession();
   const meta = sessionStartedToday(currentDayIdx);
-  return (today && today.durationSec || 0) + (meta ? (Date.now() - meta.startedAt) / 1000 : 0);
+  return (today && today.durationSec || 0) + draftActiveMs(meta, Date.now()) / 1000;
 }
 
 function updateSessionBar() {
@@ -188,14 +188,19 @@ function renderWorkout() {
   const today = todaysSession();
   const loggedSets = today ? sessionStats(today).sets : 0;
   let html = '';
-  if ((todayMeta && progress.done > 0) || today) {
+  // The clock runs from Start or the first ticked set; the bar also stays up for what's already saved today
+  const clockRunning = !!(todayMeta && (progress.done > 0 || todayMeta.started));
+  const underWay = clockRunning || today;
+  if (underWay) {
+    const paused = !!(todayMeta && todayMeta.pausedAt);
     html += `
-      <div class="session-bar">
+      <div class="session-bar${paused ? ' paused' : ''}">
         <div class="session-stat">
           <span class="session-time" id="session-elapsed">${fmtClock(sessionElapsedSec())}</span>
-          <span class="session-sets">${progress.done}/${progress.total} sets${loggedSets ? ` · ${loggedSets} saved` : ''}</span>
+          <span class="session-sets">${paused ? 'Paused' : `${progress.done}/${progress.total} sets${loggedSets ? ` · ${loggedSets} saved` : ''}`}</span>
         </div>
         <div class="session-track"><div class="session-fill" style="width: ${Math.round(progress.done / Math.max(1, progress.total) * 100)}%"></div></div>
+        ${clockRunning ? `<button class="btn btn-secondary btn-sm session-pause" onclick="${paused ? 'resumeWorkout()' : 'pauseWorkout()'}">${paused ? 'Resume' : 'Pause'}</button>` : ''}
         <button class="btn btn-positive btn-sm" onclick="finishAndSaveWorkout()">Finish</button>
       </div>
     `;
@@ -230,6 +235,16 @@ function renderWorkout() {
           <button class="btn btn-primary" onclick="finishAndSaveWorkout()">${started ? `Save to ${started}` : 'Save as today'}</button>
           <button class="btn btn-secondary" onclick="discardDraft()">Discard</button>
         </div>
+      </div>
+    `;
+  }
+
+  const staleDraft = hasDraft && (!meta || localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date()));
+  if (!clockRunning && !staleDraft && allExercises.length) {
+    html += `
+      <div class="start-card">
+        <button class="btn btn-primary start-workout-btn" onclick="startWorkout()">Start workout</button>
+        <div class="start-hint">Starts the clock. Ticking your first set starts it too.</div>
       </div>
     `;
   }
@@ -518,6 +533,7 @@ function completeSet(exIdx, setNum) {
   const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
   localStorage.setItem(key('rested'), 'true');
   touchDraft();
+  resumeWorkout(true);
 
   // Was this the exercise's last open set?
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);

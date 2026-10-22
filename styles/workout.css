@@ -317,3 +317,10 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .draft-banner-text { color: var(--text-2); font-size: var(--t-footnote); }
 .draft-banner-actions { display: flex; gap: 8px; margin-top: 12px; }
 .draft-banner-actions .btn { flex: 1; min-height: 40px; font-size: var(--t-body); margin: 0; }
+
+/* Start button before a workout, and the paused clock */
+.start-card { margin: 0 0 14px; }
+.start-workout-btn { width: 100%; }
+.start-hint { margin-top: 6px; font-size: var(--t-caption); color: var(--text-2); text-align: center; }
+.session-bar.paused .session-time { color: var(--text-2); }
+.session-bar.paused .session-fill { opacity: 0.4; }

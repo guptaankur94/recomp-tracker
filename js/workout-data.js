@@ -9,10 +9,44 @@ function touchDraft() {
   const now = Date.now();
   const meta = readJSON(draftMetaKey(currentDayIdx), null);
   const isStale = !meta || now - meta.lastEditAt > DRAFT_STALE_MS;
-  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({
-    startedAt: isStale ? now : meta.startedAt,
-    lastEditAt: now
-  }));
+  // A fresh workout starts the clock now; otherwise Start and pauses carry on
+  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify(isStale ? { startedAt: now, lastEditAt: now } : { ...meta, lastEditAt: now }));
+}
+
+/* The workout clock: Start (or the first edit) sets startedAt; pausedMs is time already paused, and
+   pausedAt is set while paused. Only the time in between counts as the workout's duration. */
+function draftActiveMs(meta, nowMs) {
+  if (!meta) return 0;
+  const paused = (meta.pausedMs || 0) + (meta.pausedAt ? Math.max(0, nowMs - meta.pausedAt) : 0);
+  return Math.max(0, nowMs - meta.startedAt - paused);
+}
+
+function startWorkout() {
+  const now = Date.now();
+  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ startedAt: now, lastEditAt: now, started: true }));
+  haptic('success');
+  renderWorkout();
+}
+
+function pauseWorkout() {
+  const meta = readJSON(draftMetaKey(currentDayIdx), null);
+  if (!meta || meta.pausedAt) return;
+  const now = Date.now();
+  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ ...meta, pausedAt: now, lastEditAt: now }));
+  haptic('light');
+  renderWorkout();
+}
+
+// quiet: from ticking a set, which resumes a paused clock without a re-render of its own
+function resumeWorkout(quiet) {
+  const meta = readJSON(draftMetaKey(currentDayIdx), null);
+  if (!meta || !meta.pausedAt) return;
+  const now = Date.now();
+  const { pausedAt, ...rest } = meta;
+  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ ...rest, pausedMs: (meta.pausedMs || 0) + Math.max(0, now - pausedAt), lastEditAt: now }));
+  if (quiet) return;
+  haptic('light');
+  renderWorkout();
 }
 
 function dayHasDraft(dayIdx) {
@@ -383,8 +417,8 @@ function saveDayToLog(dayIdx) {
   const meta = readJSON(draftMetaKey(dayIdx), null);
   const startedAt = meta && meta.startedAt <= nowMs ? meta.startedAt : nowMs;
   const workoutDate = localDateStr(new Date(startedAt));
-  // Time from the first logged set to now, when it was logged in one sitting today; parts add up
-  const elapsedSec = Math.round((nowMs - startedAt) / 1000);
+  // Time from Start (or the first logged set) to now, less pauses, when logged in one sitting today; parts add up
+  const elapsedSec = Math.round(draftActiveMs(meta && { ...meta, startedAt }, nowMs) / 1000);
   const durationSec = meta && workoutDate === localDateStr(new Date(nowMs)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
 
   const history = getHistory();
@@ -445,8 +479,16 @@ function saveToTodaysLog() {
 function finishAndSaveWorkout() {
   const hadDraft = dayHasDraft(currentDayIdx);
   const saved = saveDayToLog(currentDayIdx);
+  // Started but nothing logged on this day: Finish stops its clock
+  const startedOnly = !hadDraft && !!readJSON(draftMetaKey(currentDayIdx), null)?.started;
+  if (!hadDraft) localStorage.removeItem(draftMetaKey(currentDayIdx));
   const session = saved || todaysSession();
   if (!session) {
+    if (startedOnly) {
+      renderWorkout();
+      showToast('Workout ended. Nothing was logged, so nothing was saved.');
+      return;
+    }
     haptic('error');
     showToast('Log at least one set before saving', { type: 'error' });
     return;

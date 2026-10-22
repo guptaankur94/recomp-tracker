@@ -33,6 +33,8 @@ interface DataContext extends State {
   importHealthWeights: () => Promise<number>;
   removeBodyweight: (dateStr: string) => Promise<BodyweightEntry | null>;
   removeSession: (id: number) => Promise<void>;
+  /** Calories burned on a saved workout; null clears them */
+  setCalories: (id: number, kcal: number | null) => Promise<void>;
   restoreSession: (session: Session) => Promise<void>;
   updateSettings: (patch: Partial<repo.Settings>) => Promise<void>;
   /** The workout in progress on a day; null removes it */
@@ -112,6 +114,15 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
     removeSession: async id => {
       await repo.deleteSession(db, id);
       update(s => ({ ...s, history: s.history.filter(h => h.id !== id) }));
+    },
+    setCalories: async (id, kcal) => {
+      const found = state.history.find(h => h.id === id);
+      if (!found) return;
+      const session = { ...found };
+      if (kcal) session.calories = kcal;
+      else delete session.calories;
+      await repo.saveSession(db, session);
+      update(s => ({ ...s, history: s.history.map(h => (h.id === id ? session : h)) }));
     },
     restoreSession: async session => {
       await repo.saveSession(db, session);

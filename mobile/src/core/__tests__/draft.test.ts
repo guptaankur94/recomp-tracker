@@ -2,7 +2,7 @@
 // A workout in progress: saving must give exactly the history the web app gives for the same sets.
 // Each draft is written into the web app's own storage keys and saved by its own code.
 import {
-  addExtra, addSet, completeSet, CUSTOM_DAY, dayExercises, emptyDraft, hasDraft, nextSetLabel, removeExtra, removeSet,
+  activeMs, addExtra, addSet, clockRunning, completeSet, pauseClock, resumeClock, startClock, CUSTOM_DAY, dayExercises, emptyDraft, hasDraft, nextSetLabel, removeExtra, removeSet,
   saveDraft, setRest, touch, updateSets, withExerciseRest, withSetRest, type Draft
 } from '../draft';
 import { templatePlan, TEMPLATES, DEFAULT_PLAN } from '../templates';
@@ -16,7 +16,8 @@ const plain = (v: unknown) => JSON.parse(JSON.stringify(v));
 
 /** The draft as the web app stores it */
 function webKeys(draft: Draft, d: number, day: PlanDay, swaps: Set<number>): Record<string, string> {
-  const store: Record<string, string> = { [`active_d${d}_meta`]: JSON.stringify({ startedAt: draft.startedAt, lastEditAt: draft.lastEditAt }) };
+  const { startedAt, lastEditAt, started, pausedMs, pausedAt } = draft;
+  const store: Record<string, string> = { [`active_d${d}_meta`]: JSON.stringify({ startedAt, lastEditAt, started, pausedMs, pausedAt }) };
   if (draft.extras.length) store[`custom_ex_d${d}`] = JSON.stringify(draft.extras.map(e => ({ ...e, isCustom: true })));
   swaps.forEach(i => { store[`swap_d${d}_e${i}`] = 'true'; });
   Object.entries(draft.exercises).forEach(([i, e]) => {
@@ -82,6 +83,9 @@ describe('saving matches the web app', () => {
         let draft = randomDraft(seed * 31 + p, day, c.startedAt, swaps);
         if (custom && !draft.extras.length) draft = addExtra(draft, { name: 'Goblet Squat', sets: 3, repTarget: '8–12 reps', weightTarget: 'Custom', rest: 90 }, c.startedAt);
         if (custom) draft = updateSets(draft, 0, { sets: 3 }, c.startedAt, s => [{ ...s[0], w: '24', r: '10', done: true }, ...s.slice(1)]);
+        // Some workouts were paused: earlier, or still paused when saved
+        if (seed % 4 === 1) draft = { ...draft, started: true, pausedMs: 600e3 };
+        if (seed % 4 === 2) draft = { ...draft, pausedMs: 120e3, pausedAt: Math.max(c.startedAt, c.now - 300e3) };
         const exercises = dayExercises(day, draft, swaps);
         const ours = saveDraft({ draft, exercises, day, isCustom: custom, planDays: days, history: c.history, now: c.now });
 
@@ -188,6 +192,38 @@ describe('editing a draft', () => {
     expect(after.extras.map(e => e.name)).toEqual(['B']);
     expect(after.exercises[n].sets![0].w).toBe('from B');
     expect([...swaps]).toEqual([0, n]);
+  });
+
+  test('the workout clock: start, pause, resume, and ticking a set resumes', () => {
+    const t0 = NOW - 3600e3;
+    let draft = startClock(null, t0);
+    expect(draft.started).toBe(true);
+    expect(clockRunning(draft, 0, t0)).toBe(true);
+    expect(clockRunning(emptyDraft(t0), 0, t0)).toBe(false);
+    draft = pauseClock(draft, t0 + 600e3);
+    expect(activeMs(draft, t0 + 1800e3)).toBe(600e3);
+    draft = resumeClock(draft, t0 + 1800e3);
+    expect(draft.pausedAt).toBeUndefined();
+    expect(activeMs(draft, t0 + 2400e3)).toBe(1200e3);
+    draft = pauseClock(draft, t0 + 2400e3);
+    const day = DEFAULT_PLAN[0];
+    const exercises = dayExercises(day, draft, new Set());
+    const done = completeSet(draft, 0, 1, exercises[0], sampleHistory(), t0 + 3000e3);
+    expect(done.ok && done.draft.pausedAt).toBeFalsy();
+    if (done.ok) expect(activeMs(done.draft, t0 + 3000e3)).toBe(1200e3);
+    // A stale draft starts over without the old clock
+    const stale = touch({ ...draft, lastEditAt: NOW - 13 * 3600e3 }, NOW);
+    expect([stale.started, stale.pausedMs, stale.pausedAt, stale.startedAt]).toEqual([undefined, undefined, undefined, NOW]);
+  });
+
+  test('time on the clock matches the web app', () => {
+    const web = loadWebApp({ now: NOW });
+    const rand = rng(7);
+    for (let i = 0; i < 50; i++) {
+      const startedAt = NOW - Math.floor(rand() * 4 * 3600e3);
+      const draft: Draft = { ...emptyDraft(startedAt), ...(rand() < 0.6 ? { pausedMs: Math.floor(rand() * 900e3) } : {}), ...(rand() < 0.4 ? { pausedAt: startedAt + Math.floor(rand() * (NOW - startedAt)) } : {}) };
+      expect(activeMs(draft, NOW)).toBe(web.ctx.draftActiveMs(plain(draft), NOW));
+    }
   });
 
   test('what counts as a draft, and a stale draft starts over', () => {

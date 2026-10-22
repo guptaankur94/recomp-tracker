@@ -95,10 +95,11 @@ function renderCalendarAndHistory() {
     const end = new Date(g.key + 6 * 864e5);
     const label = g.key === thisWeek ? 'This week' : g.key === lastWeek ? 'Last week' : `${shortDate(g.key)} – ${shortDate(end.getTime())}`;
     const volume = g.sessions.reduce((v, s) => v + sessionStats(s).volume, 0);
+    const kcal = g.sessions.reduce((n, s) => n + (s.calories || 0), 0);
     return `
       <div class="week-head">
         <span>${label}</span>
-        <span class="week-meta">${g.sessions.length} workout${g.sessions.length === 1 ? '' : 's'} · ${fmtVolume(volume)}</span>
+        <span class="week-meta">${g.sessions.length} workout${g.sessions.length === 1 ? '' : 's'} · ${fmtVolume(volume)}${kcal ? ` · ${fmtNum(kcal)} kcal` : ''}</span>
       </div>
       <div class="history-group">
         ${g.sessions.map(item => {
@@ -107,7 +108,8 @@ function renderCalendarAndHistory() {
             new Date(item.id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
             st.durationSec ? fmtDuration(st.durationSec) : '',
             `${st.sets} set${st.sets === 1 ? '' : 's'}`,
-            st.volume ? fmtVolume(st.volume) : ''
+            st.volume ? fmtVolume(st.volume) : '',
+            item.calories ? `${fmtNum(item.calories)} kcal` : ''
           ].filter(Boolean).join(' · ');
           return `
             <div class="history-card" onclick="openSessionModal(${item.id})">
@@ -172,6 +174,7 @@ function sessionDetailHtml(session) {
       ${tile(st.prs, st.prs === 1 ? 'PR' : 'PRs', st.prs ? 'gold' : '')}
     </div>
     ${compare}
+    ${caloriesRowHtml(session)}
     ${session.exercises.map(ex => `
       <div class="detail-ex">
         <div class="detail-ex-head">

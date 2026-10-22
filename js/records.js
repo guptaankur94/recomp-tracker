@@ -62,6 +62,7 @@ function showSummary({ session, previous }) {
     }
   }
   document.getElementById('summary-compare').innerHTML = compare;
+  document.getElementById('summary-calories').innerHTML = caloriesRowHtml(session);
 
   document.getElementById('summary-prs').innerHTML = prs.length ? `
     <div class="summary-section">Personal records</div>
@@ -86,6 +87,36 @@ function showSummary({ session, previous }) {
   haptic('success');
   setTimeout(() => haptic('success'), 180);
   if (prs.length) setTimeout(playChime, 150);
+}
+
+/* Calories burned, typed from a fitness watch (the app can't measure them). Saved on the workout as whole kcal. */
+const MAX_CALORIES = 5000;
+
+function caloriesRowHtml(session) {
+  return `
+    <label class="cal-row">
+      <span class="cal-text"><span class="cal-label">Calories burned</span><span class="cal-hint">Active calories from your watch · optional</span></span>
+      <span class="cal-field"><input type="number" inputmode="numeric" min="0" max="${MAX_CALORIES}" placeholder="—" value="${session.calories || ''}" aria-label="Calories burned, kcal" onfocus="this.select()" onchange="setSessionCalories(${session.id}, this.value)"><span class="cal-unit">kcal</span></span>
+    </label>`;
+}
+
+function setSessionCalories(sessionId, value) {
+  const history = getHistory();
+  const session = history.find(s => s.id === sessionId);
+  if (!session) return;
+  const text = String(value).trim();
+  const kcal = Math.round(parseFloat(text));
+  if (text && !(kcal > 0 && kcal <= MAX_CALORIES)) {
+    haptic('error');
+    showToast(`Enter calories between 1 and ${MAX_CALORIES}`, { type: 'error' });
+    return;
+  }
+  if (text) session.calories = kcal;
+  else delete session.calories;
+  saveHistory(history);
+  haptic('light');
+  showToast(text ? `Saved ${kcal} kcal` : 'Calories cleared');
+  if (typeof renderCalendarAndHistory === 'function') renderCalendarAndHistory();
 }
 
 function closeSummary(goTo) {

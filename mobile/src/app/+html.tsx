@@ -5,13 +5,15 @@ import type { PropsWithChildren } from 'react';
 const BASE = process.env.EXPO_BASE_URL || '';
 
 // Where the host can't send the headers the database needs (GitHub Pages), a small service worker adds them;
-// the page reloads once when it takes over. Guarded so a browser without support never loops.
+// the page reloads once when it takes over. Guarded so a browser without support never loops. The web app's own
+// service worker may already control this page (its scope covers the preview), so wait for this one.
 const isolate = `
 if (!window.crossOriginIsolated && 'serviceWorker' in navigator && !sessionStorage.getItem('coi-reloaded')) {
-  navigator.serviceWorker.register('${BASE}/coi-sw.js', { scope: '${BASE}/' }).then(function (reg) {
+  navigator.serviceWorker.register('${BASE}/coi-sw.js', { scope: '${BASE}/' }).then(function () {
+    function ours() { var c = navigator.serviceWorker.controller; return !!c && /\\/coi-sw\\.js$/.test(c.scriptURL); }
     function reload() { sessionStorage.setItem('coi-reloaded', '1'); location.reload(); }
-    if (navigator.serviceWorker.controller) reload();
-    else navigator.serviceWorker.addEventListener('controllerchange', reload);
+    if (ours()) reload();
+    else navigator.serviceWorker.addEventListener('controllerchange', function () { if (ours()) reload(); });
   });
 }`;
 

@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { fmtDuration, fmtVolume, localDateStr, sessionDateStr, shortDate } from '@/core/format';
-import { calcWeekStreak, dayColor, groupByWeek, sessionStats } from '@/core/history';
+import { fmtDuration, fmtNum, fmtVolume, localDateStr, sessionDateStr, shortDate } from '@/core/format';
+import { calcWeekStreak, dayColor, groupByWeek, sessionStats, totalCalories } from '@/core/history';
 import type { Session } from '@/core/types';
 import { sessionDayLabels } from '@/core/workout';
 import { useData } from '@/data/store';
@@ -39,7 +39,7 @@ export default function HistoryScreen() {
       )}
       {groups.map(g => (
         <View key={g.key} style={{ gap: 8 }}>
-          <SectionLabel right={`${g.sessions.length} workout${g.sessions.length === 1 ? '' : 's'} · ${fmtVolume(g.volume)}`}>{g.label}</SectionLabel>
+          <SectionLabel right={`${g.sessions.length} workout${g.sessions.length === 1 ? '' : 's'} · ${fmtVolume(g.volume)}${totalCalories(g.sessions) ? ` · ${fmtNum(totalCalories(g.sessions))} kcal` : ''}`}>{g.label}</SectionLabel>
           {g.sessions.map(s => <SessionRow key={s.id} session={s} />)}
         </View>
       ))}
@@ -55,7 +55,8 @@ function SessionRow({ session }: { session: Session }) {
     new Date(session.id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
     st.durationSec ? fmtDuration(st.durationSec) : '',
     `${st.sets} set${st.sets === 1 ? '' : 's'}`,
-    st.volume ? fmtVolume(st.volume) : ''
+    st.volume ? fmtVolume(st.volume) : '',
+    session.calories ? `${fmtNum(session.calories)} kcal` : ''
   ].filter(Boolean).join(' · ');
   return (
     <Pressable onPress={() => openSession(session)} accessibilityRole="button" accessibilityLabel={`${session.day} ${session.title}, ${meta}${st.prs ? `, ${st.prs} records` : ''}`}

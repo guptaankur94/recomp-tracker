@@ -38,8 +38,15 @@ export interface DraftExercise {
 export type ExtraExercise = PlanExercise & { fromDay?: string };
 
 export interface Draft {
+  /** When the workout clock started: Start, or the first edit */
   startedAt: number;
   lastEditAt: number;
+  /** Start was tapped (the clock runs before any set is ticked) */
+  started?: boolean;
+  /** Time already spent paused, in ms */
+  pausedMs?: number;
+  /** Set while paused */
+  pausedAt?: number;
   /** By exercise position in the day (plan exercises, then extras) */
   exercises: Record<number, DraftExercise>;
   extras: ExtraExercise[];
@@ -101,8 +108,44 @@ export function hasDraft(draft: Draft | null): boolean {
 /** Marks an edit; a draft left for 12 hours starts over as a new workout (its start time moves to now) */
 export function touch(draft: Draft | null, now: number): Draft {
   if (!draft) return emptyDraft(now);
-  const stale = now - draft.lastEditAt > DRAFT_STALE_MS;
-  return { ...draft, startedAt: stale ? now : draft.startedAt, lastEditAt: now };
+  if (now - draft.lastEditAt > DRAFT_STALE_MS) return { ...withoutClock(draft), startedAt: now, lastEditAt: now };
+  return { ...draft, lastEditAt: now };
+}
+
+/* The workout clock. Only the time between Start (or the first edit) and now, less pauses, counts. */
+function withoutClock(draft: Draft): Draft {
+  const next = { ...draft };
+  delete next.started;
+  delete next.pausedMs;
+  delete next.pausedAt;
+  return next;
+}
+
+export function activeMs(draft: Draft | null, now: number): number {
+  if (!draft) return 0;
+  const paused = (draft.pausedMs || 0) + (draft.pausedAt ? Math.max(0, now - draft.pausedAt) : 0);
+  return Math.max(0, now - draft.startedAt - paused);
+}
+
+/** Start: the clock starts now (sets already typed stay) */
+export function startClock(draft: Draft | null, now: number): Draft {
+  return { ...withoutClock(draft ?? emptyDraft(now)), startedAt: now, lastEditAt: now, started: true };
+}
+
+export function pauseClock(draft: Draft, now: number): Draft {
+  return draft.pausedAt ? draft : { ...draft, pausedAt: now, lastEditAt: now };
+}
+
+export function resumeClock(draft: Draft, now: number): Draft {
+  if (!draft.pausedAt) return draft;
+  const next: Draft = { ...draft, pausedMs: (draft.pausedMs || 0) + Math.max(0, now - draft.pausedAt), lastEditAt: now };
+  delete next.pausedAt;
+  return next;
+}
+
+/** The clock is running (or paused) for a workout started today: Start was tapped, or a set ticked */
+export function clockRunning(draft: Draft | null, setsDone: number, now: number): boolean {
+  return !!draft && localDateStr(new Date(draft.startedAt)) === localDateStr(new Date(now)) && (setsDone > 0 || !!draft.started);
 }
 
 /** Changes one exercise's sets (created from the plan's count if untouched) */
@@ -153,7 +196,8 @@ export function completeSet(draft: Draft | null, exIdx: number, setNum: number, 
     return s;
   });
   const finished = draftSets(next, exIdx, ex).every(s => s.done);
-  return { ok: true, draft: next, pr, finished, firstCompletion, w: wNum, r: rNum };
+  // Ticking a set while paused carries on the clock
+  return { ok: true, draft: resumeClock(next, now), pr, finished, firstCompletion, w: wNum, r: rNum };
 }
 
 /** Re-checks a finished set's record after its rest changed */
@@ -279,8 +323,8 @@ export function saveDraft(args: {
   // Dated by when logging started, so late sessions and next-morning saves land on the right day
   const startedAt = draft && draft.startedAt <= now ? draft.startedAt : now;
   const workoutDate = localDateStr(new Date(startedAt));
-  // Time from the first logged set to now, when logged in one sitting today; parts add up
-  const elapsedSec = Math.round((now - startedAt) / 1000);
+  // Time from Start (or the first logged set) to now, less pauses, when logged in one sitting today; parts add up
+  const elapsedSec = Math.round(activeMs(draft && { ...draft, startedAt }, now) / 1000);
   const durationSec = draft && workoutDate === localDateStr(new Date(now)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
 
   const history = clone(args.history);

@@ -35,8 +35,8 @@ sh e2e/run.sh                # browser checks at iPhone size (after the export a
 npm run build-preview        # the browser preview for GitHub Pages, into ../preview
 ```
 
-`e2e/` drives the browser build like a person would: setup, logging a workout, backups, plans and charts
-(about 120 checks, with screenshots). Set `PLAYWRIGHT` and `CHROMIUM` if Playwright isn't installed in the
+`e2e/` drives the browser build like a person would: setup, logging a workout, the workout clock and calories, backups, plans and charts
+(about 165 checks, with screenshots). Set `PLAYWRIGHT` and `CHROMIUM` if Playwright isn't installed in the
 usual place.
 
 `src/core/__tests__/parity.test.ts` runs the web app's own code (`../js`) on the same inputs as the new

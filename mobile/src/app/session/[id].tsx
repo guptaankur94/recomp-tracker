@@ -9,6 +9,7 @@ import { avgRest, setVolume } from '@/core/workout';
 import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 import { Button } from '@/ui/button';
+import { CaloriesField } from '@/ui/calories';
 import { Header, PrBadge, Tiles } from '@/ui/parts';
 import { Card, Screen } from '@/ui/screen';
 import { Body, Mono } from '@/ui/text';
@@ -57,6 +58,7 @@ export default function SessionScreen() {
           {change.pct === 0 ? 'Same volume as' : `${change.pct > 0 ? '+' : ''}${change.pct}% volume vs`} the previous {session.day} on {shortDate(change.previous.id)}
         </Mono>
       )}
+      <CaloriesField key={session.id} session={session} />
       {session.exercises.map((ex, i) => (
         <Card key={`${ex.name}-${i}`}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>

@@ -4,8 +4,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 
-import { dayExercises, dayProgress, draftSets, hasDraft, removeExtra } from '@/core/draft';
-import { fmtClock } from '@/core/format';
+import { activeMs, clockRunning, dayExercises, dayProgress, draftSets, hasDraft, pauseClock, removeExtra, resumeClock, startClock, type Draft } from '@/core/draft';
+import { fmtClock, localDateStr } from '@/core/format';
 import { daysDoneThisWeek, todaysSession } from '@/core/history';
 import { isRestDay, nextScheduled, planSchedule, scheduledDay, upNextDayIdx, weekdayIdx, weekdaysFor, WEEKDAY_NAMES } from '@/core/schedule';
 import { shortDayTitle } from '@/core/workout';
@@ -33,7 +33,7 @@ export default function WorkoutScreen() {
   const next = upNextDayIdx(days, schedule, history);
   // Open on a day with unsaved sets, else the next one in the plan
   const [picked, setPicked] = useState<number | null>(() => {
-    for (let i = 0; i <= days.length; i++) if (hasDraft(drafts[i] ?? null)) return i;
+    for (let i = 0; i <= days.length; i++) if (hasDraft(drafts[i] ?? null) || drafts[i]?.started) return i;
     return null;
   });
   // Plan → Start opens a given day
@@ -51,6 +51,10 @@ export default function WorkoutScreen() {
   const exercises = dayExercises(day, draft, daySwaps);
   const progress = dayProgress(draft, exercises);
   const unsaved = hasDraft(draft);
+  const now = nowMs();
+  const running = clockRunning(draft, progress.done, now);
+  // Sets left from an earlier date: Start would move them to today, so it waits until they're saved or cleared
+  const fromEarlier = unsaved && !!draft && localDateStr(new Date(draft.startedAt)) !== localDateStr(new Date(now));
   const done = daysDoneThisWeek(days, history);
   const today = scheduledDay(weekdayIdx(), schedule, days.length);
   const trainedToday = !!todaysSession(history);
@@ -103,10 +107,27 @@ export default function WorkoutScreen() {
     haptic('success');
     toast(`Saved. Today: ${session.exercises.length} exercise${session.exercises.length === 1 ? '' : 's'} logged`);
   };
+  const start = () => {
+    setDraft(dayIdx, startClock(draft, nowMs()));
+    setPicked(dayIdx);
+    haptic('success');
+  };
+  const pauseOrResume = () => {
+    if (!draft) return;
+    setDraft(dayIdx, draft.pausedAt ? resumeClock(draft, nowMs()) : pauseClock(draft, nowMs()));
+    haptic('light');
+  };
   const finish = async () => {
     const saved = await saveDay(dayIdx);
     const session = saved ?? todaysSession(history);
     if (!session) {
+      // Started but nothing logged: Finish stops the clock
+      if (draft?.started && !unsaved) {
+        setDraft(dayIdx, null);
+        setPicked(null);
+        toast('Workout ended. Nothing was logged, so nothing was saved.');
+        return;
+      }
       haptic('error');
       toast('Log at least one set before saving', { error: true });
       return;
@@ -124,10 +145,10 @@ export default function WorkoutScreen() {
 
   return (
     <Screen>
-      {(unsaved || restTimer) && <KeepAwake />}
+      {(unsaved || running || restTimer) && <KeepAwake />}
       <Header eyebrow={`Workout · ${activePlan.planName}`} title={day.title}
         sub={isCustom ? 'Build it from any exercises. It saves to History without changing your plan.' : `${day.day}${wd.length ? ` · ${wd.join(' / ')}` : ''} · ${exercises.length} exercises`} />
-      {!unsaved && <WeekHero />}
+      {!unsaved && !running && <WeekHero />}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ marginHorizontal: -20, flexGrow: 0 }}>
         {[...days, null].map((d, i) => {
           const on = i === dayIdx;
@@ -158,7 +179,15 @@ export default function WorkoutScreen() {
           <Body color={c.inkSoft}>{upcoming ? `Next up: ${days[upcoming.dayIdx].title} on ${WEEKDAY_NAMES[upcoming.w]}. ` : ''}Recovery is when the muscle gets built. Want to train anyway? This is the next day in your plan.</Body>
         </Card>
       )}
-      {progress.done > 0 && <Progress done={progress.done} total={progress.total} startedAt={draft?.startedAt ?? null} />}
+      {running && draft ? (
+        <WorkoutClock draft={draft} done={progress.done} total={progress.total} savedSec={todaysSession(history)?.durationSec ?? 0}
+          onPauseOrResume={pauseOrResume} onFinish={finish} />
+      ) : exercises.length > 0 && !fromEarlier ? (
+        <View style={{ gap: 6 }}>
+          <Button label="Start workout" kind="primary" onPress={start} />
+          <Mono color={c.muted} style={{ textAlign: 'center', fontSize: 12 }}>Starts the clock. Ticking your first set starts it too.</Mono>
+        </View>
+      ) : null}
       {exercises.map((ex, i) => (
         <View key={`${dayIdx}-${i}-${ex.name}`} style={{ gap: 8 }}>
           {tip && tip.at === i && tip.id === 'swap' && <CoachTip id="swap" title={TIPS.swap[0]} text={TIPS.swap[1]} />}
@@ -175,11 +204,11 @@ export default function WorkoutScreen() {
         </Card>
       )}
       <Button label="+ Add exercise" onPress={() => router.push({ pathname: '/add-exercise', params: { day: String(dayIdx) } })} />
-      {unsaved && (
+      {(unsaved || running) && (
         <View style={{ gap: 8, marginTop: 6 }}>
           <Button label="Finish workout" kind="primary" onPress={finish} />
-          <Button label="Save and keep going" onPress={saveAndContinue} />
-          <Button label="Clear unsaved sets" kind="danger" onPress={clear} />
+          {unsaved && <Button label="Save and keep going" onPress={saveAndContinue} />}
+          {unsaved && <Button label="Clear unsaved sets" kind="danger" onPress={clear} />}
         </View>
       )}
       {!unsaved && trainedToday && (
@@ -200,7 +229,10 @@ function KeepAwakeNative() {
   return null;
 }
 
-function Progress({ done, total, startedAt }: { done: number; total: number; startedAt: number | null }) {
+/** The workout clock: time so far (plus what's already saved today), sets done, Pause / Resume and Finish */
+function WorkoutClock({ draft, done, total, savedSec, onPauseOrResume, onFinish }: {
+  draft: Draft; done: number; total: number; savedSec: number; onPauseOrResume: () => void; onFinish: () => void;
+}) {
   const { theme } = useTheme();
   const c = theme.colors;
   const [now, setNow] = useState(() => nowMs());
@@ -208,16 +240,22 @@ function Progress({ done, total, startedAt }: { done: number; total: number; sta
     const id = setInterval(() => setNow(nowMs()), 1000);
     return () => clearInterval(id);
   }, []);
-  const elapsed = startedAt && now - startedAt < 5 * 3600e3 ? (now - startedAt) / 1000 : null;
+  const paused = !!draft.pausedAt;
+  const active = activeMs(draft, now);
+  const elapsed = savedSec + (active < 5 * 3600e3 ? active / 1000 : 0);
   return (
-    <View style={{ gap: 6 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Mono color={c.ink}>{done} / {total} sets</Mono>
-        {elapsed !== null && <Mono accessibilityLabel={`Workout time ${fmtClock(elapsed)}`}>{fmtClock(elapsed)}</Mono>}
+    <Card>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Mono bold color={paused ? c.muted : c.ink} style={{ fontSize: 26 }} accessibilityLabel={`Workout time ${fmtClock(elapsed)}${paused ? ', paused' : ''}`}>{fmtClock(elapsed)}</Mono>
+          <Mono style={{ fontSize: 12 }} color={paused ? c.record : c.muted}>{paused ? 'PAUSED' : `${done} / ${total} sets`}</Mono>
+        </View>
+        <Button label={paused ? 'Resume' : 'Pause'} onPress={onPauseOrResume} style={{ minWidth: 96 }} />
+        <Button label="Finish" kind="primary" onPress={onFinish} style={{ minWidth: 88 }} />
       </View>
-      <View style={{ height: 4, borderRadius: 2, backgroundColor: c.line, overflow: 'hidden' }}>
+      <View style={{ height: 4, borderRadius: 2, backgroundColor: c.line, overflow: 'hidden', opacity: paused ? 0.5 : 1 }}>
         <View style={{ height: 4, width: `${Math.min(100, (done / Math.max(1, total)) * 100)}%`, backgroundColor: c.accent }} />
       </View>
-    </View>
+    </Card>
   );
 }

@@ -131,3 +131,19 @@ export function weekSummary(history: Session[], dayCount: number, schedule: (num
   const target = schedule ? schedule.filter(v => Number.isInteger(v) && (v as number) < dayCount).length : dayCount;
   return { done: history.filter(s => s.id >= weekStart).length, target, streak: calcWeekStreak(history, now), workouts: history.length };
 }
+
+/** Calories burned are typed from a watch; more than this is a typo */
+export const MAX_CALORIES = 5000;
+
+/** Typed calories: a whole number of kcal, null when cleared, or invalid */
+export function parseCalories(text: string): { ok: true; kcal: number | null } | { ok: false } {
+  const t = text.trim();
+  if (!t) return { ok: true, kcal: null };
+  const kcal = Math.round(parseFloat(t));
+  return kcal > 0 && kcal <= MAX_CALORIES ? { ok: true, kcal } : { ok: false };
+}
+
+/** Calories over some workouts (those without any count as none) */
+export function totalCalories(sessions: Session[]): number {
+  return sessions.reduce((n, s) => n + (s.calories || 0), 0);
+}

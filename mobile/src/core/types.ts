@@ -68,6 +68,8 @@ export interface Session {
   days?: string[];
   exercises: SavedExercise[];
   durationSec?: number;
+  /** Calories burned, typed from a fitness watch (whole kcal) */
+  calories?: number;
   updatedAt?: number;
 }
 
