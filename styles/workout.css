@@ -324,3 +324,14 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .start-hint { margin-top: 6px; font-size: var(--t-caption); color: var(--text-2); text-align: center; }
 .session-bar.paused .session-time { color: var(--text-2); }
 .session-bar.paused .session-fill { opacity: 0.4; }
+
+/* Warm-up editor */
+.warmup-edit { border-style: solid; color: var(--text-2); }
+.warmup-edit svg { width: 13px; height: 13px; }
+.wu-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.wu-edit-row input { flex: 1; min-width: 0; height: 44px; text-align: center; }
+.wu-num { width: 18px; color: var(--text-2); font-weight: 700; }
+.wu-unit { font-size: var(--t-footnote); color: var(--text-2); }
+.wu-empty { padding: 14px 0; color: var(--text-2); }
+.wu-add { width: 100%; }
+.wu-note { margin: 8px 0 4px; font-size: var(--t-caption); color: var(--text-2); }

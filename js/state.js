@@ -8,6 +8,8 @@ const BODYWEIGHT_KEY = 'recomp_bodyweight';
 const PROFILE_KEY = 'recomp_profile';
 
 const PLAN_KEY = 'recomp_plan';
+// Your own warm-up sets, by exercise name: { 'Barbell Bench Press': [{ kg: 20, reps: 10 }, { reps: 5 }] }
+const WARMUPS_KEY = 'recomp_warmups';
 
 let programData = DEFAULT_PLAN;
 

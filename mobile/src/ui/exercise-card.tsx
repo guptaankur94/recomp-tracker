@@ -1,5 +1,6 @@
 // One exercise on the Workout screen: targets, last time, warm-ups, and a row per set to log weight and
 // reps, with its rest and drop sets underneath. A finished exercise folds into a one-line summary.
+import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
@@ -38,7 +39,7 @@ interface Props {
 }
 
 export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onSwap, onRemove, coachTip }: Props) {
-  const { setDraft, setRestTimer } = useData();
+  const { setDraft, setRestTimer, warmups } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -51,7 +52,8 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
   const suggestion1 = suggestSet(ex, firstLast);
   const tip = progressionTip(ex, firstLast, last ? roundRest(avgRest(last.sets)) : 0);
   const typed1 = parseFloat(sets[0]?.w ?? '') || 0;
-  const ramp = warmupSets(ex, exIdx, typed1, suggestion1);
+  const ramp = warmupSets(ex, exIdx, typed1, suggestion1, warmups?.[ex.name]);
+  const editWarmup = () => router.push({ pathname: '/warmup', params: { name: ex.name, rows: JSON.stringify(ramp.map(w => ({ kg: w.kg ?? '', reps: w.reps }))) } });
   const warmupsDone = new Set(draft?.exercises[exIdx]?.warmups || []);
   const now = () => nowMs();
   const save = (next: Draft | null) => setDraft(dayIdx, next);
@@ -164,6 +166,7 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {ex.otherName && <SmallButton label={`⇄ ${ex.otherName}`} onPress={onSwap} a11y={`Swap to ${ex.otherName}`} />}
         <RestStepper label={`Rest ${fmtClock(exerciseRest(draft, exIdx, ex))}`} a11y="Rest for every set" onMinus={() => bumpExerciseRest(-15)} onPlus={() => bumpExerciseRest(15)} />
+        {ramp.length === 0 && <SmallButton label="+ Warm-up" onPress={editWarmup} a11y={`Add a warm-up for ${ex.name}`} />}
         {onRemove && <SmallButton label="Remove" onPress={onRemove} danger />}
       </View>
       {ramp.length > 0 && (
@@ -178,6 +181,7 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
               </Pressable>
             );
           })}
+          <SmallButton label="✎ Edit" onPress={editWarmup} a11y={`Edit warm-up for ${ex.name}`} />
         </View>
       )}
       {sets.map((s, i) => {

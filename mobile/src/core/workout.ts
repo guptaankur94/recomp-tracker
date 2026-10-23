@@ -1,6 +1,6 @@
 // Workout logic: set volume, warm-ups, rest choices, progression and how a saved session is named.
 import { fmtClock, fmtNum } from './format';
-import type { PlanDay, PlanExerciseBase, SavedSet, Session } from './types';
+import type { OwnWarmupSet, PlanDay, PlanExerciseBase, SavedSet, Session } from './types';
 
 /** Total kg moved in a set, including its drop sets */
 export function setVolume(set: Pick<SavedSet, 'weight' | 'reps' | 'drops'>): number {
@@ -54,7 +54,13 @@ export interface WarmupSet {
   reps: number;
 }
 
-export function warmupSets(ex: PlanExerciseBase, exIdx: number, typedWeight: number, suggestion: Suggestion | null): WarmupSet[] {
+export function ownWarmupSet(w: OwnWarmupSet): WarmupSet {
+  return w.kg && w.kg > 0 ? { label: `${fmtNum(w.kg)} kg × ${w.reps}`, kg: w.kg, reps: w.reps } : { label: `Light × ${w.reps}`, reps: w.reps };
+}
+
+/** The exercise's warm-up: your own sets when you've set them, else a ramp to the working weight */
+export function warmupSets(ex: PlanExerciseBase, exIdx: number, typedWeight: number, suggestion: Suggestion | null, own?: OwnWarmupSet[] | null): WarmupSet[] {
+  if (Array.isArray(own)) return own.filter(w => w && w.reps > 0).map(ownWarmupSet);
   const n = warmupCount(ex, exIdx);
   if (!n) return [];
   const work = workingWeight(ex, typedWeight, suggestion);

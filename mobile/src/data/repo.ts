@@ -4,12 +4,12 @@ import { sessionDateStr } from '@/core/format';
 import { sortHistory } from '@/core/history';
 import { validStoredPlan } from '@/core/plan-import';
 import type { Draft } from '@/core/draft';
-import type { BodyweightEntry, Plan, Profile, Session } from '@/core/types';
+import type { BodyweightEntry, OwnWarmups, Plan, Profile, Session } from '@/core/types';
 
 import type { Db } from './db';
 
 /** Keys in the kv table. Profile and plan keep the web app's names. */
-export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings', restTimer: 'rest_timer' } as const;
+export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings', restTimer: 'rest_timer', warmups: 'recomp_warmups' } as const;
 
 /** Per-day keys: the workout in progress, and which exercises are swapped for their alternative */
 export const draftKey = (dayIdx: number) => `draft_d${dayIdx}`;
@@ -104,7 +104,8 @@ export async function loadAll(db: Db): Promise<AppData & { settings: Settings }>
   const profile = await getKv<Profile | null>(db, KEYS.profile, null);
   const plan = validStoredPlan(await getKv<Plan | null>(db, KEYS.plan, null));
   const settings = await getKv<Settings>(db, KEYS.settings, {});
-  return { history, bodyweight, profile: profile && typeof profile === 'object' ? profile : null, plan, settings };
+  const warmups = await getKv<OwnWarmups>(db, KEYS.warmups, {});
+  return { history, bodyweight, profile: profile && typeof profile === 'object' ? profile : null, plan, settings, warmups: warmups && typeof warmups === 'object' && !Array.isArray(warmups) ? warmups : {} };
 }
 
 export async function saveSession(db: Db, session: Session): Promise<void> {
@@ -141,5 +142,6 @@ export async function replaceAll(db: Db, data: AppData): Promise<void> {
     for (const e of data.bodyweight) await setBodyweight(db, e);
     await setKv(db, KEYS.profile, data.profile);
     await setKv(db, KEYS.plan, data.plan);
+    await setKv(db, KEYS.warmups, data.warmups ?? {});
   });
 }

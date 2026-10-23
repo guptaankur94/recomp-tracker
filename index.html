@@ -422,6 +422,25 @@
   </div>
 
   <!-- Confirm / input dialog sheet -->
+  <!-- Warm-up editor -->
+  <div class="sheet-overlay" id="warmup-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wu-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="wu-title">Edit warm-up</div>
+        <div class="sheet-sub" id="wu-sub"></div>
+      </div>
+      <div id="wu-rows"></div>
+      <button class="btn btn-plain wu-add" id="wu-add" onclick="addWarmupRow()">+ Add warm-up set</button>
+      <div class="wu-note">Used every time you do this exercise, on any day. Leave the weight empty for a light set. Warm-ups aren't logged, so they never count toward volume or records.</div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="saveWarmupEditor()">Save warm-up</button>
+        <button class="btn btn-secondary" id="wu-auto" onclick="useAutomaticWarmup()">Use automatic warm-up</button>
+        <button class="btn btn-plain" onclick="closeSheet('warmup-sheet')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay dialog" id="dialog-sheet">
     <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title">
       <div class="sheet-head">
@@ -529,7 +548,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.10.22';
+    const APP_VERSION = '2026.10.23';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -541,6 +560,7 @@
   <script src="js/workout-data.js"></script>
   <script src="js/add-exercise.js"></script>
   <script src="js/workout.js"></script>
+  <script src="js/warmup-editor.js"></script>
   <script src="js/rest-timer.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/records.js"></script>

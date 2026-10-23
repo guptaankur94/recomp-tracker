@@ -73,6 +73,15 @@ export interface Session {
   updatedAt?: number;
 }
 
+/** A warm-up set you set yourself: a weight (none: a light set) and reps */
+export interface OwnWarmupSet {
+  kg?: number;
+  reps: number;
+}
+
+/** Your own warm-ups by exercise name. Missing: the automatic ramp; an empty list: no warm-up. */
+export type OwnWarmups = Record<string, OwnWarmupSet[]>;
+
 export interface BodyweightEntry {
   dateStr: string;
   kg: number;

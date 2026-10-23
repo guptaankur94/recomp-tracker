@@ -30,7 +30,7 @@ test('a fresh database is empty, and migrating twice is harmless', async () => {
   const db = nodeDb();
   await migrate(db);
   await migrate(db);
-  expect(await repo.loadAll(db)).toEqual({ history: [], bodyweight: [], profile: null, plan: null, settings: {} });
+  expect(await repo.loadAll(db)).toEqual({ history: [], bodyweight: [], profile: null, plan: null, settings: {}, warmups: {} });
 });
 
 test('a web app backup restores into the database and reads back exactly', async () => {
@@ -91,6 +91,6 @@ test('reset deletes everything', async () => {
   await repo.setKv(db, repo.KEYS.settings, { theme: 'neon', onboarded: true });
   await repo.setKv(db, repo.draftKey(0), { startedAt: 1, lastEditAt: 1, exercises: {}, extras: [] });
   await repo.resetAll(db);
-  expect(await repo.loadAll(db)).toEqual({ history: [], bodyweight: [], profile: null, plan: null, settings: {} });
+  expect(await repo.loadAll(db)).toEqual({ history: [], bodyweight: [], profile: null, plan: null, settings: {}, warmups: {} });
   expect((await repo.loadWorkouts(db)).drafts).toEqual({});
 });

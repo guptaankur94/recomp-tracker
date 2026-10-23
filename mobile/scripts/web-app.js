@@ -8,7 +8,7 @@ const WEB = path.join(__dirname, '..', '..', 'js');
 const FILES = [
   'data/default-plan.js', 'data/exercises.js', 'data/plans.js', 'state.js', 'helpers.js', 'storage.js',
   'workout-data.js', 'records.js', 'profile.js', 'history.js', 'progress.js', 'plan.js', 'ai-plan.js', 'backup.js',
-  'add-exercise.js', 'workout.js', 'plan-editor.js'
+  'add-exercise.js', 'workout.js', 'plan-editor.js', 'warmup-editor.js'
 ];
 
 // A Date whose "now" is fixed, so date-dependent answers can be compared

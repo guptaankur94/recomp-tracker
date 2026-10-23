@@ -163,7 +163,14 @@ function workingWeight(ex, exIdx, suggestion) {
   return m ? parseFloat(m[1]) : 0;
 }
 
+// A warm-up set you set yourself: a weight (or none, for a light set) and reps
+function ownWarmupSet(w) {
+  return w.kg > 0 ? { label: `${fmtNum(w.kg)} kg × ${w.reps}`, kg: w.kg, reps: w.reps } : { label: `Light × ${w.reps}`, reps: w.reps };
+}
+
 function warmupSets(ex, exIdx, suggestion) {
+  const own = customWarmup(ex.name);
+  if (own) return own.map(ownWarmupSet);
   const n = warmupCount(ex, exIdx);
   if (!n) return [];
   const work = workingWeight(ex, exIdx, suggestion);

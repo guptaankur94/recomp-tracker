@@ -9,7 +9,8 @@ function buildBackupJson() {
     history: getHistory(),
     bodyweight: getBodyweight(),
     profile: getProfile(),
-    plan: getCustomPlan()
+    plan: getCustomPlan(),
+    warmups: getWarmups()
   }, null, 2);
 }
 
@@ -164,6 +165,21 @@ function restoreBackupText(text) {
       loadActivePlan();
       extras.push('workout plan');
     } catch (e) {}
+  }
+
+  // Your own warm-ups: added for exercises that don't have one here
+  if (data && data.warmups && typeof data.warmups === 'object' && !Array.isArray(data.warmups)) {
+    const map = getWarmups();
+    let addedWu = 0;
+    Object.entries(data.warmups).forEach(([name, list]) => {
+      if (Object.prototype.hasOwnProperty.call(map, name) || !Array.isArray(list)) return;
+      map[name] = list.filter(w => w && w.reps > 0).map(w => (w.kg > 0 ? { kg: Number(w.kg), reps: Number(w.reps) } : { reps: Number(w.reps) }));
+      addedWu++;
+    });
+    if (addedWu) {
+      localStorage.setItem(WARMUPS_KEY, JSON.stringify(map));
+      extras.push('warm-ups');
+    }
   }
 
   saveHistory(history.sort((a, b) => b.id - a.id));

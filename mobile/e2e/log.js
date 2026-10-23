@@ -109,7 +109,8 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await rows.first().click();
   await p.waitForTimeout(500);
   check('drop set saved', await p.getByText('↳ Drop 1: 40 kg × 10').isVisible());
-  check('swapped exercise saved under its own name', await p.getByText('Dumbbell Bench Press').isVisible());
+  // (the workout screen underneath can show the same exercise for the next day)
+  check('swapped exercise saved under its own name', await p.getByText('Dumbbell Bench Press', { exact: true }).last().isVisible());
   check('per-set rest saved', (await p.getByText('3:15').count()) >= 1);
   await btn('Back').click();
 

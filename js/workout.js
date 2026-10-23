@@ -332,6 +332,7 @@ function renderWorkout() {
               const wDone = localStorage.getItem(warmupKey(currentDayIdx, exIdx, i)) === 'true';
               return `<button class="warmup-chip ${wDone ? 'done' : ''}" onclick="toggleWarmup(${exIdx}, ${i})" aria-pressed="${wDone}">${wDone ? icon('check', 3) : ''}${escapeHtml(w.label)}</button>`;
             }).join('')}
+            <button class="warmup-chip warmup-edit" onclick="openWarmupEditor(${exIdx})" aria-label="Edit warm-up for ${escapeHtml(ex.name)}">${icon('pencil', 2.2)}Edit</button>
           </div>` : ''}
         ${showInfo ? `
           <div class="ex-info">
@@ -341,6 +342,7 @@ function renderWorkout() {
             ${ex.otherName ? `
               <div class="ex-info-row"><span class="ex-info-label">${ex.swapped ? 'Original' : 'Alternative'}</span><span>${escapeHtml(ex.otherName)}</span></div>
               <button class="btn btn-secondary btn-sm" onclick="toggleSwap(${exIdx})">${icon('swap')}Swap to ${escapeHtml(ex.otherName)}</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="openWarmupEditor(${exIdx})">${icon('pencil', 2.2)}Edit warm-up</button>
             ${ex.isCustom ? `<button class="btn btn-danger btn-sm" onclick="removeCustomExercise(${exIdx})">Remove exercise</button>` : ''}
             ${!ex.cue && !last && !ex.otherName && !ex.isCustom ? '<div class="ex-info-row">No details for this exercise yet.</div>' : ''}
           </div>` : ''}
@@ -370,7 +372,7 @@ function renderWorkout() {
       const suggestion = suggestSet(ex, lastSetFor(last, s));
       const canDelete = totalSets > 1;
       const swipe = canDelete ? `data-swipe="${exIdx},${s}"` : '';
-      const moreBtn = canDelete ? `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>` : '';
+      const moreBtn = `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>`;
       // Always-visible line under the set: add a drop set, and the rest that follows it
       const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
       const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr')) === 'rest';
@@ -593,9 +595,11 @@ function editSet(exIdx, setNum) {
 async function openSetMenu(exIdx, setNum) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);
-  // Drop sets and rest have their own line under each set; the menu is just for deleting
-  if (count <= 1) return;
-  const choice = await actionSheet(`Set ${setNum}`, ex.name, [{ label: 'Delete set', value: 'delete', destructive: true }]);
+  // Drop sets and rest have their own line under each set; the menu edits the warm-up and deletes sets
+  const choices = [{ label: 'Edit warm-up', value: 'warmup' }];
+  if (count > 1) choices.push({ label: 'Delete set', value: 'delete', destructive: true });
+  const choice = await actionSheet(`Set ${setNum}`, ex.name, choices);
+  if (choice === 'warmup') openWarmupEditor(exIdx);
   if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);
 }
 

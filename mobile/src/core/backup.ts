@@ -4,13 +4,16 @@ import { normalizePlan } from './plan-import';
 import { sortBodyweight } from './progress';
 import { sortHistory } from './history';
 import { TEMPLATES } from './templates';
-import type { BodyweightEntry, Plan, Profile, Session } from './types';
+import type { BodyweightEntry, OwnWarmups, Plan, Profile, Session } from './types';
+import { mergeWarmups } from './warmups';
 
 export interface AppData {
   history: Session[];
   bodyweight: BodyweightEntry[];
   profile: Profile | null;
   plan: Plan | null;
+  /** Your own warm-ups by exercise name */
+  warmups?: OwnWarmups;
 }
 
 export function buildBackupJson(data: AppData, now: Date = new Date()): string {
@@ -21,7 +24,8 @@ export function buildBackupJson(data: AppData, now: Date = new Date()): string {
     history: data.history,
     bodyweight: data.bodyweight,
     profile: data.profile,
-    plan: data.plan
+    plan: data.plan,
+    warmups: data.warmups ?? {}
   }, null, 2);
 }
 
@@ -94,8 +98,10 @@ export function restoreBackup(text: string, current: AppData, { hasUnsavedSets =
       // A broken plan in the backup doesn't stop the workouts restoring
     }
   }
+  const merged = mergeWarmups(current.warmups ?? {}, parsed && parsed.warmups);
+  if (merged.added) extras.push('warm-ups');
   return {
-    data: { history: sortHistory(history), bodyweight: sortBodyweight(bodyweight), profile, plan },
+    data: { history: sortHistory(history), bodyweight: sortBodyweight(bodyweight), profile, plan, warmups: merged.warmups },
     added, addedBw, alreadyHere: importedHistory.length - added, extras
   };
 }

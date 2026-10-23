@@ -18,6 +18,7 @@ import {
   suggestSet, warmupSets
 } from '../workout';
 import { NOW, sampleBodyweight, sampleHistory } from '../testing/fixtures';
+import { parseWarmupRows } from '../warmups';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadWebApp } = require('../../../scripts/web-app');
@@ -70,6 +71,17 @@ describe('workout logic', () => {
       web.store[`active_d0_e${exIdx}_s1_w`] = typed ? String(typed) : '';
       same(warmupSets(ex, exIdx, typed, suggestion), web.ctx.warmupSets(ex, exIdx, web.ctx.suggestSet(ex, last)));
     }))));
+  });
+  test('your own warm-ups, and the editor\'s checks', () => {
+    const own = [{ kg: 20, reps: 10 }, { reps: 8 }, { kg: 42.5, reps: 3 }];
+    const w = webWith({ plan: { planName: 'Mine', days: DEFAULT_PLAN }, extra: { recomp_warmups: JSON.stringify({ [allExercises[0].name]: own, [allExercises[1].name]: [] }) } });
+    same(warmupSets(allExercises[0], 0, 0, null, own), w.ctx.warmupSets(allExercises[0], 0, null));
+    same(warmupSets(allExercises[1], 0, 0, null, []), w.ctx.warmupSets(allExercises[1], 0, null));
+    const rows = [
+      [{ kg: '20', reps: '10' }, { kg: '', reps: '8' }, { kg: '', reps: '' }], [{ kg: '20', reps: '0' }], [{ kg: '600', reps: '5' }],
+      [{ kg: '-5', reps: '5' }], [{ kg: '12.345', reps: '6.7' }], [{ kg: 'abc', reps: '5' }], []
+    ];
+    rows.forEach(r => same(parseWarmupRows(r), w.ctx.parseWarmupRows(r)));
   });
   test('suggestions and progression tips', () => {
     allExercises.forEach(ex => [0, 10, 25, 52.5].forEach(weight => [1, 5, 8, 10, 12, 15, 20].forEach(reps => [0, 30, 45, 90, 137].forEach(rest => {
@@ -235,18 +247,22 @@ describe('plans from a chatbot', () => {
 
 describe('backups', () => {
   test('restore merges the same way as the web app', () => {
-    const current = { history: history.slice(0, 10), bodyweight: bodyweight.slice(0, 5), profile: null, plan: null };
+    const mine = { 'Barbell Bench Press': [{ kg: 20, reps: 10 }] };
+    const current = { history: history.slice(0, 10), bodyweight: bodyweight.slice(0, 5), profile: null, plan: null, warmups: mine };
     const backups = [
       JSON.stringify({ app: 'recomp-tracker', version: 2, history, bodyweight, profile: { name: 'A', sex: 'male' }, plan: templatePlan(TEMPLATES[2]) }),
       JSON.stringify(history.slice(4, 20).map(s => ({ id: s.id, exercises: s.exercises }))),
       JSON.stringify({ history: [{ id: 'bad' }, { id: 5, exercises: [] }], bodyweight: [{ dateStr: '2026-1-1', kg: 80 }, { dateStr: '2026-01-01', kg: '80' }], plan: { days: [] } }),
-      'not json', '{"hello":1}'
+      'not json', '{"hello":1}',
+      // Warm-ups: added for exercises without one here; junk is skipped
+      JSON.stringify({ history: [], warmups: { 'Barbell Bench Press': [{ reps: 3 }], 'Lat Pulldown': [{ reps: 10 }, { kg: '30', reps: 6 }, { kg: 5, reps: 0 }, null], Plank: 'x' } }),
+      JSON.stringify({ history: [], warmups: [1, 2] })
     ];
     backups.forEach(text => {
       let toast = '';
       let error = '';
       const web = loadWebApp({
-        store: { recomp_history: JSON.stringify(current.history), recomp_bodyweight: JSON.stringify(current.bodyweight) },
+        store: { recomp_history: JSON.stringify(current.history), recomp_bodyweight: JSON.stringify(current.bodyweight), recomp_warmups: JSON.stringify(mine) },
         now: NOW,
         stubs: { showToast: (m: string) => { toast = m; }, reportTextError: (m: string) => { error = m; }, anyUnsavedSets: () => false }
       });
@@ -266,6 +282,7 @@ describe('backups', () => {
       same(ours.data.bodyweight, web.ctx.getBodyweight());
       same(ours.data.profile, web.ctx.getProfile());
       same(ours.data.plan, web.ctx.getCustomPlan());
+      same(ours.data.warmups, web.ctx.getWarmups());
     });
   });
 });

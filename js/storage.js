@@ -22,6 +22,24 @@ function saveBodyweight(entries) {
   updateStats();
 }
 
+/* Your own warm-ups, by exercise name (missing: the automatic ramp; an empty list: no warm-up) */
+function getWarmups() {
+  const map = readJSON(WARMUPS_KEY, {});
+  return map && typeof map === 'object' && !Array.isArray(map) ? map : {};
+}
+
+function customWarmup(name) {
+  const list = getWarmups()[name];
+  return Array.isArray(list) ? list.filter(w => w && w.reps > 0) : null;
+}
+
+function saveWarmup(name, list) {
+  const map = getWarmups();
+  if (list) map[name] = list;
+  else delete map[name];
+  localStorage.setItem(WARMUPS_KEY, JSON.stringify(map));
+}
+
 function startOfWeek(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);

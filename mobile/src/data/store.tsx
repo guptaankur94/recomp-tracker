@@ -9,7 +9,7 @@ import { CUSTOM_DAY, dayExercises, saveDraft, type Draft } from '@/core/draft';
 import { sortHistory } from '@/core/history';
 import { sortBodyweight } from '@/core/progress';
 import { templatePlan, TEMPLATES } from '@/core/templates';
-import type { BodyweightEntry, Plan, PlanDay, Profile, Session } from '@/core/types';
+import type { BodyweightEntry, OwnWarmupSet, Plan, PlanDay, Profile, Session } from '@/core/types';
 import { widgetSnapshot } from '@/core/widget';
 import { updateWidget } from '@/widgets/update-widget';
 
@@ -33,6 +33,8 @@ interface DataContext extends State {
   importHealthWeights: () => Promise<number>;
   removeBodyweight: (dateStr: string) => Promise<BodyweightEntry | null>;
   removeSession: (id: number) => Promise<void>;
+  /** Your own warm-up for an exercise (by name); null goes back to the automatic one */
+  setWarmup: (name: string, sets: OwnWarmupSet[] | null) => Promise<void>;
   /** Calories burned on a saved workout; null clears them */
   setCalories: (id: number, kcal: number | null) => Promise<void>;
   restoreSession: (session: Session) => Promise<void>;
@@ -115,6 +117,13 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       await repo.deleteSession(db, id);
       update(s => ({ ...s, history: s.history.filter(h => h.id !== id) }));
     },
+    setWarmup: async (name, sets) => {
+      const warmups = { ...(state.warmups ?? {}) };
+      if (sets) warmups[name] = sets;
+      else delete warmups[name];
+      await repo.setKv(db, repo.KEYS.warmups, warmups);
+      update(s => ({ ...s, warmups }));
+    },
     setCalories: async (id, kcal) => {
       const found = state.history.find(h => h.id === id);
       if (!found) return;
@@ -170,7 +179,7 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
     },
     resetAll: async () => {
       await repo.resetAll(db);
-      setState({ history: [], bodyweight: [], profile: null, plan: null, settings: {}, drafts: {}, swaps: {}, restTimer: null });
+      setState({ history: [], bodyweight: [], profile: null, plan: null, warmups: {}, settings: {}, drafts: {}, swaps: {}, restTimer: null });
     },
     pendingPlan,
     setPendingPlan,

@@ -11,9 +11,9 @@ python3 scripts/serve-web.py dist "$PORT" & SERVER=$!
 trap 'kill $SERVER' EXIT
 sleep 1
 FAILED=0
-for t in setup log data plan chart settings extras clock; do
+for t in setup log data plan chart settings extras clock warmup; do
   echo "== $t"
-  PORT=$PORT node "e2e/$t.js" "$OUT" | tee "$OUT/$t.txt"
+  PORT=$PORT node "e2e/$t.js" "$OUT" 2>&1 | tee "$OUT/$t.txt"
   grep -q '^FAIL\|CRASH' "$OUT/$t.txt" && FAILED=1
 done
 echo "Screenshots: $OUT"
