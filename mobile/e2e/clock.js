@@ -93,4 +93,4 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   check('no page errors or native dialogs', errors.length === 0, errors.join(' | '));
   console.log(results.join('\n'));
   await b.close();
-})().catch(e => { console.log('CRASH', e.message); process.exit(1); });
+})().catch(e => { console.log(results.join('\n')); console.error('CRASH', e.message.slice(0, 700)); process.exit(1); });

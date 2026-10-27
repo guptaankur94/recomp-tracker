@@ -96,6 +96,60 @@ let justFinishedEx = null;
 
 const infoOpen = new Set();
 
+// Warm-up panels opened again after they folded away (all ticked, or the first working set done)
+const warmupOpen = new Set();
+
+function toggleWarmupPanel(exIdx) {
+  const key = exStateKey(exIdx);
+  if (warmupOpen.has(key)) warmupOpen.delete(key);
+  else warmupOpen.add(key);
+  haptic('light');
+  renderWorkout();
+}
+
+/* Warm-up: a panel of rows to tick, like the working sets. Once every warm-up is ticked (or set 1 is done)
+   it folds to one line; tap it to open again. With no warm-up, a quiet line offers to add one. */
+function warmupPanelHtml(ex, exIdx, warmups, suggestion, set1Done) {
+  if (!warmups.length) {
+    return `<button class="wu-line wu-add-line" onclick="openWarmupEditor(${exIdx})" aria-label="Add a warm-up for ${escapeHtml(ex.name)}">${icon('plus', 2.4)}Add warm-up</button>`;
+  }
+  const isDone = i => localStorage.getItem(warmupKey(currentDayIdx, exIdx, i)) === 'true';
+  const doneCount = warmups.filter((_, i) => isDone(i)).length;
+  const allDone = doneCount === warmups.length;
+  const key = exStateKey(exIdx);
+  const foldable = allDone || set1Done;
+  const summary = warmups.map(w => w.label.replace(/ kg × /, '×').replace(/ × /, '×')).join(' · ');
+  if (foldable && !warmupOpen.has(key)) {
+    return `
+      <button class="wu-line ${allDone ? 'done' : ''}" onclick="toggleWarmupPanel(${exIdx})" aria-expanded="false" aria-label="Warm-up ${allDone ? 'done' : `${doneCount} of ${warmups.length} done`}. Show warm-up sets">
+        <span class="wu-line-title">${allDone ? `${icon('check', 3)}Warm-up done` : `Warm-up · ${doneCount}/${warmups.length}`}</span>
+        <span class="wu-line-sets">${escapeHtml(summary)}</span>
+        <span class="wu-line-chev">${icon('chevron', 2.4)}</span>
+      </button>`;
+  }
+  const work = workingWeight(ex, exIdx, suggestion);
+  return `
+    <div class="wu-panel" role="group" aria-label="Warm-up sets">
+      <div class="wu-head">
+        <span class="wu-title">Warm-up</span>
+        <span class="wu-count">${doneCount}/${warmups.length}</span>
+        <button class="wu-head-btn" onclick="openWarmupEditor(${exIdx})" aria-label="Edit warm-up for ${escapeHtml(ex.name)}">${icon('pencil', 2.2)}Edit</button>
+        ${foldable ? `<button class="wu-head-btn icon-only" onclick="toggleWarmupPanel(${exIdx})" aria-expanded="true" aria-label="Hide warm-up sets">${icon('chevronUp', 2.4)}</button>` : ''}
+      </div>
+      ${warmups.map((w, i) => {
+        const on = isDone(i);
+        const hint = [w.label.startsWith('Bar') ? `${fmtNum(w.kg)} kg` : '', w.kg && work > 0 ? `~${Math.round(w.kg / work * 100)}%` : ''].filter(Boolean).join(' · ');
+        return `
+          <div class="wu-r ${on ? 'done' : ''}">
+            <span class="wu-badge">W${i + 1}</span>
+            <span class="wu-val">${escapeHtml(w.label)}</span>
+            ${hint ? `<span class="wu-hint">${hint}</span>` : ''}
+            <button class="wu-chk" onclick="toggleWarmup(${exIdx}, ${i})" aria-pressed="${on}" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}${on ? ', done' : ''}">${icon('check', 3)}</button>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
 function exStateKey(exIdx) {
   return `${currentDayIdx}:${exIdx}`;
 }
@@ -294,7 +348,8 @@ function renderWorkout() {
     const doneStats = allDone ? exerciseDoneStats(exIdx, ex, totalSets) : null;
     const nextEx = exIdx + 1 < allExercises.length;
     const showInfo = infoOpen.has(exStateKey(exIdx));
-    const warmups = allDone ? [] : warmupSets(ex, exIdx, suggestSet(ex, lastSetFor(last, 1)));
+    const suggestion1 = suggestSet(ex, lastSetFor(last, 1));
+    const warmups = allDone ? [] : warmupSets(ex, exIdx, suggestion1);
     let firstOpenSet = 0;
     for (let s = 1; s <= totalSets && !firstOpenSet; s++) {
       if (localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) !== 'true') firstOpenSet = s;
@@ -325,15 +380,7 @@ function renderWorkout() {
           <button class="chip ${restDiff.startsWith('−') ? 'faster' : ''}" onclick="pickRest(${exIdx})" aria-label="Rest ${fmtClock(rest)}, change">${icon('clock', 2)}Rest ${fmtClock(rest)}${restDiff ? `<span class="chip-delta">· ${restDiff}</span>` : ''}</button>
           ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}
         </div>
-        ${warmups.length ? `
-          <div class="warmup-row" role="group" aria-label="Warm-up sets">
-            <span class="warmup-label">Warm-up</span>
-            ${warmups.map((w, i) => {
-              const wDone = localStorage.getItem(warmupKey(currentDayIdx, exIdx, i)) === 'true';
-              return `<button class="warmup-chip ${wDone ? 'done' : ''}" onclick="toggleWarmup(${exIdx}, ${i})" aria-pressed="${wDone}">${wDone ? icon('check', 3) : ''}${escapeHtml(w.label)}</button>`;
-            }).join('')}
-            <button class="warmup-chip warmup-edit" onclick="openWarmupEditor(${exIdx})" aria-label="Edit warm-up for ${escapeHtml(ex.name)}">${icon('pencil', 2.2)}Edit</button>
-          </div>` : ''}
+        ${allDone ? '' : warmupPanelHtml(ex, exIdx, warmups, suggestion1, localStorage.getItem(setKey(currentDayIdx, exIdx, 1, 'done')) === 'true')}
         ${showInfo ? `
           <div class="ex-info">
             ${ex.cue ? `<div class="ex-info-row"><span class="ex-info-label">Cue</span><span>${escapeHtml(ex.cue)}</span></div>` : ''}

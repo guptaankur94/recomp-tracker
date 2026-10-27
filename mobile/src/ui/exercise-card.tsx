@@ -12,7 +12,7 @@ import { fmtClock, fmtNum, fmtVolume } from '@/core/format';
 import { getLastPerformance } from '@/core/history';
 import { PR_LABELS } from '@/core/records';
 import type { Session } from '@/core/types';
-import { avgRest, lastSetFor, nudgeRest, progressionTip, roundRest, setVolume, suggestSet, warmupSets } from '@/core/workout';
+import { avgRest, lastSetFor, nudgeRest, progressionTip, roundRest, setVolume, suggestSet, warmupSets, workingWeight } from '@/core/workout';
 import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 
@@ -20,6 +20,7 @@ import { nowMs } from './clock';
 import { haptic } from './haptics';
 import { PrBadge } from './parts';
 import { Body, Mono, Title } from './text';
+import { WarmupPanel } from './warmup-panel';
 import { useToast } from './toast';
 
 /** Record kinds short enough to sit beside a set */
@@ -166,24 +167,10 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {ex.otherName && <SmallButton label={`⇄ ${ex.otherName}`} onPress={onSwap} a11y={`Swap to ${ex.otherName}`} />}
         <RestStepper label={`Rest ${fmtClock(exerciseRest(draft, exIdx, ex))}`} a11y="Rest for every set" onMinus={() => bumpExerciseRest(-15)} onPlus={() => bumpExerciseRest(15)} />
-        {ramp.length === 0 && <SmallButton label="+ Warm-up" onPress={editWarmup} a11y={`Add a warm-up for ${ex.name}`} />}
         {onRemove && <SmallButton label="Remove" onPress={onRemove} danger />}
       </View>
-      {ramp.length > 0 && (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-          <Mono style={{ fontSize: 11 }} color={c.muted}>WARM-UP</Mono>
-          {ramp.map((w, i) => {
-            const on = warmupsDone.has(i);
-            return (
-              <Pressable key={i} onPress={() => toggleWarmup(i)} accessibilityRole="checkbox" aria-checked={on} accessibilityLabel={`Warm-up ${i + 1}: ${w.label}`}
-                style={{ paddingHorizontal: 10, height: 30, justifyContent: 'center', borderRadius: 15, borderWidth: 1, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : 'transparent' }}>
-                <Mono style={{ fontSize: 12 }} color={on ? c.ink : c.inkSoft}>{on ? '✓ ' : ''}{w.label}</Mono>
-              </Pressable>
-            );
-          })}
-          <SmallButton label="✎ Edit" onPress={editWarmup} a11y={`Edit warm-up for ${ex.name}`} />
-        </View>
-      )}
+      <WarmupPanel name={ex.name} ramp={ramp} done={warmupsDone} work={workingWeight(ex, typed1, suggestion1)} set1Done={!!sets[0]?.done}
+        onToggle={toggleWarmup} onEdit={editWarmup} />
       {sets.map((s, i) => {
         const setNum = i + 1;
         const sug = suggestSet(ex, lastSetFor(last, setNum));
