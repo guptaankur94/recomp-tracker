@@ -39,7 +39,8 @@ export async function syncRestAlert(timer: RestTimer | null, sound = true): Prom
     if (!timer || timer.endAt <= Date.now() + 1000 || !(await allowed())) return;
     await Notifications.scheduleNotificationAsync({
       identifier: ID,
-      content: { title: 'Rest over', body: timer.next.replace(/^Next: /, 'Next up: '), sound: sound ? 'chime.wav' : false },
+      // Time-sensitive: it gets through Focus modes, and the Apple Watch taps your wrist when the phone is locked
+      content: { title: 'Rest over', body: timer.next.replace(/^Next: /, 'Next up: '), sound: sound ? 'chime.wav' : false, interruptionLevel: 'timeSensitive' },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: timer.endAt, channelId: CHANNEL }
     });
   } catch {

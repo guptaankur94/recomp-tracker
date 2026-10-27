@@ -50,7 +50,8 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.waitForTimeout(300);
   check('ticking a set resumes', await btn('Pause').isVisible());
   if (await btn('Skip rest').isVisible().catch(() => false)) await btn('Skip rest').click();
-  await p.clock.fastForward('01:00');
+  // 1:30 more: the second or so paused while typing is (rightly) left out, so 16:00 sharp could show as 15
+  await p.clock.fastForward('01:30');
   await btn('Finish').click();
   await p.waitForTimeout(1200);
   check('Finish shows the summary', await p.getByText('Workout complete', { exact: false }).first().isVisible());

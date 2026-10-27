@@ -11,6 +11,8 @@ import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 
 import { nowMs } from './clock';
+import { syncRestActivity } from '@/widgets/rest-live';
+
 import { syncRestAlert } from './rest-alert';
 import { playSound } from './sound';
 import { haptic } from './haptics';
@@ -39,6 +41,8 @@ export function RestTimerBar() {
 
   // The lock-screen alert follows the timer: booked when it starts, moved by −15/+15, cancelled by Skip
   useEffect(() => { syncRestAlert(restTimer, soundOn); }, [restTimer, soundOn]);
+  // The same countdown on the Lock Screen, Dynamic Island and Apple Watch
+  useEffect(() => { syncRestActivity(restTimer); }, [restTimer]);
 
   const remaining = restTimer ? Math.max(0, restTimer.endAt - now) : 0;
   // A tick for each of the last three seconds

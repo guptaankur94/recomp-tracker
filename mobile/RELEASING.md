@@ -17,7 +17,8 @@ develop this app, which is why builds go through GitHub.
 The app uses Apple Health and an App Group (shared with the home-screen widget, a second target with the ID
 `com.guptaankur.recomp.widget`). EAS registers both IDs and their capabilities when it creates the
 certificates; if a build complains about them, enable HealthKit and App Groups (`group.com.guptaankur.recomp`)
-for the IDs at developer.apple.com → Identifiers.
+for the IDs at developer.apple.com → Identifiers. The app also uses Time Sensitive Notifications (for the "Rest over"
+alert) and Live Activities (the rest timer on the Lock Screen); the first needs that capability on the app's ID too.
 
 Before the first build, settle the app's permanent ID (`ios.bundleIdentifier` and `android.package` in
 `app.json`). It can't change once the app is on the App Store.

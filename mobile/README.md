@@ -15,6 +15,9 @@ the repository root, which keeps running until this one reaches the stores.
 - `src/widgets`: the iPhone home-screen widget (this week's ring, the next workout, the streak). Its layout is
   compiled to text and runs inside the widget, so it may only use `@expo/ui/swift-ui` components and modifiers.
   `src/core/widget.ts` works out what it shows.
+- `src/widgets/rest-activity.tsx`: the rest timer as a Live Activity (Lock Screen, Dynamic Island, Apple Watch Smart
+  Stack), kept in step with the in-app timer by `rest-live.ios.ts`. The "Rest over" alert is time-sensitive, so it gets
+  through Focus modes and taps your wrist on Apple Watch when the phone is locked.
 - Apple Health: `src/data/health.ios.ts` reads body weight into the app and saves weigh-ins logged here
   (Settings → Apple Health, iPhone only). `src/core/health.ts` decides which readings to add.
 
