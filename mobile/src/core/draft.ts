@@ -38,15 +38,9 @@ export interface DraftExercise {
 export type ExtraExercise = PlanExercise & { fromDay?: string };
 
 export interface Draft {
-  /** When the workout clock started: Start, or the first edit */
+  /** When these sets were started: they're saved to that date */
   startedAt: number;
   lastEditAt: number;
-  /** Start was tapped (the clock runs before any set is ticked) */
-  started?: boolean;
-  /** Time already spent paused, in ms */
-  pausedMs?: number;
-  /** Set while paused */
-  pausedAt?: number;
   /** By exercise position in the day (plan exercises, then extras) */
   exercises: Record<number, DraftExercise>;
   extras: ExtraExercise[];
@@ -105,47 +99,66 @@ export function hasDraft(draft: Draft | null): boolean {
   return Object.values(draft.exercises).some(e => (e.sets || []).some(s => s.done || s.w || s.r || (s.drops || []).some(d => d.w || d.r)));
 }
 
-/** Marks an edit; a draft left for 12 hours starts over as a new workout (its start time moves to now) */
+/** Marks an edit; a draft left for 12 hours starts over as a new workout (its start date moves to now) */
 export function touch(draft: Draft | null, now: number): Draft {
   if (!draft) return emptyDraft(now);
-  if (now - draft.lastEditAt > DRAFT_STALE_MS) return { ...withoutClock(draft), startedAt: now, lastEditAt: now };
-  return { ...draft, lastEditAt: now };
+  return { ...draft, startedAt: now - draft.lastEditAt > DRAFT_STALE_MS ? now : draft.startedAt, lastEditAt: now };
 }
 
-/* The workout clock. Only the time between Start (or the first edit) and now, less pauses, counts. */
-function withoutClock(draft: Draft): Draft {
-  const next = { ...draft };
-  delete next.started;
-  delete next.pausedMs;
+/* The workout clock: one for the whole app, started by Start (or the first ticked set) on any day and stopped by
+   Finish. pausedMs is time already paused and pausedAt is set while paused; only the time in between counts.
+   creditedMs is the part already added to today's saved workout ("Save and keep going"). */
+export interface WorkoutClock {
+  startedAt: number;
+  lastEditAt: number;
+  pausedMs?: number;
+  pausedAt?: number;
+  creditedMs?: number;
+}
+
+/** A clock longer than this counts as forgotten: it adds nothing to the workout */
+const MAX_WORKOUT_MS = 5 * 3600e3;
+
+export function clockActiveMs(clock: WorkoutClock | null, now: number): number {
+  if (!clock) return 0;
+  const paused = (clock.pausedMs || 0) + (clock.pausedAt ? Math.max(0, now - clock.pausedAt) : 0);
+  return Math.max(0, now - clock.startedAt - paused);
+}
+
+/** The running clock, or null (none, or left for 12 hours: a new workout starts over) */
+export function freshClock(clock: WorkoutClock | null | undefined, now: number): WorkoutClock | null {
+  return clock && typeof clock.startedAt === 'number' && now - clock.lastEditAt <= DRAFT_STALE_MS ? clock : null;
+}
+
+export function startClock(now: number): WorkoutClock {
+  return { startedAt: now, lastEditAt: now };
+}
+
+export function pauseClock(clock: WorkoutClock, now: number): WorkoutClock {
+  return clock.pausedAt ? clock : { ...clock, pausedAt: now, lastEditAt: now };
+}
+
+export function resumeClock(clock: WorkoutClock, now: number): WorkoutClock {
+  const next: WorkoutClock = { ...clock, lastEditAt: now };
+  if (!clock.pausedAt) return next;
+  next.pausedMs = (clock.pausedMs || 0) + Math.max(0, now - clock.pausedAt);
   delete next.pausedAt;
   return next;
 }
 
-export function activeMs(draft: Draft | null, now: number): number {
-  if (!draft) return 0;
-  const paused = (draft.pausedMs || 0) + (draft.pausedAt ? Math.max(0, now - draft.pausedAt) : 0);
-  return Math.max(0, now - draft.startedAt - paused);
+/** Ticking a set starts the clock if it isn't running, and carries on a paused one */
+export function clockOnSet(clock: WorkoutClock | null | undefined, now: number): WorkoutClock {
+  const running = freshClock(clock, now);
+  return running ? resumeClock(running, now) : startClock(now);
 }
 
-/** Start: the clock starts now (sets already typed stay) */
-export function startClock(draft: Draft | null, now: number): Draft {
-  return { ...withoutClock(draft ?? emptyDraft(now)), startedAt: now, lastEditAt: now, started: true };
-}
-
-export function pauseClock(draft: Draft, now: number): Draft {
-  return draft.pausedAt ? draft : { ...draft, pausedAt: now, lastEditAt: now };
-}
-
-export function resumeClock(draft: Draft, now: number): Draft {
-  if (!draft.pausedAt) return draft;
-  const next: Draft = { ...draft, pausedMs: (draft.pausedMs || 0) + Math.max(0, now - draft.pausedAt), lastEditAt: now };
-  delete next.pausedAt;
-  return next;
-}
-
-/** The clock is running (or paused) for a workout started today: Start was tapped, or a set ticked */
-export function clockRunning(draft: Draft | null, setsDone: number, now: number): boolean {
-  return !!draft && localDateStr(new Date(draft.startedAt)) === localDateStr(new Date(now)) && (setsDone > 0 || !!draft.started);
+/** The clock's time not yet added to today's workout, in seconds, and the clock with it added */
+export function creditClock(clock: WorkoutClock | null | undefined, now: number): { sec: number; clock: WorkoutClock | null } {
+  const running = freshClock(clock, now);
+  if (!running) return { sec: 0, clock: null };
+  const active = clockActiveMs(running, now);
+  const sec = active < MAX_WORKOUT_MS ? Math.max(0, Math.round((active - (running.creditedMs || 0)) / 1000)) : 0;
+  return { sec, clock: { ...running, creditedMs: active } };
 }
 
 /** Changes one exercise's sets (created from the plan's count if untouched) */
@@ -196,8 +209,7 @@ export function completeSet(draft: Draft | null, exIdx: number, setNum: number, 
     return s;
   });
   const finished = draftSets(next, exIdx, ex).every(s => s.done);
-  // Ticking a set while paused carries on the clock
-  return { ok: true, draft: resumeClock(next, now), pr, finished, firstCompletion, w: wNum, r: rNum };
+  return { ok: true, draft: next, pr, finished, firstCompletion, w: wNum, r: rNum };
 }
 
 /** Re-checks a finished set's record after its rest changed */
@@ -313,19 +325,22 @@ export function collectSets(draft: Draft | null, exercises: DayExercise[], dayLa
 }
 
 /** Saves the draft into the session for the date it was started on (one workout per date), merging with what's
-    already saved that day. Returns the new history (newest first) and the session, or null when nothing was logged. */
+    already saved that day, and adds the workout clock's time not yet added. Returns the new history (newest first),
+    the session and the clock, or null when nothing was logged. */
 export function saveDraft(args: {
   draft: Draft | null; exercises: DayExercise[]; day: PlanDay; isCustom: boolean; planDays: PlanDay[]; history: Session[]; now: number;
-}): { history: Session[]; session: Session } | null {
+  clock?: WorkoutClock | null;
+}): { history: Session[]; session: Session; clock: WorkoutClock | null } | null {
   const { draft, exercises, day, isCustom, planDays, now } = args;
   const logged = collectSets(draft, exercises, day.day, isCustom);
   if (!logged.length) return null;
   // Dated by when logging started, so late sessions and next-morning saves land on the right day
   const startedAt = draft && draft.startedAt <= now ? draft.startedAt : now;
   const workoutDate = localDateStr(new Date(startedAt));
-  // Time from Start (or the first logged set) to now, less pauses, when logged in one sitting today; parts add up
-  const elapsedSec = Math.round(activeMs(draft && { ...draft, startedAt }, now) / 1000);
-  const durationSec = draft && workoutDate === localDateStr(new Date(now)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
+  // The clock's time since it was last added to today's workout (parts add up), when logged today
+  let durationSec = 0;
+  let clock = freshClock(args.clock, now);
+  if (clock && workoutDate === localDateStr(new Date(now))) ({ sec: durationSec, clock } = creditClock(clock, now));
 
   const history = clone(args.history);
   const existing = history.find(s => sessionDateStr(s) === workoutDate);
@@ -357,5 +372,14 @@ export function saveDraft(args: {
   }
   const named = applySessionDays(session, planDays);
   const out = history.map(s => (s === session ? named : s)).sort((a, b) => b.id - a.id);
-  return { history: out, session: named };
+  return { history: out, session: named, clock };
+}
+
+/** Finish: the clock's time since the last save still belongs to today's workout (when there is one) */
+export function finishClock(history: Session[], clock: WorkoutClock | null | undefined, now: number): Session[] {
+  const today = localDateStr(new Date(now));
+  const session = history.find(s => sessionDateStr(s) === today);
+  const { sec } = creditClock(clock, now);
+  if (!session || !sec) return history;
+  return history.map(s => (s === session ? { ...s, durationSec: (s.durationSec || 0) + sec } : s));
 }

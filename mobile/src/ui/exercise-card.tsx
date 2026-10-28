@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
 import {
-  addSet, completeSet, draftSets, exerciseRest, nextSetLabel, recheckPr, removeSet, setRest, updateExercise, updateSets,
+  addSet, clockOnSet, completeSet, draftSets, exerciseRest, nextSetLabel, recheckPr, removeSet, setRest, updateExercise, updateSets,
   withExerciseRest, withSetRest, type DayExercise, type Draft, type DraftSet
 } from '@/core/draft';
 import { fmtClock, fmtNum, fmtVolume } from '@/core/format';
@@ -40,7 +40,7 @@ interface Props {
 }
 
 export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onSwap, onRemove, coachTip }: Props) {
-  const { setDraft, setRestTimer, warmups } = useData();
+  const { setDraft, setRestTimer, warmups, clock, setClock } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -70,6 +70,8 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
       return;
     }
     save(result.draft);
+    // Ticking a set starts the workout clock (one for the whole app), or carries on a paused one
+    setClock(clockOnSet(clock, now()));
     haptic('success');
     if (result.pr) {
       const restNote = result.pr === 'rest' ? ` · rest ${fmtClock(setRest(result.draft, exIdx, setNum, ex))}` : '';

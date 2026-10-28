@@ -16,7 +16,7 @@
   .nav-indicator.ready, .nav-indicator.moving::before, .nav-item.active svg, .view.enter-right, .view.enter-left { transition: none; animation: none; }
   .just-completed, .just-completed .locked-num, .shake, .saved-pulse { animation: none; }
   .sheet, .toast, .sheet-overlay, .rest-full, .set-swipe .set-block { transition: none; }
-  .rest-pill, .just-collapsed, .ex-complete.pop, .summary-badge, .just-completed .pr-badge, .chart-area.fade, .saved-tick.pop { animation: none; }
+  .rest-pill, .just-collapsed, .ex-card.pop, .summary-badge, .just-completed .pr-badge, .chart-area.fade, .saved-tick.pop { animation: none; }
   .chart-line.draw { animation: none; stroke-dashoffset: 0; }
   .confetti { display: none; }
   .summary { transition: none; }

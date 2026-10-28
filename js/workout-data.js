@@ -5,46 +5,67 @@ function draftMetaKey(dayIdx) {
   return `active_d${dayIdx}_meta`;
 }
 
+// Each day's unsaved sets remember when they were started, so they're saved to that date
 function touchDraft() {
   const now = Date.now();
   const meta = readJSON(draftMetaKey(currentDayIdx), null);
   const isStale = !meta || now - meta.lastEditAt > DRAFT_STALE_MS;
-  // A fresh workout starts the clock now; otherwise Start and pauses carry on
-  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify(isStale ? { startedAt: now, lastEditAt: now } : { ...meta, lastEditAt: now }));
+  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify(isStale ? { startedAt: now, lastEditAt: now } : { startedAt: meta.startedAt, lastEditAt: now }));
 }
 
-/* The workout clock: Start (or the first edit) sets startedAt; pausedMs is time already paused, and
-   pausedAt is set while paused. Only the time in between counts as the workout's duration. */
-function draftActiveMs(meta, nowMs) {
-  if (!meta) return 0;
-  const paused = (meta.pausedMs || 0) + (meta.pausedAt ? Math.max(0, nowMs - meta.pausedAt) : 0);
-  return Math.max(0, nowMs - meta.startedAt - paused);
+/* The workout clock: one for the whole app, started by Start (or the first ticked set) on any day and stopped by
+   Finish. pausedMs is time already paused and pausedAt is set while paused; only the time in between counts.
+   creditedMs is the part already added to today's saved workout ("Save and keep going"). */
+function clockActiveMs(clock, nowMs) {
+  if (!clock) return 0;
+  const paused = (clock.pausedMs || 0) + (clock.pausedAt ? Math.max(0, nowMs - clock.pausedAt) : 0);
+  return Math.max(0, nowMs - clock.startedAt - paused);
+}
+
+// The running clock, or null (none, or left running for 12 hours: a new workout starts over)
+function workoutClock(nowMs = Date.now()) {
+  const clock = readJSON(CLOCK_KEY, null);
+  return clock && typeof clock.startedAt === 'number' && nowMs - clock.lastEditAt <= DRAFT_STALE_MS ? clock : null;
+}
+
+function saveClock(clock) {
+  if (clock) localStorage.setItem(CLOCK_KEY, JSON.stringify(clock));
+  else localStorage.removeItem(CLOCK_KEY);
+}
+
+function resumedClock(clock, now) {
+  if (!clock.pausedAt) return { ...clock, lastEditAt: now };
+  const { pausedAt, ...rest } = clock;
+  return { ...rest, pausedMs: (clock.pausedMs || 0) + Math.max(0, now - pausedAt), lastEditAt: now };
 }
 
 function startWorkout() {
   const now = Date.now();
-  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ startedAt: now, lastEditAt: now, started: true }));
+  saveClock({ startedAt: now, lastEditAt: now });
   haptic('success');
   renderWorkout();
 }
 
-function pauseWorkout() {
-  const meta = readJSON(draftMetaKey(currentDayIdx), null);
-  if (!meta || meta.pausedAt) return;
+// Ticking a set starts the clock if it isn't running, and carries on a paused one
+function clockOnSet() {
   const now = Date.now();
-  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ ...meta, pausedAt: now, lastEditAt: now }));
+  const clock = workoutClock(now);
+  saveClock(clock ? resumedClock(clock, now) : { startedAt: now, lastEditAt: now });
+}
+
+function pauseWorkout() {
+  const clock = workoutClock();
+  if (!clock || clock.pausedAt) return;
+  const now = Date.now();
+  saveClock({ ...clock, pausedAt: now, lastEditAt: now });
   haptic('light');
   renderWorkout();
 }
 
-// quiet: from ticking a set, which resumes a paused clock without a re-render of its own
-function resumeWorkout(quiet) {
-  const meta = readJSON(draftMetaKey(currentDayIdx), null);
-  if (!meta || !meta.pausedAt) return;
-  const now = Date.now();
-  const { pausedAt, ...rest } = meta;
-  localStorage.setItem(draftMetaKey(currentDayIdx), JSON.stringify({ ...rest, pausedMs: (meta.pausedMs || 0) + Math.max(0, now - pausedAt), lastEditAt: now }));
-  if (quiet) return;
+function resumeWorkout() {
+  const clock = workoutClock();
+  if (!clock || !clock.pausedAt) return;
+  saveClock(resumedClock(clock, Date.now()));
   haptic('light');
   renderWorkout();
 }
@@ -424,9 +445,15 @@ function saveDayToLog(dayIdx) {
   const meta = readJSON(draftMetaKey(dayIdx), null);
   const startedAt = meta && meta.startedAt <= nowMs ? meta.startedAt : nowMs;
   const workoutDate = localDateStr(new Date(startedAt));
-  // Time from Start (or the first logged set) to now, less pauses, when logged in one sitting today; parts add up
-  const elapsedSec = Math.round(draftActiveMs(meta && { ...meta, startedAt }, nowMs) / 1000);
-  const durationSec = meta && workoutDate === localDateStr(new Date(nowMs)) && elapsedSec < 5 * 3600 ? elapsedSec : 0;
+  // The clock's time since it was last added to today's workout (parts add up), when logged today. A clock left
+  // running 5 hours was forgotten, so it adds nothing.
+  let durationSec = 0;
+  const clock = workoutClock(nowMs);
+  if (clock && workoutDate === localDateStr(new Date(nowMs))) {
+    const active = clockActiveMs(clock, nowMs);
+    if (active < 5 * 3600e3) durationSec = Math.max(0, Math.round((active - (clock.creditedMs || 0)) / 1000));
+    saveClock({ ...clock, creditedMs: active });
+  }
 
   const history = getHistory();
   let session = history.find(s => sessionDateStr(s) === workoutDate);
@@ -474,7 +501,7 @@ function saveToTodaysLog() {
     return;
   }
   haptic('success');
-  collapsedByUser.clear();
+  openedDone.clear();
   initNav();
   renderWorkout();
   const n = session.exercises.length;
@@ -482,16 +509,44 @@ function saveToTodaysLog() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Save whatever is on this tab, then show the summary for the whole day's workout.
+// The days (plan days and the custom workout) with unsaved sets started today
+function daysWithSetsToday() {
+  const today = localDateStr(new Date());
+  return [...programData.keys(), programData.length].filter(d => {
+    const meta = readJSON(draftMetaKey(d), null);
+    return dayHasDraft(d) && meta && localDateStr(new Date(meta.startedAt)) === today;
+  });
+}
+
+// Finish: save today's sets from every day you trained (this tab first), stop the clock, show the summary.
+// Unsaved sets from an earlier date (the "Save to Tue" banner) are saved on their own, to that date.
 function finishAndSaveWorkout() {
   const hadDraft = dayHasDraft(currentDayIdx);
-  const saved = saveDayToLog(currentDayIdx);
-  // Started but nothing logged on this day: Finish stops its clock
-  const startedOnly = !hadDraft && !!readJSON(draftMetaKey(currentDayIdx), null)?.started;
+  const meta = readJSON(draftMetaKey(currentDayIdx), null);
+  const fromEarlier = hadDraft && (!meta || localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date()));
+  const days = fromEarlier ? [currentDayIdx] : [currentDayIdx, ...daysWithSetsToday().filter(d => d !== currentDayIdx)];
+  let saved = null;
+  days.forEach(d => { saved = saveDayToLog(d) || saved; });
   if (!hadDraft) localStorage.removeItem(draftMetaKey(currentDayIdx));
+  const clockWas = workoutClock();
+  if (!fromEarlier) {
+    // Time since the last save ("Save and keep going") still belongs to today's workout
+    const today = todaysSession();
+    if (clockWas && today) {
+      const active = clockActiveMs(clockWas, Date.now());
+      const extra = active < 5 * 3600e3 ? Math.max(0, Math.round((active - (clockWas.creditedMs || 0)) / 1000)) : 0;
+      if (extra) {
+        const history = getHistory();
+        const s = history.find(h => h.id === today.id);
+        s.durationSec = (s.durationSec || 0) + extra;
+        saveHistory(history);
+      }
+    }
+    saveClock(null);
+  }
   const session = saved || todaysSession();
   if (!session) {
-    if (startedOnly) {
+    if (clockWas) {
       renderWorkout();
       showToast('Workout ended. Nothing was logged, so nothing was saved.');
       return;
@@ -503,7 +558,7 @@ function finishAndSaveWorkout() {
   if (hadDraft && !saved) clearDayDraft(currentDayIdx);
   haptic('success');
   stopRestTimer();
-  collapsedByUser.clear();
+  openedDone.clear();
   initNav();
   renderWorkout();
   const previous = getHistory().find(s => s.day === session.day && s.id < session.id) || null;

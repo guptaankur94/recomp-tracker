@@ -93,6 +93,43 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.waitForTimeout(500);
   check('Finish with nothing logged stops the clock', (await toast()).includes('Nothing was logged') && await btn('Start workout').isVisible());
 
+  // One clock for the whole app: Start on one day, go to another, then Finish saves both days' sets
+  await p.clock.fastForward('24:00:00');
+  await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' });
+  await p.waitForTimeout(1500);
+  await p.getByRole('tab', { name: /^Day 3,/ }).click();
+  await btn('Start workout').click();
+  await p.waitForTimeout(300);
+  await p.clock.fastForward('05:00');
+  await p.getByRole('tab', { name: /^Day 1,/ }).click();
+  await p.waitForTimeout(300);
+  check('another day: no second Start', !(await btn('Start workout').isVisible()));
+  check('another day: the same clock', /^Workout time 5:0\d$/.test(await clock()), await clock());
+  check('one clock on screen', (await p.getByLabel(/^Workout time/).count()) === 1);
+  await p.getByLabel('Set 1 weight in kg').first().fill('60');
+  await p.getByLabel('Set 1 reps').first().fill('8');
+  await btn('Done with set 1').first().click();
+  await p.waitForTimeout(300);
+  if (await btn('Skip rest').isVisible().catch(() => false)) await btn('Skip rest').click();
+  await p.getByRole('tab', { name: /^Day 3,/ }).click();
+  await p.waitForTimeout(300);
+  await p.getByLabel('Set 1 weight in kg').first().fill('40');
+  await p.getByLabel('Set 1 reps').first().fill('10');
+  await btn('Done with set 1').first().click();
+  await p.waitForTimeout(300);
+  if (await btn('Skip rest').isVisible().catch(() => false)) await btn('Skip rest').click();
+  // Kept across a reload
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(1500);
+  check('the clock survives a reload', /^Workout time 5:\d\d/.test(await clock()), await clock());
+  await btn('Finish').click();
+  await p.waitForTimeout(1200);
+  check('Finish saves both days in one workout', (await p.getByLabel('Sets: 2').isVisible()) || (await p.getByText(/^2$/).first().isVisible()));
+  await shot('c-5-both-days');
+  await btn('Done').click();
+  await p.waitForTimeout(600);
+  check('clock stopped, nothing left unsaved', await btn('Start workout').isVisible() && (await p.getByRole('tab', { name: /Unsaved/ }).count()) === 0);
+
   check('no page errors or native dialogs', errors.length === 0, errors.join(' | '));
   console.log(results.join('\n'));
   await b.close();

@@ -2,8 +2,8 @@
 // A workout in progress: saving must give exactly the history the web app gives for the same sets.
 // Each draft is written into the web app's own storage keys and saved by its own code.
 import {
-  activeMs, addExtra, addSet, clockRunning, completeSet, pauseClock, resumeClock, startClock, CUSTOM_DAY, dayExercises, emptyDraft, hasDraft, nextSetLabel, removeExtra, removeSet,
-  saveDraft, setRest, touch, updateSets, withExerciseRest, withSetRest, type Draft
+  addExtra, addSet, clockActiveMs, clockOnSet, completeSet, creditClock, finishClock, freshClock, pauseClock, resumeClock, startClock, CUSTOM_DAY, dayExercises, emptyDraft, hasDraft, nextSetLabel, removeExtra, removeSet,
+  saveDraft, setRest, touch, updateSets, withExerciseRest, withSetRest, type Draft, type WorkoutClock
 } from '../draft';
 import { templatePlan, TEMPLATES, DEFAULT_PLAN } from '../templates';
 import type { PlanDay, Session } from '../types';
@@ -16,8 +16,7 @@ const plain = (v: unknown) => JSON.parse(JSON.stringify(v));
 
 /** The draft as the web app stores it */
 function webKeys(draft: Draft, d: number, day: PlanDay, swaps: Set<number>): Record<string, string> {
-  const { startedAt, lastEditAt, started, pausedMs, pausedAt } = draft;
-  const store: Record<string, string> = { [`active_d${d}_meta`]: JSON.stringify({ startedAt, lastEditAt, started, pausedMs, pausedAt }) };
+  const store: Record<string, string> = { [`active_d${d}_meta`]: JSON.stringify({ startedAt: draft.startedAt, lastEditAt: draft.lastEditAt }) };
   if (draft.extras.length) store[`custom_ex_d${d}`] = JSON.stringify(draft.extras.map(e => ({ ...e, isCustom: true })));
   swaps.forEach(i => { store[`swap_d${d}_e${i}`] = 'true'; });
   Object.entries(draft.exercises).forEach(([i, e]) => {
@@ -83,17 +82,30 @@ describe('saving matches the web app', () => {
         let draft = randomDraft(seed * 31 + p, day, c.startedAt, swaps);
         if (custom && !draft.extras.length) draft = addExtra(draft, { name: 'Goblet Squat', sets: 3, repTarget: '8–12 reps', weightTarget: 'Custom', rest: 90 }, c.startedAt);
         if (custom) draft = updateSets(draft, 0, { sets: 3 }, c.startedAt, s => [{ ...s[0], w: '24', r: '10', done: true }, ...s.slice(1)]);
-        // Some workouts were paused: earlier, or still paused when saved
-        if (seed % 4 === 1) draft = { ...draft, started: true, pausedMs: 600e3 };
-        if (seed % 4 === 2) draft = { ...draft, pausedMs: 120e3, pausedAt: Math.max(c.startedAt, c.now - 300e3) };
+        // The workout clock: none, running, paused earlier, still paused, partly added already, forgotten, or stale
+        const clocks: (WorkoutClock | null)[] = [
+          null,
+          { startedAt: c.startedAt, lastEditAt: c.now - 60e3 },
+          { startedAt: c.startedAt, lastEditAt: c.now - 60e3, pausedMs: 600e3 },
+          { startedAt: c.startedAt, lastEditAt: c.now - 60e3, pausedMs: 120e3, pausedAt: Math.max(c.startedAt, c.now - 300e3) },
+          { startedAt: c.startedAt, lastEditAt: c.now - 60e3, creditedMs: 900e3 },
+          { startedAt: c.now - 6 * 3600e3, lastEditAt: c.now - 60e3 },
+          { startedAt: c.startedAt, lastEditAt: c.now - 13 * 3600e3 }
+        ];
+        const clock = clocks[seed % clocks.length];
         const exercises = dayExercises(day, draft, swaps);
-        const ours = saveDraft({ draft, exercises, day, isCustom: custom, planDays: days, history: c.history, now: c.now });
+        const ours = saveDraft({ draft, exercises, day, isCustom: custom, planDays: days, history: c.history, now: c.now, clock });
 
-        const web = loadWebApp({ store: { recomp_history: JSON.stringify(c.history), recomp_plan: JSON.stringify({ planName: 'P', days }), ...webKeys(draft, d, day, swaps) }, now: c.now });
+        const store: Record<string, string> = { recomp_history: JSON.stringify(c.history), recomp_plan: JSON.stringify({ planName: 'P', days }), ...webKeys(draft, d, day, swaps) };
+        if (clock) store.recomp_clock = JSON.stringify(clock);
+        const web = loadWebApp({ store, now: c.now });
         web.run('loadActivePlan()');
         const theirs = web.ctx.saveDayToLog(d);
         expect(plain(ours?.session ?? null)).toEqual(plain(theirs));
         expect(plain(ours ? ours.history : c.history)).toEqual(plain(web.ctx.getHistory()));
+        // The clock left behind: with this save's time marked as added (a stale one is dropped here, left there unused)
+        const webClock = web.ctx.workoutClock(c.now);
+        if (ours) expect(plain(ours.clock)).toEqual(plain(webClock));
       }
     });
   }));
@@ -194,26 +206,31 @@ describe('editing a draft', () => {
     expect([...swaps]).toEqual([0, n]);
   });
 
-  test('the workout clock: start, pause, resume, and ticking a set resumes', () => {
+  test('one workout clock: start, pause, resume, ticking a set, saving and finishing', () => {
     const t0 = NOW - 3600e3;
-    let draft = startClock(null, t0);
-    expect(draft.started).toBe(true);
-    expect(clockRunning(draft, 0, t0)).toBe(true);
-    expect(clockRunning(emptyDraft(t0), 0, t0)).toBe(false);
-    draft = pauseClock(draft, t0 + 600e3);
-    expect(activeMs(draft, t0 + 1800e3)).toBe(600e3);
-    draft = resumeClock(draft, t0 + 1800e3);
-    expect(draft.pausedAt).toBeUndefined();
-    expect(activeMs(draft, t0 + 2400e3)).toBe(1200e3);
-    draft = pauseClock(draft, t0 + 2400e3);
-    const day = DEFAULT_PLAN[0];
-    const exercises = dayExercises(day, draft, new Set());
-    const done = completeSet(draft, 0, 1, exercises[0], sampleHistory(), t0 + 3000e3);
-    expect(done.ok && done.draft.pausedAt).toBeFalsy();
-    if (done.ok) expect(activeMs(done.draft, t0 + 3000e3)).toBe(1200e3);
-    // A stale draft starts over without the old clock
-    const stale = touch({ ...draft, lastEditAt: NOW - 13 * 3600e3 }, NOW);
-    expect([stale.started, stale.pausedMs, stale.pausedAt, stale.startedAt]).toEqual([undefined, undefined, undefined, NOW]);
+    let clock = startClock(t0);
+    expect(freshClock(clock, t0)).toBe(clock);
+    clock = pauseClock(clock, t0 + 600e3);
+    expect(clockActiveMs(clock, t0 + 1800e3)).toBe(600e3);
+    clock = resumeClock(clock, t0 + 1800e3);
+    expect(clock.pausedAt).toBeUndefined();
+    expect(clockActiveMs(clock, t0 + 2400e3)).toBe(1200e3);
+    // Ticking a set carries on a paused clock, or starts one
+    clock = clockOnSet(pauseClock(clock, t0 + 2400e3), t0 + 3000e3);
+    expect(clockActiveMs(clock, t0 + 3000e3)).toBe(1200e3);
+    expect(clockOnSet(null, t0)).toEqual({ startedAt: t0, lastEditAt: t0 });
+    // Left for 12 hours: no longer running
+    expect(freshClock({ ...clock, lastEditAt: NOW - 13 * 3600e3 }, NOW)).toBeNull();
+    expect(clockOnSet({ ...clock, lastEditAt: NOW - 13 * 3600e3 }, NOW)).toEqual({ startedAt: NOW, lastEditAt: NOW });
+    // Saved part way, then finished: the time after the save is added once
+    const credited = creditClock(clock, t0 + 3000e3);
+    expect(credited.sec).toBe(1200);
+    expect(creditClock(credited.clock, t0 + 3600e3).sec).toBe(600);
+    const today = { id: t0, dateStr: '2026-04-17', displayDate: '', day: 'Day 1', title: 'x', exercises: [], durationSec: 1200 };
+    const later = finishClock([today], credited.clock, t0 + 3600e3);
+    expect(later[0].durationSec).toBe(1800);
+    // A stale draft starts over (its date moves to now)
+    expect(touch({ ...emptyDraft(NOW - 14 * 3600e3) }, NOW).startedAt).toBe(NOW);
   });
 
   test('time on the clock matches the web app', () => {
@@ -221,8 +238,8 @@ describe('editing a draft', () => {
     const rand = rng(7);
     for (let i = 0; i < 50; i++) {
       const startedAt = NOW - Math.floor(rand() * 4 * 3600e3);
-      const draft: Draft = { ...emptyDraft(startedAt), ...(rand() < 0.6 ? { pausedMs: Math.floor(rand() * 900e3) } : {}), ...(rand() < 0.4 ? { pausedAt: startedAt + Math.floor(rand() * (NOW - startedAt)) } : {}) };
-      expect(activeMs(draft, NOW)).toBe(web.ctx.draftActiveMs(plain(draft), NOW));
+      const clock: WorkoutClock = { startedAt, lastEditAt: NOW, ...(rand() < 0.6 ? { pausedMs: Math.floor(rand() * 900e3) } : {}), ...(rand() < 0.4 ? { pausedAt: startedAt + Math.floor(rand() * (NOW - startedAt)) } : {}) };
+      expect(clockActiveMs(clock, NOW)).toBe(web.ctx.clockActiveMs(plain(clock), NOW));
     }
   });
 

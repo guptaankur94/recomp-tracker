@@ -3,13 +3,13 @@ import type { AppData } from '@/core/backup';
 import { sessionDateStr } from '@/core/format';
 import { sortHistory } from '@/core/history';
 import { validStoredPlan } from '@/core/plan-import';
-import type { Draft } from '@/core/draft';
+import type { Draft, WorkoutClock } from '@/core/draft';
 import type { BodyweightEntry, OwnWarmups, Plan, Profile, Session } from '@/core/types';
 
 import type { Db } from './db';
 
 /** Keys in the kv table. Profile and plan keep the web app's names. */
-export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings', restTimer: 'rest_timer', warmups: 'recomp_warmups' } as const;
+export const KEYS = { profile: 'recomp_profile', plan: 'recomp_plan', settings: 'settings', restTimer: 'rest_timer', warmups: 'recomp_warmups', clock: 'workout_clock' } as const;
 
 /** Per-day keys: the workout in progress, and which exercises are swapped for their alternative */
 export const draftKey = (dayIdx: number) => `draft_d${dayIdx}`;
@@ -28,6 +28,8 @@ export interface Workouts {
   drafts: Record<number, Draft>;
   swaps: Record<number, number[]>;
   restTimer: RestTimer | null;
+  /** The workout clock: one for the whole app */
+  clock: WorkoutClock | null;
 }
 
 export interface Settings {
@@ -89,7 +91,8 @@ export async function loadWorkouts(db: Db): Promise<Workouts> {
     }
   });
   const restTimer = await getKv<RestTimer | null>(db, KEYS.restTimer, null);
-  return { drafts, swaps, restTimer: restTimer && restTimer.endAt > Date.now() ? restTimer : null };
+  const clock = await getKv<WorkoutClock | null>(db, KEYS.clock, null);
+  return { drafts, swaps, restTimer: restTimer && restTimer.endAt > Date.now() ? restTimer : null, clock: clock && typeof clock.startedAt === 'number' ? clock : null };
 }
 
 /** Drops every workout in progress and swap (when the plan changes, day positions no longer match) */

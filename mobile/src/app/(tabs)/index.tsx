@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 
-import { activeMs, clockRunning, dayExercises, dayProgress, draftSets, hasDraft, pauseClock, removeExtra, resumeClock, startClock, type Draft } from '@/core/draft';
+import { clockActiveMs, dayExercises, dayProgress, draftSets, freshClock, hasDraft, pauseClock, removeExtra, resumeClock, startClock, type WorkoutClock as Clock } from '@/core/draft';
 import { fmtClock, localDateStr } from '@/core/format';
 import { daysDoneThisWeek, todaysSession } from '@/core/history';
 import { isRestDay, nextScheduled, planSchedule, scheduledDay, upNextDayIdx, weekdayIdx, weekdaysFor, WEEKDAY_NAMES } from '@/core/schedule';
@@ -23,7 +23,7 @@ import { Body, Mono } from '@/ui/text';
 import { useToast } from '@/ui/toast';
 
 export default function WorkoutScreen() {
-  const { activePlan, history, drafts, swaps, restTimer, dayAt, setDraft, setSwaps, saveDay } = useData();
+  const { activePlan, history, drafts, swaps, restTimer, clock: storedClock, dayAt, setDraft, setSwaps, saveDay, setClock, finishWorkout } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -33,7 +33,7 @@ export default function WorkoutScreen() {
   const next = upNextDayIdx(days, schedule, history);
   // Open on a day with unsaved sets, else the next one in the plan
   const [picked, setPicked] = useState<number | null>(() => {
-    for (let i = 0; i <= days.length; i++) if (hasDraft(drafts[i] ?? null) || drafts[i]?.started) return i;
+    for (let i = 0; i <= days.length; i++) if (hasDraft(drafts[i] ?? null)) return i;
     return null;
   });
   // Plan → Start opens a given day
@@ -52,7 +52,9 @@ export default function WorkoutScreen() {
   const progress = dayProgress(draft, exercises);
   const unsaved = hasDraft(draft);
   const now = nowMs();
-  const running = clockRunning(draft, progress.done, now);
+  // One clock for the whole app: started on any day, it shows on every day
+  const clock = freshClock(storedClock, now);
+  const running = !!clock;
   // Sets left from an earlier date: Start would move them to today, so it waits until they're saved or cleared
   const fromEarlier = unsaved && !!draft && localDateStr(new Date(draft.startedAt)) !== localDateStr(new Date(now));
   const done = daysDoneThisWeek(days, history);
@@ -108,22 +110,20 @@ export default function WorkoutScreen() {
     toast(`Saved. Today: ${session.exercises.length} exercise${session.exercises.length === 1 ? '' : 's'} logged`);
   };
   const start = () => {
-    setDraft(dayIdx, startClock(draft, nowMs()));
+    setClock(startClock(nowMs()));
     setPicked(dayIdx);
     haptic('success');
   };
   const pauseOrResume = () => {
-    if (!draft) return;
-    setDraft(dayIdx, draft.pausedAt ? resumeClock(draft, nowMs()) : pauseClock(draft, nowMs()));
+    if (!clock) return;
+    setClock(clock.pausedAt ? resumeClock(clock, nowMs()) : pauseClock(clock, nowMs()));
     haptic('light');
   };
+  // Finish saves today's sets from every day you trained, and stops the clock
   const finish = async () => {
-    const saved = await saveDay(dayIdx);
-    const session = saved ?? todaysSession(history);
+    const session = await finishWorkout(dayIdx);
     if (!session) {
-      // Started but nothing logged: Finish stops the clock
-      if (draft?.started && !unsaved) {
-        setDraft(dayIdx, null);
+      if (running) {
         setPicked(null);
         toast('Workout ended. Nothing was logged, so nothing was saved.');
         return;
@@ -132,7 +132,6 @@ export default function WorkoutScreen() {
       toast('Log at least one set before saving', { error: true });
       return;
     }
-    if (!saved && draft) setDraft(dayIdx, null);
     haptic('success');
     setPicked(null);
     router.push({ pathname: '/summary/[id]', params: { id: String(session.id) } });
@@ -179,8 +178,8 @@ export default function WorkoutScreen() {
           <Body color={c.inkSoft}>{upcoming ? `Next up: ${days[upcoming.dayIdx].title} on ${WEEKDAY_NAMES[upcoming.w]}. ` : ''}Recovery is when the muscle gets built. Want to train anyway? This is the next day in your plan.</Body>
         </Card>
       )}
-      {running && draft ? (
-        <WorkoutClock draft={draft} done={progress.done} total={progress.total} savedSec={todaysSession(history)?.durationSec ?? 0}
+      {clock ? (
+        <WorkoutClock clock={clock} done={progress.done} total={progress.total} savedSec={todaysSession(history)?.durationSec ?? 0}
           onPauseOrResume={pauseOrResume} onFinish={finish} />
       ) : exercises.length > 0 && !fromEarlier ? (
         <View style={{ gap: 6 }}>
@@ -230,8 +229,8 @@ function KeepAwakeNative() {
 }
 
 /** The workout clock: time so far (plus what's already saved today), sets done, Pause / Resume and Finish */
-function WorkoutClock({ draft, done, total, savedSec, onPauseOrResume, onFinish }: {
-  draft: Draft; done: number; total: number; savedSec: number; onPauseOrResume: () => void; onFinish: () => void;
+function WorkoutClock({ clock, done, total, savedSec, onPauseOrResume, onFinish }: {
+  clock: Clock; done: number; total: number; savedSec: number; onPauseOrResume: () => void; onFinish: () => void;
 }) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -240,9 +239,10 @@ function WorkoutClock({ draft, done, total, savedSec, onPauseOrResume, onFinish 
     const id = setInterval(() => setNow(nowMs()), 1000);
     return () => clearInterval(id);
   }, []);
-  const paused = !!draft.pausedAt;
-  const active = activeMs(draft, now);
-  const elapsed = savedSec + (active < 5 * 3600e3 ? active / 1000 : 0);
+  const paused = !!clock.pausedAt;
+  // Time already saved today, plus the clock's time since
+  const active = clockActiveMs(clock, now);
+  const elapsed = savedSec + (active < 5 * 3600e3 ? Math.max(0, active - (clock.creditedMs || 0)) / 1000 : 0);
   return (
     <Card>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

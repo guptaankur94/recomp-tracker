@@ -25,3 +25,5 @@ let progressMetric = 'top';
 
 // A draft untouched for this long is treated as a new workout when edited again.
 const DRAFT_STALE_MS = 12 * 60 * 60 * 1000;
+// The workout clock: one for the whole app, whichever plan days you train
+const CLOCK_KEY = 'recomp_clock';

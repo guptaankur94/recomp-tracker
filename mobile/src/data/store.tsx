@@ -3,10 +3,11 @@
 import { openDatabaseAsync } from 'expo-sqlite';
 import { createContext, useContext, useEffect, useEffectEvent, useState, type ReactNode } from 'react';
 
+import { localDateStr } from '@/core/format';
 import { mergeHealthWeights } from '@/core/health';
 import { buildBackupJson, restoreBackup, type AppData, type RestoreResult } from '@/core/backup';
-import { CUSTOM_DAY, dayExercises, saveDraft, type Draft } from '@/core/draft';
-import { sortHistory } from '@/core/history';
+import { CUSTOM_DAY, dayExercises, finishClock, hasDraft, saveDraft, type Draft, type WorkoutClock } from '@/core/draft';
+import { sortHistory, todaysSession } from '@/core/history';
 import { sortBodyweight } from '@/core/progress';
 import { templatePlan, TEMPLATES } from '@/core/templates';
 import type { BodyweightEntry, OwnWarmupSet, Plan, PlanDay, Profile, Session } from '@/core/types';
@@ -44,6 +45,11 @@ interface DataContext extends State {
   setSwaps: (dayIdx: number, swaps: Set<number>) => void;
   /** Saves a day's sets to history and clears its draft; null when nothing was logged */
   saveDay: (dayIdx: number) => Promise<Session | null>;
+  /** The workout clock (one for the whole app); null stops it */
+  setClock: (clock: WorkoutClock | null) => void;
+  /** Finish: saves today's sets from every day (this one first; or only this one's, when they're from an earlier
+      date), stops the clock and returns the workout to show, or null when nothing was logged */
+  finishWorkout: (dayIdx: number) => Promise<Session | null>;
   setRestTimer: (timer: repo.RestTimer | null) => void;
   updateProfile: (patch: Partial<Profile>) => Promise<void>;
   /** Deletes everything on this phone; setup runs again */
@@ -79,6 +85,37 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
   // Writes that don't block the screen; a failure is logged (the in-memory state stays as the person left it)
   const background = (p: Promise<unknown>) => { p.catch(e => console.warn('Saving failed', e)); };
   const update = (fn: (s: State) => State) => setState(s => (s ? fn(s) : s));
+
+  // Saves days' sets one after another (they merge into the date's workout), adding the clock's time once
+  const saveDays = (dayIdxs: number[], now: number) => {
+    let history = state.history;
+    let clock = state.clock;
+    let saved: Session | null = null;
+    const cleared: number[] = [];
+    for (const d of dayIdxs) {
+      const draft = state.drafts[d] ?? null;
+      const day = dayAt(d);
+      const exercises = dayExercises(day, draft, new Set(state.swaps[d] || []));
+      const out = saveDraft({ draft, exercises, day, isCustom: d === activePlan.days.length, planDays: activePlan.days, history, now, clock });
+      if (!out) continue;
+      ({ history, clock } = out);
+      saved = out.session;
+      cleared.push(d);
+    }
+    return { history, clock, saved, cleared };
+  };
+  // Writes the workouts that changed (saving only ever changes the date's workout: today's, or an earlier one)
+  const commitSaved = async (r: { history: Session[]; clock: WorkoutClock | null; cleared: number[]; saved: Session | null }) => {
+    const changed = new Set([r.saved?.id, todaysSession(r.history)?.id]);
+    for (const s of r.history) if (changed.has(s.id)) await repo.saveSession(db, s);
+    for (const d of r.cleared) await repo.setKv(db, repo.draftKey(d), null);
+    await repo.setKv(db, repo.KEYS.clock, r.clock);
+    update(x => {
+      const drafts = { ...x.drafts };
+      r.cleared.forEach(d => delete drafts[d]);
+      return { ...x, history: r.history, drafts, clock: r.clock };
+    });
+  };
 
   const value: DataContext = {
     ...state,
@@ -157,20 +194,31 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       background(repo.setKv(db, repo.swapsKey(dayIdx), list.length ? list : null));
     },
     saveDay: async dayIdx => {
-      const s = state;
-      const draft = s.drafts[dayIdx] ?? null;
-      const day = dayAt(dayIdx);
-      const exercises = dayExercises(day, draft, new Set(s.swaps[dayIdx] || []));
-      const saved = saveDraft({ draft, exercises, day, isCustom: dayIdx === activePlan.days.length, planDays: activePlan.days, history: s.history, now: Date.now() });
-      if (!saved) return null;
-      await repo.saveSession(db, saved.session);
-      await repo.setKv(db, repo.draftKey(dayIdx), null);
-      update(x => {
-        const drafts = { ...x.drafts };
-        delete drafts[dayIdx];
-        return { ...x, history: saved.history, drafts };
-      });
-      return saved.session;
+      const result = saveDays([dayIdx], Date.now());
+      if (!result.saved) return null;
+      await commitSaved(result);
+      return result.saved;
+    },
+    setClock: clock => {
+      update(s => ({ ...s, clock }));
+      background(repo.setKv(db, repo.KEYS.clock, clock));
+    },
+    finishWorkout: async dayIdx => {
+      const now = Date.now();
+      const today = localDateStr(new Date(now));
+      const draftDate = (d: number) => (state.drafts[d] ? localDateStr(new Date(state.drafts[d].startedAt)) : null);
+      const fromEarlier = hasDraft(state.drafts[dayIdx] ?? null) && draftDate(dayIdx) !== today;
+      const others = Object.keys(state.drafts).map(Number).filter(d => d !== dayIdx && hasDraft(state.drafts[d]) && draftDate(d) === today);
+      const result = saveDays(fromEarlier ? [dayIdx] : [dayIdx, ...others], now);
+      if (!fromEarlier) {
+        // Time since the last save still belongs to today's workout; then the clock stops
+        result.history = finishClock(result.history, result.clock, now);
+        result.clock = null;
+      }
+      // A day with nothing logged keeps no draft
+      if (!hasDraft(state.drafts[dayIdx] ?? null) && state.drafts[dayIdx]) result.cleared.push(dayIdx);
+      await commitSaved(result);
+      return result.saved ? result.history.find(h => h.id === result.saved!.id) ?? result.saved : todaysSession(result.history, new Date(now));
     },
     updateProfile: async patch => {
       const profile = { ...(state.profile || {}), ...patch };
@@ -179,7 +227,7 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
     },
     resetAll: async () => {
       await repo.resetAll(db);
-      setState({ history: [], bodyweight: [], profile: null, plan: null, warmups: {}, settings: {}, drafts: {}, swaps: {}, restTimer: null });
+      setState({ history: [], bodyweight: [], profile: null, plan: null, warmups: {}, settings: {}, drafts: {}, swaps: {}, restTimer: null, clock: null });
     },
     pendingPlan,
     setPendingPlan,

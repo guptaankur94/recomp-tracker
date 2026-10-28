@@ -75,11 +75,11 @@ function sessionStartedToday(dayIdx) {
   return meta && localDateStr(new Date(meta.startedAt)) === localDateStr(new Date()) ? meta : null;
 }
 
-// Time already saved to today's workout plus time on the current tab
+// Time already saved to today's workout plus the clock's time since
 function sessionElapsedSec() {
   const today = todaysSession();
-  const meta = sessionStartedToday(currentDayIdx);
-  return (today && today.durationSec || 0) + draftActiveMs(meta, Date.now()) / 1000;
+  const clock = workoutClock();
+  return (today && today.durationSec || 0) + (clock ? Math.max(0, clockActiveMs(clock, Date.now()) - (clock.creditedMs || 0)) / 1000 : 0);
 }
 
 function updateSessionBar() {
@@ -89,8 +89,8 @@ function updateSessionBar() {
 
 setInterval(updateSessionBar, 1000);
 
-// Finished exercises stay open with a summary banner; these are the ones the user folded away.
-const collapsedByUser = new Set();
+// A finished exercise folds to one line with a tick; these are the ones the user opened again.
+const openedDone = new Set();
 
 let justFinishedEx = null;
 
@@ -155,32 +155,17 @@ function exStateKey(exIdx) {
 }
 
 function expandExercise(exIdx) {
-  collapsedByUser.delete(exStateKey(exIdx));
+  openedDone.add(exStateKey(exIdx));
   haptic('light');
   renderWorkout();
 }
 
 function collapseExercise(exIdx) {
-  collapsedByUser.add(exStateKey(exIdx));
+  openedDone.delete(exStateKey(exIdx));
   haptic('light');
   renderWorkout();
 }
 
-// "Next exercise →" on a finished card: bring the next unfinished exercise into view
-function goToNextExercise(exIdx) {
-  const exercises = getAllExercisesForDay(currentDayIdx);
-  let target = exIdx + 1;
-  for (let e = exIdx + 1; e < exercises.length; e++) {
-    const count = getSetCount(currentDayIdx, e, exercises[e].sets);
-    let open = false;
-    for (let s = 1; s <= count && !open; s++) open = localStorage.getItem(setKey(currentDayIdx, e, s, 'done')) !== 'true';
-    if (open) { target = e; break; }
-  }
-  const card = document.getElementById(`ex-card-${target}`);
-  if (!card) return;
-  haptic('light');
-  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 // Small confetti burst inside the exercise-complete banner
 function celebrate(el) {
@@ -216,19 +201,6 @@ function bestDraftSet(exIdx, totalSets) {
   return best;
 }
 
-// Sets, best set, volume and average rest of a finished exercise in today's draft
-function exerciseDoneStats(exIdx, ex, totalSets) {
-  let volume = 0;
-  let restSum = 0;
-  for (let s = 1; s <= totalSets; s++) {
-    const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'w'))) || 0;
-    const r = parseInt(localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'r')), 10) || 0;
-    const drops = getDrops(currentDayIdx, exIdx, s).map(d => ({ weight: parseFloat(d.w) || 0, reps: parseInt(d.r, 10) || 0 }));
-    volume += setVolume({ weight: w, reps: r, drops });
-    restSum += getSetRest(currentDayIdx, exIdx, s, ex);
-  }
-  return { best: bestDraftSet(exIdx, totalSets), volume, avgRest: Math.round(restSum / Math.max(1, totalSets)) };
-}
 
 function renderWorkout() {
   const main = document.getElementById('workout-content');
@@ -238,15 +210,16 @@ function renderWorkout() {
   const progress = dayProgress(currentDayIdx);
 
   // Sticky bar while a workout is under way today (this tab, or parts already saved to today's log)
-  const todayMeta = sessionStartedToday(currentDayIdx);
   const today = todaysSession();
   const loggedSets = today ? sessionStats(today).sets : 0;
   let html = '';
-  // The clock runs from Start or the first ticked set; the bar also stays up for what's already saved today
-  const clockRunning = !!(todayMeta && (progress.done > 0 || todayMeta.started));
+  // One clock for the whole app (Start or the first ticked set, on any day); the bar also stays up for what's
+  // already saved today
+  const clock = workoutClock();
+  const clockRunning = !!clock;
   const underWay = clockRunning || today;
   if (underWay) {
-    const paused = !!(todayMeta && todayMeta.pausedAt);
+    const paused = !!(clock && clock.pausedAt);
     html += `
       <div class="session-bar${paused ? ' paused' : ''}">
         <div class="session-stat">
@@ -322,11 +295,11 @@ function renderWorkout() {
     }
     const allDone = doneSets === totalSets;
 
-    // Finished exercise the user folded away: one summary line, tap to open
-    if (allDone && collapsedByUser.has(exStateKey(exIdx))) {
+    // Finished exercise: one line with a tick, tap to open
+    if (allDone && !openedDone.has(exStateKey(exIdx))) {
       const best = bestDraftSet(exIdx, totalSets);
       html += `
-        <div class="card ex-card collapsed just-collapsed" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})">
+        <div class="card ex-card collapsed ${justFinishedEx === exIdx ? 'pop' : 'just-collapsed'}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
           <span class="locked-num">${icon('check', 3)}</span>
           <div class="collapsed-text">
             <div class="ex-name">${escapeHtml(ex.name)}</div>
@@ -345,8 +318,6 @@ function renderWorkout() {
     // Rest chip: change vs last time (or vs the plan before there is a last time); shorter is progress
     const restRef = lastRest ? roundRest(lastRest) : ex.rest;
     const restDiff = restDelta(rest, restRef);
-    const doneStats = allDone ? exerciseDoneStats(exIdx, ex, totalSets) : null;
-    const nextEx = exIdx + 1 < allExercises.length;
     const showInfo = infoOpen.has(exStateKey(exIdx));
     const suggestion1 = suggestSet(ex, lastSetFor(last, 1));
     const warmups = allDone ? [] : warmupSets(ex, exIdx, suggestion1);
@@ -365,17 +336,6 @@ function renderWorkout() {
         </div>
         <div class="ex-meta">${warmups.length ? `${warmups.length} warm-up + ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
         ${lastBest ? `<div class="ex-last">Last: <strong>${lastBest.weight > 0 ? fmtSetLine(lastBest) : `BW × ${lastBest.reps}`}</strong>${lastRest ? ` · rest ${fmtClock(roundRest(lastRest))}` : ''}</div>` : ''}
-        ${doneStats ? `
-          <div class="ex-complete ${justFinishedEx === exIdx ? 'pop' : ''}" id="ex-complete-${exIdx}">
-            <div class="ex-complete-title">${icon('check', 3)}Exercise complete</div>
-            <div class="ex-complete-stats">
-              <span><strong>${totalSets}</strong> set${totalSets === 1 ? '' : 's'}</span>
-              ${doneStats.best ? `<span>best <strong>${doneStats.best.w > 0 ? `${fmtNum(doneStats.best.w)} kg` : 'BW'} × ${doneStats.best.r}</strong></span>` : ''}
-              ${doneStats.volume > 0 ? `<span><strong>${fmtVolume(doneStats.volume)}</strong></span>` : ''}
-              <span>rest <strong>${fmtClock(doneStats.avgRest)}</strong> avg</span>
-            </div>
-            ${nextEx ? `<button class="btn btn-positive btn-sm ex-next-btn" onclick="goToNextExercise(${exIdx})">Next exercise →</button>` : ''}
-          </div>` : ''}
         <div class="ex-chips">
           <button class="chip ${restDiff.startsWith('−') ? 'faster' : ''}" onclick="pickRest(${exIdx})" aria-label="Rest ${fmtClock(rest)}, change">${icon('clock', 2)}Rest ${fmtClock(rest)}${restDiff ? `<span class="chip-delta">· ${restDiff}</span>` : ''}</button>
           ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}
@@ -582,7 +542,7 @@ function completeSet(exIdx, setNum) {
   const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
   localStorage.setItem(key('rested'), 'true');
   touchDraft();
-  resumeWorkout(true);
+  clockOnSet();
 
   // Was this the exercise's last open set?
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);
@@ -597,7 +557,7 @@ function completeSet(exIdx, setNum) {
   }
   justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
   if (finished) {
-    collapsedByUser.delete(exStateKey(exIdx));
+    openedDone.delete(exStateKey(exIdx));
     justFinishedEx = exIdx;
   }
   initNav();
@@ -605,7 +565,7 @@ function completeSet(exIdx, setNum) {
   justCompletedBlock = null;
   if (finished) {
     justFinishedEx = null;
-    celebrate(document.getElementById(`ex-complete-${exIdx}`));
+    celebrate(document.getElementById(`ex-card-${exIdx}`));
   }
 
   if (firstCompletion) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
@@ -685,7 +645,6 @@ function addSet(exIdx) {
   const allExercises = getAllExercisesForDay(currentDayIdx);
   const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
   saveSetCount(currentDayIdx, exIdx, currentCount + 1);
-  collapsedByUser.delete(exStateKey(exIdx));
   renderWorkout();
 }
 
@@ -807,7 +766,7 @@ function closeOpenSwipe() {
 let wakeLock = null;
 
 function workoutInProgress() {
-  return !!restTimer || !!sessionStartedToday(currentDayIdx) && dayHasDraft(currentDayIdx);
+  return !!restTimer || !!workoutClock() || !!sessionStartedToday(currentDayIdx) && dayHasDraft(currentDayIdx);
 }
 
 async function syncWakeLock() {
