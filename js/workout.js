@@ -335,7 +335,8 @@ function renderWorkout() {
           <button class="icon-btn plain ${showInfo ? 'on' : ''}" onclick="toggleExInfo(${exIdx})" aria-label="Exercise details" aria-expanded="${showInfo}">${icon('infoCircle', 1.8)}</button>
         </div>
         <div class="ex-meta">${warmups.length ? `${warmups.length} warm-up + ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
-        ${lastBest ? `<div class="ex-last">Last: <strong>${lastBest.weight > 0 ? fmtSetLine(lastBest) : `BW × ${lastBest.reps}`}</strong>${lastRest ? ` · rest ${fmtClock(roundRest(lastRest))}` : ''}</div>` : ''}
+        ${allDone ? '' : goalPanelHtml(ex, last, exIdx)}
+        ${lastBest ? `<div class="ex-last">Last time ${lastBest.weight > 0 ? fmtSetLine(lastBest) : `BW × ${lastBest.reps}`}${lastRest ? ` · rest ${fmtClock(roundRest(lastRest))}` : ''}</div>` : ''}
         <div class="ex-chips">
           <button class="chip ${restDiff.startsWith('−') ? 'faster' : ''}" onclick="pickRest(${exIdx})" aria-label="Rest ${fmtClock(rest)}, change">${icon('clock', 2)}Rest ${fmtClock(rest)}${restDiff ? `<span class="chip-delta">· ${restDiff}</span>` : ''}</button>
           ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}

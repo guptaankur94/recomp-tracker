@@ -10,6 +10,8 @@ export interface PlanExerciseBase {
   /** Rest between sets, in seconds. */
   rest: number;
   cue?: string;
+  /** What to lift by the end of the program (from an AI plan, or set by you); reps alone for bodyweight or holds */
+  goal?: { weight?: number; reps: number };
 }
 
 export interface PlanExercise extends PlanExerciseBase {
@@ -32,6 +34,8 @@ export interface Plan {
   templateId?: string;
   days: PlanDay[];
   schedule?: Schedule;
+  /** A program under way: this many weeks from startDate ("YYYY-MM-DD") */
+  program?: { weeks: number; startDate: string };
 }
 
 export type PrType = 'weight' | 'e1rm' | 'reps' | 'rest';

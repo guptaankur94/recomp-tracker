@@ -27,6 +27,10 @@ interface DataContext extends State {
   dayAt: (dayIdx: number) => PlanDay;
   restore: (text: string) => Promise<RestoreResult>;
   backupJson: () => string;
+  /** Starts a program on the active plan (null ends it); workouts in progress stay */
+  setProgram: (program: Plan['program'] | null) => Promise<void>;
+  /** Your goal for an exercise on the plan (on its swap, when swapped); workouts in progress stay */
+  setGoal: (dayIdx: number, exIdx: number, swapped: boolean, goal: { weight?: number; reps: number }) => Promise<void>;
   /** Switches plan (null: back to the default). Workouts in progress are cleared, since days no longer line up. */
   choosePlan: (plan: Plan | null) => Promise<void>;
   logBodyweight: (entry: BodyweightEntry) => Promise<void>;
@@ -128,6 +132,22 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       return result;
     },
     backupJson: () => buildBackupJson(state),
+    setProgram: async program => {
+      const plan: Plan = JSON.parse(JSON.stringify(activePlan));
+      if (program) plan.program = program;
+      else delete plan.program;
+      await repo.setKv(db, repo.KEYS.plan, plan);
+      update(s => ({ ...s, plan }));
+    },
+    setGoal: async (dayIdx, exIdx, swapped, goal) => {
+      const plan: Plan = JSON.parse(JSON.stringify(activePlan));
+      const target = plan.days[dayIdx]?.exercises[exIdx];
+      if (!target) return;
+      if (swapped && target.alt) target.alt.goal = goal;
+      else target.goal = goal;
+      await repo.setKv(db, repo.KEYS.plan, plan);
+      update(s => ({ ...s, plan }));
+    },
     choosePlan: async plan => {
       await repo.setKv(db, repo.KEYS.plan, plan);
       await repo.clearWorkouts(db);

@@ -244,3 +244,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .toast.error .toast-icon { background: var(--danger); }
 .toast.info .toast-icon { background: var(--text-2); }
 .toast-action { background: none; border: none; color: var(--accent); font-weight: 700; font-size: var(--t-body); padding: 4px 2px 4px 8px; white-space: nowrap; }
+
+/* Program: weeks to a goal */
+.program-card { margin-top: 12px; border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); background: color-mix(in srgb, var(--gold) 7%, var(--surface)); }
+.program-head { display: flex; align-items: baseline; gap: 8px; }
+.program-title { font-size: var(--t-headline); font-weight: 700; color: var(--gold); }
+.program-end { margin-left: auto; font-size: var(--t-footnote); color: var(--text-2); }
+.program-text { margin: 8px 0 12px; font-size: var(--t-footnote); color: var(--text-2); }
+.program-card .btn { width: 100%; }

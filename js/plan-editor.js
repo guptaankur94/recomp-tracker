@@ -267,7 +267,9 @@ async function saveEditedPlan() {
   const days = plan.days.map((d, i) => ({ day: `Day ${i + 1}`, title: (d.title || '').trim() || `Day ${i + 1}`, exercises: d.exercises }));
   editor.saved = true;
   const schedule = plan.schedule.some(v => Number.isInteger(v)) ? plan.schedule : undefined;
-  setActivePlan({ planName: plan.planName, days, ...(schedule ? { schedule } : {}) });
+  // Editing the plan keeps a program under way
+  const program = getProgram();
+  setActivePlan({ planName: plan.planName, days, ...(schedule ? { schedule } : {}), ...(program ? { program } : {}) });
   document.getElementById('editor-sheet').dataset.saved = '1';
   closeSheet('editor-sheet');
   editor = null;

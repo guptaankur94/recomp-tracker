@@ -15,6 +15,8 @@ the repository root, which keeps running until this one reaches the stores.
 - `src/widgets`: the iPhone home-screen widget (this week's ring, the next workout, the streak). Its layout is
   compiled to text and runs inside the widget, so it may only use `@expo/ui/swift-ui` components and modifiers.
   `src/core/widget.ts` works out what it shows.
+- Goals: `src/core/goals.ts` works out each exercise's goal (from an AI plan's `goal`, or the top of the plan's weight
+  range) and how close you are; a program (`plan.program`, e.g. 12 weeks) adds the week count. Same answers as `js/goals.js`.
 - `src/widgets/rest-activity.tsx`: the rest timer as a Live Activity (Lock Screen, Dynamic Island, Apple Watch Smart
   Stack), kept in step with the in-app timer by `rest-live.ios.ts`. The "Rest over" alert is time-sensitive, so it gets
   through Focus modes and taps your wrist on Apple Watch when the phone is locked.
@@ -38,7 +40,7 @@ sh e2e/run.sh                # browser checks at iPhone size (after the export a
 npm run build-preview        # the browser preview for GitHub Pages, into ../preview
 ```
 
-`e2e/` drives the browser build like a person would: setup, logging a workout, the workout clock and calories, your own warm-ups, backups, plans and charts
+`e2e/` drives the browser build like a person would: setup, logging a workout, the workout clock and calories, your own warm-ups, goals and programs, backups, plans and charts
 (about 180 checks, with screenshots). Set `PLAYWRIGHT` and `CHROMIUM` if Playwright isn't installed in the
 usual place.
 

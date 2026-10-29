@@ -22,6 +22,7 @@ function loadActivePlan() {
 function planExerciseOut(ex) {
   const out = { name: ex.name, warmup: ex.warmup, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
   if (out.warmup === undefined) delete out.warmup;
+  if (ex.goal) out.goal = ex.goal;
   if (ex.cue) out.cue = ex.cue;
   return out;
 }
@@ -119,6 +120,7 @@ function renderPlanView() {
       <div class="plan-own">${icon('pencil', 2.2)}<span>This plan is yours. Change any day, exercise, set or rest time. Your history is kept.</span></div>
       <button class="btn btn-primary" onclick="openPlanEditor()">Edit Plan</button>
     </div>
+    ${programCardHtml()}
 
     <div class="group-label">Days</div>
     ${programData.map((d, i) => {

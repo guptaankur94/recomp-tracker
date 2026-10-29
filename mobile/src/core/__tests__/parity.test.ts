@@ -19,6 +19,7 @@ import {
 } from '../workout';
 import { NOW, sampleBodyweight, sampleHistory } from '../testing/fixtures';
 import { parseWarmupRows } from '../warmups';
+import { exerciseGoal, goalLabel, goalProgress, parseGoalText, programStatus } from '../goals';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { loadWebApp } = require('../../../scripts/web-app');
@@ -82,6 +83,23 @@ describe('workout logic', () => {
       [{ kg: '-5', reps: '5' }], [{ kg: '12.345', reps: '6.7' }], [{ kg: 'abc', reps: '5' }], []
     ];
     rows.forEach(r => same(parseWarmupRows(r), w.ctx.parseWarmupRows(r)));
+  });
+  test('goals: from the plan, how close you are, the program week, typed goals', () => {
+    const lasts = [null, { sets: [{ weight: 0, reps: 12 }] }, { sets: [{ weight: 20, reps: 10 }, { weight: 22.5, reps: 8 }] }, { sets: [{ weight: 45, reps: 8 }] }, { sets: [{ weight: 60, reps: 12 }] }, { sets: [{ weight: 140, reps: 3 }] }];
+    const withGoals = [...allExercises, { ...allExercises[0], goal: { weight: 60, reps: 8 } }, { ...allExercises[0], repTarget: '30–45s hold', weightTarget: 'Bodyweight', goal: { reps: 90 } }, { ...allExercises[0], weightTarget: 'Moderate' }, { ...allExercises[0], repTarget: 'Failure' }];
+    withGoals.forEach(ex => {
+      const g = exerciseGoal(ex);
+      same(g, web.ctx.exerciseGoal(ex));
+      if (g) expect(goalLabel(g)).toBe(web.ctx.goalLabel(g));
+      lasts.forEach(last => same(goalProgress(g, last), web.ctx.goalProgress(g, last)));
+    });
+    for (let back = -3; back < 120; back += 4) {
+      const start = new Date(2026, 9, 28 - back);
+      const program = { weeks: back % 3 ? 12 : 8, startDate: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}` };
+      same(programStatus(program, new Date(2026, 9, 28, 18)), web.ctx.programStatus(program, new Date(2026, 9, 28, 18)));
+    }
+    same(programStatus(null), web.ctx.programStatus(null));
+    ['60 kg × 8', '60x8', '60 8', '62.5 kg x 6', '15', '90 s', 'abc', '0 x 5', '60 kg', '2000 x 5', ' 40 X 12 reps '].forEach(t => same(parseGoalText(t), web.ctx.parseGoalText(t)));
   });
   test('suggestions and progression tips', () => {
     allExercises.forEach(ex => [0, 10, 25, 52.5].forEach(weight => [1, 5, 8, 10, 12, 15, 20].forEach(reps => [0, 30, 45, 90, 137].forEach(rest => {
@@ -224,7 +242,14 @@ describe('plans from a chatbot', () => {
     '{"days":[{"exercises":[{"sets":3}]}]}',
     JSON.stringify({ days: Array.from({ length: 8 }, () => ({ exercises: [{ name: 'X' }] })) }),
     JSON.stringify({ days: [{ exercises: Array.from({ length: 16 }, () => ({ name: 'X' })) }] }),
-    JSON.stringify(templatePlan(TEMPLATES[3]))
+    JSON.stringify(templatePlan(TEMPLATES[3])),
+    // Goals in every shape, and a program under way (or a broken one)
+    JSON.stringify({ planName: 'G', program: { weeks: 12, startDate: '2026-10-01' }, days: [{ title: 'A', exercises: [
+      { name: 'Bench', reps: '8–10 reps', weight: '40–50 kg', goal: { weight: 60, reps: 8 }, alt: { name: 'DB Bench', goal: '22.5 kg × 10' } },
+      { name: 'Squat', goal: '80 kg x 5' }, { name: 'Plank', reps: '30–45s hold', goal: { reps: 90 } }, { name: 'Curl', goal: 'junk' },
+      { name: 'Dip', goal: 15 }, { name: 'Row', goal: { weight: -5, reps: 8 } }, { name: 'Press', goal: { weight: 2000, reps: 5 } }] }] }),
+    JSON.stringify({ program: { weeks: 99, startDate: '2026-10-01' }, days: [{ exercises: [{ name: 'X' }] }] }),
+    JSON.stringify({ program: { weeks: 12, startDate: 'soon' }, days: [{ exercises: [{ name: 'X' }] }] })
   ];
   test('read the same way, with the same messages', () => {
     replies.forEach(text => same(outcome(() => normalizePlan(extractJson(text))), outcome(() => web.ctx.normalizePlan(web.ctx.extractJson(text)))));

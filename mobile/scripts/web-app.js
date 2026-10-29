@@ -7,7 +7,7 @@ const vm = require('vm');
 const WEB = path.join(__dirname, '..', '..', 'js');
 const FILES = [
   'data/default-plan.js', 'data/exercises.js', 'data/plans.js', 'state.js', 'helpers.js', 'storage.js',
-  'workout-data.js', 'records.js', 'profile.js', 'history.js', 'progress.js', 'plan.js', 'ai-plan.js', 'backup.js',
+  'workout-data.js', 'records.js', 'goals.js', 'profile.js', 'history.js', 'progress.js', 'plan.js', 'ai-plan.js', 'backup.js',
   'add-exercise.js', 'workout.js', 'plan-editor.js', 'warmup-editor.js'
 ];
 

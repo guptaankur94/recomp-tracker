@@ -46,6 +46,18 @@ export function normalizePlan(data: unknown): Plan {
     if (text(raw.cue)) ex.cue = text(raw.cue);
     const warmup = raw.warmup ?? raw.warmupSets ?? raw.warmups;
     if (warmup !== undefined && warmup !== null && !Number.isNaN(parseInt(warmup, 10))) ex.warmup = int(warmup, 0, 3, 0);
+    // The goal for the end of the program: { weight, reps } or text like "60 kg × 8" / "15 reps"
+    const goal = raw.goal ?? raw.target;
+    let gw = 0;
+    let gr = 0;
+    if (goal && typeof goal === 'object') {
+      gw = parseFloat(goal.weight ?? goal.kg) || 0;
+      gr = parseInt(goal.reps ?? goal.seconds, 10) || 0;
+    } else if (typeof goal === 'string' || typeof goal === 'number') {
+      const m = String(goal).match(/(\d+(?:\.\d+)?)\s*kg\s*[×x*]\s*(\d+)/i);
+      if (m) { gw = parseFloat(m[1]); gr = parseInt(m[2], 10); } else gr = parseInt(String(goal), 10) || 0;
+    }
+    if (gr > 0 && gr <= 500 && gw >= 0 && gw <= 1000) ex.goal = gw > 0 ? { weight: Math.round(gw * 100) / 100, reps: gr } : { reps: gr };
     return ex;
   };
 
@@ -66,6 +78,11 @@ export function normalizePlan(data: unknown): Plan {
   const plan: Plan = { planName: text(d0.planName || d0.name) || 'Custom Plan', days };
   if (Array.isArray(d0.schedule) && d0.schedule.length === 7) {
     plan.schedule = d0.schedule.map((v: unknown) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) < days.length ? v as number : null));
+  }
+  // A program already under way (kept through backups)
+  const program = d0.program;
+  if (program && Number.isInteger(program.weeks) && program.weeks >= 1 && program.weeks <= 52 && /^\d{4}-\d{2}-\d{2}$/.test(program.startDate || '')) {
+    plan.program = { weeks: program.weeks, startDate: program.startDate };
   }
   return plan;
 }

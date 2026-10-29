@@ -20,6 +20,7 @@ import { nowMs } from './clock';
 import { haptic } from './haptics';
 import { PrBadge } from './parts';
 import { Body, Mono, Title } from './text';
+import { GoalPanel } from './goal-panel';
 import { WarmupPanel } from './warmup-panel';
 import { useToast } from './toast';
 
@@ -40,7 +41,7 @@ interface Props {
 }
 
 export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onSwap, onRemove, coachTip }: Props) {
-  const { setDraft, setRestTimer, warmups, clock, setClock } = useData();
+  const { setDraft, setRestTimer, warmups, clock, setClock, activePlan } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -161,8 +162,10 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
         {finished && <SmallButton label="Fold" onPress={() => setFolded(true)} />}
       </View>
       {showInfo && ex.cue ? <Body color={c.inkSoft}>{ex.cue}</Body> : null}
+      <GoalPanel ex={ex} last={last} program={activePlan.program}
+        onEdit={ex.isExtra ? undefined : () => router.push({ pathname: '/goal', params: { day: String(dayIdx), ex: String(exIdx), swapped: ex.swapped ? '1' : '' } })} />
       {last ? (
-        <Mono style={{ fontSize: 12 }}>Last: {last.sets.map(s => (s.weight > 0 ? `${fmtNum(s.weight)}×${s.reps}` : `BW×${s.reps}`)).join(', ')}{tip ? `  ·  ${tip}` : ''}</Mono>
+        <Mono style={{ fontSize: 12 }} color={c.muted}>Last time {last.sets.map(s => (s.weight > 0 ? `${fmtNum(s.weight)}×${s.reps}` : `BW×${s.reps}`)).join(', ')}{tip ? `  ·  ${tip}` : ''}</Mono>
       ) : (
         <Mono style={{ fontSize: 12 }} color={c.muted}>First time: pick a weight you could lift 2 more reps with.</Mono>
       )}

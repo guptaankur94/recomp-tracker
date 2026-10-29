@@ -83,6 +83,7 @@ Rules:
 - Exactly ${days} training days, 4–7 exercises per day, ordered big compound lifts first.
 - "sets": 2–5. "reps": a range like "8–12 reps" (or "45s hold" / "Failure" where it fits).
 - "weight": a realistic starting load for me, e.g. "40–50 kg", "12.5 kg DBs", "Moderate" or "Bodyweight".
+- "goal": what I should lift by the end of a 12-week program if I train consistently: { "weight": kg as a number, "reps": a number } (for bodyweight or timed moves, just { "reps": number }, using seconds for holds). Ambitious but realistic for me; the app shows it on every exercise as the target to reach.
 - "rest": seconds between sets as a number (60–180).
 - "cue": one short technique tip.
 - "warmup": number of light ramp-up sets before the working sets (0–3), not counted as working sets. Use 2 for the day's first heavy compound lift (3 if its working sets are 5 reps or fewer), 1 for a later compound lift or the first exercise for a new joint or muscle (e.g. first biceps or triceps move, overhead or elbow-heavy moves), and 0 for isolation, high-rep or bodyweight work on muscles already warmed up.
@@ -103,6 +104,7 @@ The file must be valid JSON in exactly this format:
       "sets": 3,
       "reps": "8–10 reps",
       "weight": "40–50 kg",
+      "goal": { "weight": 60, "reps": 8 },
       "rest": 150,
       "cue": "3s lowering, pause on the chest",
       "alt": { "name": "DB Bench Press", "warmup": 2, "sets": 3, "reps": "10–12 reps", "weight": "15–20 kg DBs", "rest": 120, "cue": "Full stretch at the bottom" }
@@ -154,6 +156,18 @@ function normalizePlan(data) {
     if (text(raw.cue)) ex.cue = text(raw.cue);
     const warmup = raw.warmup ?? raw.warmupSets ?? raw.warmups;
     if (warmup !== undefined && warmup !== null && !Number.isNaN(parseInt(warmup, 10))) ex.warmup = int(warmup, 0, 3, 0);
+    // The goal for the end of the program: { weight, reps } or text like "60 kg × 8" / "15 reps"
+    const goal = raw.goal ?? raw.target;
+    let gw = 0;
+    let gr = 0;
+    if (goal && typeof goal === 'object') {
+      gw = parseFloat(goal.weight ?? goal.kg) || 0;
+      gr = parseInt(goal.reps ?? goal.seconds, 10) || 0;
+    } else if (typeof goal === 'string' || typeof goal === 'number') {
+      const m = String(goal).match(/(\d+(?:\.\d+)?)\s*kg\s*[×x*]\s*(\d+)/i);
+      if (m) { gw = parseFloat(m[1]); gr = parseInt(m[2], 10); } else gr = parseInt(goal, 10) || 0;
+    }
+    if (gr > 0 && gr <= 500 && gw >= 0 && gw <= 1000) ex.goal = gw > 0 ? { weight: Math.round(gw * 100) / 100, reps: gr } : { reps: gr };
     return ex;
   };
 
@@ -174,6 +188,11 @@ function normalizePlan(data) {
   const plan = { planName: text(data.planName || data.name) || 'Custom Plan', days };
   if (Array.isArray(data.schedule) && data.schedule.length === 7) {
     plan.schedule = data.schedule.map(v => (Number.isInteger(v) && v >= 0 && v < days.length ? v : null));
+  }
+  // A program already under way (kept through backups)
+  const program = data.program;
+  if (program && Number.isInteger(program.weeks) && program.weeks >= 1 && program.weeks <= 52 && /^\d{4}-\d{2}-\d{2}$/.test(program.startDate || '')) {
+    plan.program = { weeks: program.weeks, startDate: program.startDate };
   }
   return plan;
 }

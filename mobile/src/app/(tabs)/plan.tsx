@@ -1,12 +1,16 @@
 // Plan: your plan (its week, days and exercises; edit anything) and ways to start a different one.
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { localDateStr } from '@/core/format';
+import { PROGRAM_WEEKS, programStatus } from '@/core/goals';
 import { dayColor } from '@/core/history';
 import { changePlanPrompt, dayMinutes } from '@/core/plan-edit';
 import { extractJson, normalizePlan } from '@/core/plan-import';
 import { planSchedule, weekdaysFor, WEEKDAYS, WEEKDAY_NAMES } from '@/core/schedule';
+import type { Plan } from '@/core/types';
 import { pickTextFile } from '@/data/files';
 import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
@@ -18,7 +22,7 @@ import { Body, Mono, Title } from '@/ui/text';
 import { useToast } from '@/ui/toast';
 
 export default function PlanScreen() {
-  const { activePlan, setPendingPlan } = useData();
+  const { activePlan, setPendingPlan, setProgram } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -65,6 +69,11 @@ export default function PlanScreen() {
         <Body color={c.inkSoft} style={{ fontSize: 14 }}>This plan is yours. Change any day, exercise, set or rest time. Your history is kept.</Body>
         <Button label="Edit plan" kind="primary" onPress={() => router.push('/plan-editor')} style={{ marginTop: 6 }} />
       </Card>
+      <ProgramCard program={activePlan.program} onStart={async weeks => {
+        await setProgram({ weeks, startDate: localDateStr(new Date()) });
+        haptic('success');
+        toast(`Week 1 of ${weeks}. Your goals are on every exercise.`);
+      }} onEnd={async () => { await setProgram(null); toast('Program ended. Your goals stay on each exercise.'); }} />
 
       <SectionLabel>Days</SectionLabel>
       {days.map((d, i) => {
@@ -116,5 +125,45 @@ function Tile({ title, sub, onPress }: { title: string; sub: string; onPress: ()
       <Body bold>{title}</Body>
       <Body style={{ fontSize: 13 }} color={c.inkSoft}>{sub}</Body>
     </Pressable>
+  );
+}
+
+/** Train to a goal: start a program (8, 12 or 16 weeks), or see the week you're in */
+function ProgramCard({ program, onStart, onEnd }: { program: Plan['program']; onStart: (weeks: number) => void; onEnd: () => void }) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+  const [choosing, setChoosing] = useState(false);
+  const status = programStatus(program);
+  const card = { padding: 16, gap: 10, borderRadius: theme.radius, borderWidth: 1, borderColor: c.record, backgroundColor: c.surface };
+  if (!status || status.ended) {
+    return (
+      <View style={card}>
+        <Body bold style={{ fontSize: 18 }} color={c.record}>{status?.ended ? 'Program complete' : 'Train to a goal'}</Body>
+        <Body style={{ fontSize: 14 }} color={c.inkSoft}>{status?.ended ? 'See how close you got on each exercise, then start the next block.' : 'Start a 12-week program and every exercise shows the weight to reach by the end, with how close you are.'}</Body>
+        {choosing ? (
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {PROGRAM_WEEKS.map(w => <Button key={w} label={`${w} weeks`} kind={w === 12 ? 'primary' : 'secondary'} onPress={() => { setChoosing(false); onStart(w); }} style={{ flex: 1 }} />)}
+          </View>
+        ) : (
+          <Button label={status?.ended ? 'Start the next program' : 'Start a program'} kind="primary" onPress={() => setChoosing(true)} />
+        )}
+        {status?.ended && <Button label="Clear" onPress={onEnd} />}
+      </View>
+    );
+  }
+  const [y, m, d] = status.endDate.split('-').map(Number);
+  const end = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return (
+    <View style={card}>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+        <Body bold style={{ fontSize: 18, flex: 1 }} color={c.record}>Week {status.week} of {status.weeks}</Body>
+        <Mono style={{ fontSize: 12 }} color={c.inkSoft}>ends {end}</Mono>
+      </View>
+      <View style={{ height: 6, borderRadius: 3, backgroundColor: c.line, overflow: 'hidden' }}>
+        <View style={{ height: 6, width: `${Math.round(((status.week - 1) / status.weeks) * 100)}%`, borderRadius: 3, backgroundColor: c.record }} />
+      </View>
+      <Body style={{ fontSize: 14 }} color={c.inkSoft}>Your goal for the end is on every exercise.</Body>
+      <Button label="End program" onPress={onEnd} />
+    </View>
   );
 }

@@ -38,8 +38,20 @@
 .chip.tip svg { color: var(--accent); }
 .chip-delta { color: var(--text-2); font-weight: 600; }
 .chip.faster .chip-delta { color: var(--accent); }
-.ex-last { font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
-.ex-last strong { color: var(--text); font-weight: 600; }
+.ex-last { font-size: var(--t-caption); color: var(--text-3); margin-top: 6px; }
+/* The goal: the number to reach, big and gold, so it's the first thing you see on every exercise */
+.goal-panel { margin-top: 12px; padding: 12px 14px 12px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--gold) 10%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); }
+.goal-head { display: flex; align-items: center; gap: 8px; }
+.goal-label { font-size: var(--t-caption); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.goal-week { margin-left: auto; font-family: var(--font-numbers); font-size: var(--t-caption); font-weight: 700; color: var(--text); padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--gold) 18%, transparent); }
+.goal-row { display: flex; align-items: baseline; gap: 10px; margin-top: 4px; }
+.goal-value { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-numbers); font-size: 30px; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; color: var(--gold); text-shadow: 0 0 18px color-mix(in srgb, var(--gold) 35%, transparent); }
+.goal-value svg { width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: var(--gold); color: var(--bg); }
+.goal-pct { margin-left: auto; font-family: var(--font-numbers); font-size: var(--t-headline); font-weight: 700; color: var(--text); }
+.goal-track { height: 6px; margin-top: 8px; border-radius: 3px; background: color-mix(in srgb, var(--gold) 14%, transparent); overflow: hidden; }
+.goal-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 60%, transparent), var(--gold)); transition: width 0.5s var(--ease-out); }
+.goal-sub { margin-top: 6px; font-size: var(--t-footnote); color: var(--text-2); }
+.goal-panel.reached { background: color-mix(in srgb, var(--gold) 18%, var(--surface-2)); }
 .ex-card { scroll-margin-top: 76px; }
 /* Exercise complete banner */
 .ex-card.collapsed.pop { position: relative; overflow: hidden; animation: setPop 0.45s ease-out; }
@@ -339,3 +351,7 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .wu-empty { padding: 14px 0; color: var(--text-2); }
 .wu-add { width: 100%; }
 .wu-note { margin: 8px 0 4px; font-size: var(--t-caption); color: var(--text-2); }
+
+.goal-panel[role="button"] { cursor: pointer; }
+.goal-empty { margin-top: 12px; width: 100%; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: var(--r-lg); border: 1px dashed color-mix(in srgb, var(--gold) 55%, transparent); background: none; color: var(--gold); font-size: var(--t-footnote); font-weight: 700; text-align: left; }
+.goal-empty svg { width: 14px; height: 14px; flex-shrink: 0; }

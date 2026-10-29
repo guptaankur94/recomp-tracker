@@ -9,6 +9,8 @@ export interface EditablePlan {
   days: PlanDay[];
   schedule: Schedule;
   templateId?: string;
+  /** A program under way: editing the plan keeps it */
+  program?: Plan['program'];
 }
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -19,7 +21,8 @@ export function editablePlan(plan: Plan): EditablePlan {
     planName: copy.planName,
     days: copy.days,
     schedule: Array.isArray(copy.schedule) && copy.schedule.length === 7 ? [...copy.schedule] : Array(7).fill(null),
-    ...(copy.templateId ? { templateId: copy.templateId } : {})
+    ...(copy.templateId ? { templateId: copy.templateId } : {}),
+    ...(copy.program ? { program: copy.program } : {})
   };
 }
 
@@ -116,7 +119,7 @@ export function finishPlan(plan: EditablePlan): PlanCheck {
   if (nameless !== -1) return { ok: false, message: 'Every exercise needs a name', dayIdx: nameless };
   const days = plan.days.map((d, i) => ({ day: `Day ${i + 1}`, title: (d.title || '').trim() || `Day ${i + 1}`, exercises: d.exercises }));
   const schedule = plan.schedule.some(v => Number.isInteger(v)) ? plan.schedule : undefined;
-  return { ok: true, plan: { planName: (plan.planName || '').trim() || 'My Plan', days, ...(schedule ? { schedule } : {}) } };
+  return { ok: true, plan: { planName: (plan.planName || '').trim() || 'My Plan', days, ...(schedule ? { schedule } : {}), ...(plan.program ? { program: plan.program } : {}) } };
 }
 
 /** Rough length of a day: sets × (rest + 40 s) plus a minute per warm-up set, to the nearest 5 minutes */
@@ -128,6 +131,7 @@ export function dayMinutes(day: PlanDay): number {
 function exerciseOut(ex: PlanExerciseBase) {
   const out: Record<string, unknown> = { name: ex.name, warmup: ex.warmup, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
   if (out.warmup === undefined) delete out.warmup;
+  if (ex.goal) out.goal = ex.goal;
   if (ex.cue) out.cue = ex.cue;
   return out;
 }
