@@ -42,8 +42,8 @@ export function WarmupPanel({ name, ramp, done, work, set1Done, onToggle, onEdit
     return (
       <Pressable onPress={toggleOpen} accessibilityRole="button" aria-expanded={false}
         accessibilityLabel={`Warm-up ${allDone ? 'done' : `${count} of ${ramp.length} done`}. Show warm-up sets`}
-        style={{ ...panel, minHeight: 48, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: allDone ? c.accentSoft : c.surfaceHigh }}>
-        <Body bold style={{ fontSize: 14 }} color={allDone ? c.accent : c.ink}>{allDone ? '✓ Warm-up done' : `Warm-up · ${count}/${ramp.length}`}</Body>
+        style={{ ...panel, minHeight: 48, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.surfaceHigh, borderLeftWidth: 4, borderLeftColor: allDone ? c.done : c.todo }}>
+        <Body bold style={{ fontSize: 14 }} color={allDone ? c.done : c.ink}>{allDone ? '✓ Warm-up done' : `Warm-up · ${count}/${ramp.length}`}</Body>
         <Mono style={{ fontSize: 13, flex: 1 }} color={c.inkSoft} numberOfLines={1}>{summary}</Mono>
         <Body color={c.inkSoft}>›</Body>
       </Pressable>
@@ -69,14 +69,14 @@ export function WarmupPanel({ name, ramp, done, work, set1Done, onToggle, onEdit
         const hint = [w.label.startsWith('Bar') && w.kg ? `${w.kg} kg` : '', w.kg && work > 0 ? `~${Math.round((w.kg / work) * 100)}%` : ''].filter(Boolean).join(' · ');
         return (
           <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-            <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: c.accent, backgroundColor: on ? c.accent : 'transparent' }}>
-              <Mono bold style={{ fontSize: 11 }} color={on ? c.onAccent : c.accent}>W{i + 1}</Mono>
+            <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: on ? c.done : c.todo, backgroundColor: on ? c.done : 'transparent' }}>
+              <Mono bold style={{ fontSize: 11 }} color={on ? c.onAccent : c.todo}>W{i + 1}</Mono>
             </View>
             <Mono bold style={{ fontSize: 18 }} color={on ? c.muted : c.ink}>{w.label}</Mono>
             {hint ? <Mono style={{ fontSize: 12, flex: 1 }} color={on ? c.muted : c.inkSoft} numberOfLines={1}>{hint}</Mono> : <View style={{ flex: 1 }} />}
             <Pressable onPress={() => onToggle(i)} accessibilityRole="checkbox" aria-checked={on} accessibilityLabel={`Warm-up ${i + 1}: ${w.label}`}
-              style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: c.accent, backgroundColor: on ? c.accent : c.accentSoft }}>
-              <Body bold color={on ? c.onAccent : c.accent}>✓</Body>
+              style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: on ? c.done : c.todo, backgroundColor: on ? c.done : 'transparent' }}>
+              <Body bold color={on ? c.onAccent : c.todo}>✓</Body>
             </Pressable>
           </View>
         );

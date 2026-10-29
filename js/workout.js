@@ -32,6 +32,13 @@ function updateStats() {
     }
   }
 
+  // During a workout the top panel is the live clock; before, it's the week with one Start button
+  const clock = workoutClock();
+  hero.classList.toggle('is-live', !!clock);
+  if (clock) {
+    hero.innerHTML = livePanelHtml(clock);
+    return;
+  }
   hero.innerHTML = `
     <div class="hero">
       <div class="hero-ring">
@@ -53,7 +60,53 @@ function updateStats() {
         </div>
         ${profileLink}
       </div>
+    </div>
+    <button class="hero-start" onclick="startWorkout()">${icon('arrowUp', 2.6)}Start workout</button>
+    <div class="hero-hint">Then log any day of your plan, and switch between days as you go.</div>`;
+}
+
+// Today's ticked sets, by day of the plan (unsaved, started today)
+function setsTodayByDay() {
+  const today = localDateStr(new Date());
+  return [...programData.keys(), programData.length].map(d => {
+    const meta = readJSON(draftMetaKey(d), null);
+    const n = meta && localDateStr(new Date(meta.startedAt)) === today ? dayProgress(d).done : 0;
+    return { d, n };
+  }).filter(x => x.n > 0);
+}
+
+function dayShortLabel(d) {
+  return d === programData.length ? 'Custom' : `D${d + 1}`;
+}
+
+// The live panel: the clock, Pause, and each day you've trained so far (tap one to go to it)
+function livePanelHtml(clock) {
+  const paused = !!clock.pausedAt;
+  const byDay = setsTodayByDay();
+  const today = todaysSession();
+  const saved = today ? sessionStats(today).sets : 0;
+  const sets = byDay.reduce((n, x) => n + x.n, 0) + saved;
+  return `
+    <div class="live ${paused ? 'paused' : ''}" role="region" aria-label="Workout in progress">
+      <div class="live-row">
+        <div class="live-main">
+          <div class="live-time" id="session-elapsed">${fmtClock(sessionElapsedSec())}</div>
+          <div class="live-sub">${paused ? 'Paused' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${byDay.length ? ` · ${byDay.length} day${byDay.length === 1 ? '' : 's'}` : ''}`}</div>
+        </div>
+        <button class="btn btn-secondary live-pause" onclick="${paused ? 'resumeWorkout()' : 'pauseWorkout()'}">${paused ? 'Resume' : 'Pause'}</button>
+      </div>
+      ${byDay.length ? `<div class="live-days">${byDay.map(x => `<button class="live-day" onclick="selectDay(${x.d})">${dayShortLabel(x.d)} · ${x.n} set${x.n === 1 ? '' : 's'}</button>`).join('')}</div>` : ''}
     </div>`;
+}
+
+// The bottom: Finish, once a workout is under way (at the end of the list, so it isn't tapped by accident)
+function finishSectionHtml(clockRunning) {
+  const byDay = setsTodayByDay();
+  if (!clockRunning && !byDay.length) return '';
+  const days = byDay.map(x => dayShortLabel(x.d)).join(' + ');
+  return `
+    <button class="finish-btn" onclick="openFinishSheet()">${icon('check', 3)}Finish workout</button>
+    <div class="finish-hint">${days ? `Saves today's sets from ${days}` : 'Nothing logged yet'}</div>`;
 }
 
 /* Workout progress across the selected day */
@@ -203,35 +256,16 @@ function bestDraftSet(exIdx, totalSets) {
 
 
 function renderWorkout() {
+  updateStats();
   const main = document.getElementById('workout-content');
   const data = dayAt(currentDayIdx);
   const allExercises = getAllExercisesForDay(currentDayIdx);
   const history = getHistory();
   const progress = dayProgress(currentDayIdx);
 
-  // Sticky bar while a workout is under way today (this tab, or parts already saved to today's log)
-  const today = todaysSession();
-  const loggedSets = today ? sessionStats(today).sets : 0;
+  // The workout clock lives in the top panel (see updateStats); this screen only needs to know if it's running
+  const clockRunning = !!workoutClock();
   let html = '';
-  // One clock for the whole app (Start or the first ticked set, on any day); the bar also stays up for what's
-  // already saved today
-  const clock = workoutClock();
-  const clockRunning = !!clock;
-  const underWay = clockRunning || today;
-  if (underWay) {
-    const paused = !!(clock && clock.pausedAt);
-    html += `
-      <div class="session-bar${paused ? ' paused' : ''}">
-        <div class="session-stat">
-          <span class="session-time" id="session-elapsed">${fmtClock(sessionElapsedSec())}</span>
-          <span class="session-sets">${paused ? 'Paused' : `${progress.done}/${progress.total} sets${loggedSets ? ` · ${loggedSets} saved` : ''}`}</span>
-        </div>
-        <div class="session-track"><div class="session-fill" style="width: ${Math.round(progress.done / Math.max(1, progress.total) * 100)}%"></div></div>
-        ${clockRunning ? `<button class="btn btn-secondary btn-sm session-pause" onclick="${paused ? 'resumeWorkout()' : 'pauseWorkout()'}">${paused ? 'Resume' : 'Pause'}</button>` : ''}
-        <button class="btn btn-positive btn-sm" onclick="finishAndSaveWorkout()">Finish</button>
-      </div>
-    `;
-  }
 
   html += `
     ${restDayCardHtml()}
@@ -266,16 +300,6 @@ function renderWorkout() {
     `;
   }
 
-  const staleDraft = hasDraft && (!meta || localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date()));
-  if (!clockRunning && !staleDraft && allExercises.length) {
-    html += `
-      <div class="start-card">
-        <button class="btn btn-primary start-workout-btn" onclick="startWorkout()">Start workout</button>
-        <div class="start-hint">Starts the clock. Ticking your first set starts it too.</div>
-      </div>
-    `;
-  }
-
   if (isCustomDay() && !allExercises.length) {
     html += `
       <div class="empty-card">
@@ -305,6 +329,7 @@ function renderWorkout() {
             <div class="ex-name">${escapeHtml(ex.name)}</div>
             <div class="ex-meta">${totalSets} set${totalSets === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}</div>
           </div>
+          <span class="done-tag">Done</span>
           <span class="chevron">${icon('chevron')}</span>
         </div>
       `;
@@ -471,9 +496,7 @@ function renderWorkout() {
 
   html += `
     <button class="btn btn-secondary add-custom-ex-btn" onclick="addCustomExercise()">+ Add Exercise</button>
-    ${hasDraft ? `<button class="btn btn-secondary save-log-btn" onclick="saveToTodaysLog()">Save to Today's Log</button>
-    <div class="save-log-hint">Saves these sets and keeps your workout going, so you can add exercises from another day.</div>` : ''}
-    <button class="btn btn-positive finish-workout-btn" onclick="finishAndSaveWorkout()">Finish Workout</button>
+    ${finishSectionHtml(clockRunning)}
   `;
   main.innerHTML = html;
   syncWakeLock();

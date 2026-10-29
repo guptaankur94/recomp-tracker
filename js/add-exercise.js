@@ -199,13 +199,11 @@ async function openDayMenu() {
   const actions = [{ label: 'Add exercise for today', value: 'add' }];
   if (!isCustomDay()) actions.push({ label: 'Edit this day in the plan', value: 'edit' });
   if (dayHasDraft(currentDayIdx)) {
-    actions.push({ label: 'Save to today\'s log', value: 'log' });
     actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
   }
   const choice = await actionSheet(dayAt(currentDayIdx).day, dayAt(currentDayIdx).title, actions);
   if (choice === 'add') addCustomExercise();
   else if (choice === 'edit') openPlanEditor({ dayIdx: currentDayIdx });
-  else if (choice === 'log') saveToTodaysLog();
   else if (choice === 'clear') discardDraft();
 }
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { fmtDuration, fmtNum, fmtVolume, localDateStr, sessionDateStr, shortDate } from '@/core/format';
+import { effortLabel } from '@/core/effort';
 import { calcWeekStreak, dayColor, groupByWeek, sessionStats, totalCalories } from '@/core/history';
 import type { Session } from '@/core/types';
 import { sessionDayLabels } from '@/core/workout';
@@ -56,7 +57,8 @@ function SessionRow({ session }: { session: Session }) {
     st.durationSec ? fmtDuration(st.durationSec) : '',
     `${st.sets} set${st.sets === 1 ? '' : 's'}`,
     st.volume ? fmtVolume(st.volume) : '',
-    session.calories ? `${fmtNum(session.calories)} kcal` : ''
+    session.calories ? `${fmtNum(session.calories)} kcal` : '',
+    effortLabel(session.effort)
   ].filter(Boolean).join(' · ');
   return (
     <Pressable onPress={() => openSession(session)} accessibilityRole="button" accessibilityLabel={`${session.day} ${session.title}, ${meta}${st.prs ? `, ${st.prs} records` : ''}`}

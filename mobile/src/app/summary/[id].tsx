@@ -12,13 +12,14 @@ import { useData } from '@/data/store';
 import { useTheme } from '@/theme/theme-context';
 import { Button } from '@/ui/button';
 import { CaloriesField } from '@/ui/calories';
+import { EffortPicker } from '@/ui/effort-picker';
 import { Header, SectionLabel, Tiles } from '@/ui/parts';
 import { Card, Screen } from '@/ui/screen';
 import { Body, Mono } from '@/ui/text';
 
 export default function SummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { history } = useData();
+  const { history, setEffort } = useData();
   const { theme } = useTheme();
   const c = theme.colors;
   const session = history.find(s => String(s.id) === id);
@@ -51,6 +52,9 @@ export default function SummaryScreen() {
           </Mono>
         )}
       </Animated.View>
+      <Card>
+        <EffortPicker label="EFFORT" value={session.effort ?? null} onChange={v => setEffort(session.id, v)} />
+      </Card>
       <CaloriesField key={session.id} session={session} />
       {prs.length > 0 && (
         <>

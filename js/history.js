@@ -109,7 +109,8 @@ function renderCalendarAndHistory() {
             st.durationSec ? fmtDuration(st.durationSec) : '',
             `${st.sets} set${st.sets === 1 ? '' : 's'}`,
             st.volume ? fmtVolume(st.volume) : '',
-            item.calories ? `${fmtNum(item.calories)} kcal` : ''
+            item.calories ? `${fmtNum(item.calories)} kcal` : '',
+            effortLabel(item.effort)
           ].filter(Boolean).join(' · ');
           return `
             <div class="history-card" onclick="openSessionModal(${item.id})">
@@ -174,6 +175,7 @@ function sessionDetailHtml(session) {
       ${tile(st.prs, st.prs === 1 ? 'PR' : 'PRs', st.prs ? 'gold' : '')}
     </div>
     ${compare}
+    ${effortRowHtml(session)}
     ${caloriesRowHtml(session)}
     ${session.exercises.map(ex => `
       <div class="detail-ex">

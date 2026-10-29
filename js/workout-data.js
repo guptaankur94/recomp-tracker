@@ -15,7 +15,7 @@ function touchDraft() {
 
 /* The workout clock: one for the whole app, started by Start (or the first ticked set) on any day and stopped by
    Finish. pausedMs is time already paused and pausedAt is set while paused; only the time in between counts.
-   creditedMs is the part already added to today's saved workout ("Save and keep going"). */
+   creditedMs is the part already added to today's saved workout (from an earlier Finish today). */
 function clockActiveMs(clock, nowMs) {
   if (!clock) return 0;
   const paused = (clock.pausedMs || 0) + (clock.pausedAt ? Math.max(0, nowMs - clock.pausedAt) : 0);
@@ -492,23 +492,6 @@ function todaysSession() {
   return getHistory().find(s => sessionDateStr(s) === today) || null;
 }
 
-// Save this tab's sets and keep going: the rest timer and today's workout carry on.
-function saveToTodaysLog() {
-  const session = saveDayToLog(currentDayIdx);
-  if (!session) {
-    haptic('error');
-    showToast('Log at least one set first', { type: 'error' });
-    return;
-  }
-  haptic('success');
-  openedDone.clear();
-  initNav();
-  renderWorkout();
-  const n = session.exercises.length;
-  showToast(`Saved. Today: ${n} exercise${n === 1 ? '' : 's'} logged`, { actionLabel: 'Finish', onAction: finishAndSaveWorkout });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 // The days (plan days and the custom workout) with unsaved sets started today
 function daysWithSetsToday() {
   const today = localDateStr(new Date());
@@ -520,7 +503,8 @@ function daysWithSetsToday() {
 
 // Finish: save today's sets from every day you trained (this tab first), stop the clock, show the summary.
 // Unsaved sets from an earlier date (the "Save to Tue" banner) are saved on their own, to that date.
-function finishAndSaveWorkout() {
+// opts: { effort, calories } from the Finish sheet, saved on the workout
+function finishAndSaveWorkout(opts = {}) {
   const hadDraft = dayHasDraft(currentDayIdx);
   const meta = readJSON(draftMetaKey(currentDayIdx), null);
   const fromEarlier = hadDraft && (!meta || localDateStr(new Date(meta.startedAt)) !== localDateStr(new Date()));
@@ -530,7 +514,7 @@ function finishAndSaveWorkout() {
   if (!hadDraft) localStorage.removeItem(draftMetaKey(currentDayIdx));
   const clockWas = workoutClock();
   if (!fromEarlier) {
-    // Time since the last save ("Save and keep going") still belongs to today's workout
+    // Time since the last save still belongs to today's workout
     const today = todaysSession();
     if (clockWas && today) {
       const active = clockActiveMs(clockWas, Date.now());
@@ -556,13 +540,68 @@ function finishAndSaveWorkout() {
     return;
   }
   if (hadDraft && !saved) clearDayDraft(currentDayIdx);
+  let finished = session;
+  if (opts.effort || opts.calories) {
+    const history = getHistory();
+    finished = history.find(h => h.id === session.id) || session;
+    if (opts.effort) finished.effort = opts.effort;
+    if (opts.calories) finished.calories = opts.calories;
+    saveHistory(history);
+  }
   haptic('success');
   stopRestTimer();
   openedDone.clear();
   initNav();
   renderWorkout();
-  const previous = getHistory().find(s => s.day === session.day && s.id < session.id) || null;
-  showSummary({ session, previous });
+  const previous = getHistory().find(s => s.day === finished.day && s.id < finished.id) || null;
+  showSummary({ session: finished, previous });
+}
+
+/* The Finish sheet: what's being saved, how hard it was (one tap, optional) and calories, then the summary */
+let finishEffort = null;
+
+function openFinishSheet() {
+  const byDay = setsTodayByDay();
+  const today = todaysSession();
+  // Nothing new to save: Finish just ends the workout (or says there's nothing to save)
+  if (!byDay.length && !(today && workoutClock())) return finishAndSaveWorkout();
+  let sets = today ? sessionStats(today).sets : 0;
+  let volume = today ? sessionStats(today).volume : 0;
+  byDay.forEach(({ d }) => collectDaySets(d).forEach(ex => ex.sets.forEach(s => { sets++; volume += setVolume(s); })));
+  const minutes = Math.max(1, Math.round(sessionElapsedSec() / 60));
+  finishEffort = today && today.effort || null;
+  document.getElementById('finish-stats').innerHTML = `
+    <span><b>${minutes}</b> min</span><span><b>${sets}</b> set${sets === 1 ? '' : 's'}</span>
+    ${volume ? `<span><b>${fmtVolume(volume)}</b></span>` : ''}
+    ${byDay.length ? `<span>${byDay.map(x => dayShortLabel(x.d)).join(' + ')}</span>` : ''}`;
+  document.getElementById('finish-body').innerHTML = `
+    <div class="fin-label" id="effort-label">How hard was today?</div>
+    <div class="effort" role="group" aria-labelledby="effort-label" id="finish-effort">${effortButtonsHtml(finishEffort, 'pickFinishEffort')}</div>
+    <div class="fin-label">Calories burned · optional</div>
+    <label class="cal-field fin-cal"><input type="number" id="finish-cal" inputmode="numeric" min="0" max="${MAX_CALORIES}" placeholder="—" value="${today && today.calories || ''}" aria-label="Calories burned, kcal"><span class="cal-unit">kcal, active, from your watch</span></label>
+    <div class="fin-actions">
+      <button class="finish-btn" onclick="confirmFinish()">${icon('check', 3)}Finish workout</button>
+      <button class="btn btn-plain" onclick="closeSheet('finish-sheet')">Keep training</button>
+    </div>`;
+  openSheet('finish-sheet');
+}
+
+function pickFinishEffort(value) {
+  finishEffort = finishEffort === value ? null : value;
+  haptic('light');
+  document.getElementById('finish-effort').innerHTML = effortButtonsHtml(finishEffort, 'pickFinishEffort');
+}
+
+function confirmFinish() {
+  const text = document.getElementById('finish-cal').value.trim();
+  const kcal = Math.round(parseFloat(text));
+  if (text && !(kcal > 0 && kcal <= MAX_CALORIES)) {
+    haptic('error');
+    showToast(`Enter calories between 1 and ${MAX_CALORIES}, or leave it empty`, { type: 'error' });
+    return;
+  }
+  closeSheet('finish-sheet');
+  finishAndSaveWorkout({ effort: finishEffort, calories: text ? kcal : null });
 }
 
 // A plan day counts as done this week once at least half of its exercises have been logged.
@@ -673,7 +712,9 @@ function initNav() {
   const customIdx = programData.length;
   navContainer.innerHTML = programData.map((d, i) => {
     const wd = weekdaysFor(i, schedule);
-    const badge = dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>'
+    const doneSets = dayHasDraft(i) ? dayProgress(i).done : 0;
+    const badge = doneSets ? `<span class="tab-badge" aria-label="${doneSets} sets logged">${doneSets}</span>`
+      : dayHasDraft(i) ? '<span class="tab-dot" aria-label="unsaved sets"></span>'
       : i === today && !todaysSession() ? '<span class="tab-next">Today</span>'
       : i === next && !done.has(d.day) ? '<span class="tab-next">Next</span>' : '';
     return `

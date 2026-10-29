@@ -19,6 +19,9 @@
   --orange: #FF9F0A;
   --orange-soft: rgba(255, 159, 10, 0.12);
   --gold: #FFD60A;
+  /* States: what's still to do (and Start), and what's done (and Finish). Never the only cue: done also fills in and gets a ✓ */
+  --todo: #0A84FF;
+  --done: #30D158;
   /* Text on a filled button or badge (accent, ink or gold) */
   --on-fill: #000000;
   /* Floating tab bar, sheets and toasts (frosted) */

@@ -107,7 +107,7 @@ export function touch(draft: Draft | null, now: number): Draft {
 
 /* The workout clock: one for the whole app, started by Start (or the first ticked set) on any day and stopped by
    Finish. pausedMs is time already paused and pausedAt is set while paused; only the time in between counts.
-   creditedMs is the part already added to today's saved workout ("Save and keep going"). */
+   creditedMs is the part already added to today's saved workout (from an earlier Finish today). */
 export interface WorkoutClock {
   startedAt: number;
   lastEditAt: number;

@@ -14,6 +14,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   const shot = name => p.screenshot({ path: `${SP}/${name}.png` });
   const toast = () => p.getByRole('alert').last().innerText().catch(() => '');
   const btn = name => p.getByRole('button', { name, exact: true });
+  const finishAll = async () => { await p.getByRole('button', { name: 'Finish workout', exact: true }).first().click(); await p.waitForTimeout(900); await p.getByRole('button', { name: 'Finish workout', exact: true }).last().click(); await p.waitForTimeout(1200); };
   await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
   if (await p.getByRole('button', { name: 'Skip for now' }).isVisible().catch(() => false)) { await p.getByRole('button', { name: 'Skip for now' }).click(); await p.waitForTimeout(1200); }
@@ -60,7 +61,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   const nextLabel = await p.getByRole('timer').getAttribute('aria-label');
   check('timer points to the next exercise', nextLabel.includes('Next: Barbell Bench Press · Set 1'), nextLabel);
   await btn('Skip rest').click();
-  check('progress count', await p.getByText('3 / 18 sets').isVisible());
+  check('progress count', await p.getByText('Workout · 3 sets · 1 day').isVisible());
 
   // Swap the second exercise
   await btn('Swap to Dumbbell Bench Press').click();
@@ -91,11 +92,11 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.waitForTimeout(2000);
   check('draft kept after reload', await btn('Barbell Back Squat, done. Show sets').isVisible());
   check('swap kept after reload', await p.getByRole('heading', { name: 'Dumbbell Bench Press' }).isVisible());
-  check('unsaved badge on the day', (await p.getByRole('tab', { name: /Unsaved/ }).count()) === 1);
+  const dayTab = await p.getByRole('tab', { name: /^Day 1,/ }).getAttribute('aria-label');
+  check('logged sets counted on the day', /, \d+ sets logged$/.test(dayTab || ''), dayTab);
 
   // Finish
-  await btn('Finish workout').click();
-  await p.waitForTimeout(1000);
+  await finishAll();
   check('summary opens', await p.getByText('Workout complete').isVisible());
   check('summary counts sets', await p.getByLabel('Sets: 4').isVisible());
   await shot('w-3-summary');
@@ -132,9 +133,10 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   check('PR toast', (await toast()).includes('New PR · Barbell Back Squat: 65 kg × 8'), await toast());
   await shot('w-4-pr');
   await btn('Skip rest').click();
-  await btn('Save and keep going').click();
+  await finishAll();
+  check('a second workout the same day finishes too', await p.getByText('Workout complete').isVisible());
+  await btn('Done').click();
   await p.waitForTimeout(600);
-  check('save and keep going', (await toast()).startsWith('Saved. Today:'), await toast());
   await tab('History');
   await p.waitForTimeout(400);
   check('same day merges into one workout', (await p.getByRole('button', { name: /sets/ }).filter({ hasText: 'PR' }).count()) === 1);

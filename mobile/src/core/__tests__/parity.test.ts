@@ -19,6 +19,7 @@ import {
 } from '../workout';
 import { NOW, sampleBodyweight, sampleHistory } from '../testing/fixtures';
 import { parseWarmupRows } from '../warmups';
+import { EFFORT_LEVELS, effortLabel } from '../effort';
 import { exerciseGoal, goalLabel, goalProgress, parseGoalText, programStatus } from '../goals';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -100,6 +101,10 @@ describe('workout logic', () => {
     }
     same(programStatus(null), web.ctx.programStatus(null));
     ['60 kg × 8', '60x8', '60 8', '62.5 kg x 6', '15', '90 s', 'abc', '0 x 5', '60 kg', '2000 x 5', ' 40 X 12 reps '].forEach(t => same(parseGoalText(t), web.ctx.parseGoalText(t)));
+  });
+  test('effort levels and their names', () => {
+    same(EFFORT_LEVELS, web.get('EFFORT_LEVELS'));
+    [undefined, null, 0, -1, 1, 3, 4, 5, 6, 7, 8, 8.5, 9, 10, 12].forEach(v => expect(effortLabel(v as number)).toBe(web.ctx.effortLabel(v)));
   });
   test('suggestions and progression tips', () => {
     allExercises.forEach(ex => [0, 10, 25, 52.5].forEach(weight => [1, 5, 8, 10, 12, 15, 20].forEach(reps => [0, 30, 45, 90, 137].forEach(rest => {

@@ -14,6 +14,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   const shot = name => p.screenshot({ path: `${SP}/${name}.png` });
   const toast = () => p.getByRole('alert').last().innerText().catch(() => '');
   const btn = name => p.getByRole('button', { name, exact: true });
+  const finishAll = async () => { await p.getByRole('button', { name: 'Finish workout', exact: true }).first().click(); await p.waitForTimeout(900); await p.getByRole('button', { name: 'Finish workout', exact: true }).last().click(); await p.waitForTimeout(1200); };
   const url = 'http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/';
   const goal = () => p.getByRole('button', { name: /^(your goal|goal by week \d+|program goal): / }).first().getAttribute('aria-label').catch(() => '');
   await p.goto(url, { waitUntil: 'networkidle' });
@@ -43,8 +44,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await btn('Done with set 1').first().click();
   await p.waitForTimeout(300);
   if (await btn('Skip rest').isVisible().catch(() => false)) await btn('Skip rest').click();
-  await btn('Finish workout').click();
-  await p.waitForTimeout(1000);
+  await finishAll();
   await btn('Done').click();
   await p.waitForTimeout(600);
   await p.getByRole('tab', { name: /^Day 1,/ }).click();

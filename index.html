@@ -422,6 +422,18 @@
   </div>
 
   <!-- Confirm / input dialog sheet -->
+  <!-- Finish: what's being saved, effort and calories -->
+  <div class="sheet-overlay" id="finish-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="finish-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="finish-title">Finish workout?</div>
+        <div class="fin-stats" id="finish-stats"></div>
+      </div>
+      <div id="finish-body"></div>
+    </div>
+  </div>
+
   <!-- Warm-up editor -->
   <div class="sheet-overlay" id="warmup-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wu-title">
@@ -548,7 +560,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.10.28b';
+    const APP_VERSION = '2026.10.29';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>

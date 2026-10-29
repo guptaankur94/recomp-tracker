@@ -15,6 +15,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   const shot = name => p.screenshot({ path: `${SP}/${name}.png` });
   const toast = () => p.getByRole('alert').last().innerText().catch(() => '');
   const btn = name => p.getByRole('button', { name, exact: true });
+  const finishAll = async () => { await p.getByRole('button', { name: 'Finish workout', exact: true }).first().click(); await p.waitForTimeout(900); await p.getByRole('button', { name: 'Finish workout', exact: true }).last().click(); await p.waitForTimeout(1200); };
   const clock = () => p.getByLabel(/^Workout time/).getAttribute('aria-label').catch(() => '');
   await p.clock.install({ time: new Date('2026-10-22T18:00:00') });
   await p.goto('http://127.0.0.1:' + (process.env.PORT || 8793) + (process.env.BASE || '') + '/', { waitUntil: 'networkidle' });
@@ -27,7 +28,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await shot('c-1-start');
   await btn('Start workout').click();
   await p.waitForTimeout(300);
-  check('Start shows the clock with Pause and Finish', await btn('Pause').isVisible() && await btn('Finish').isVisible());
+  check('Start shows the clock with Pause, and Finish at the bottom', await btn('Pause').isVisible() && await btn('Finish workout').isVisible());
   check('Start is gone once started', !(await btn('Start workout').isVisible()));
   await p.clock.fastForward('10:00');
   check('the clock runs', /^Workout time 10:0\d$/.test(await clock()), await clock());
@@ -51,8 +52,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   check('ticking a set resumes', await btn('Pause').isVisible());
   if (await btn('Skip rest').isVisible().catch(() => false)) await btn('Skip rest').click();
   await p.clock.fastForward('01:00');
-  await btn('Finish').click();
-  await p.waitForTimeout(1200);
+  await finishAll();
   check('Finish shows the summary', await p.getByText('Workout complete', { exact: false }).first().isVisible());
   // 10 + 5 + 1 minutes on the clock, with 20 paused: about 16 (rounding and the seconds the test itself takes can
   // move it a minute either way), where counting the pause would give 36
@@ -89,7 +89,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.getByRole('tab', { name: /^Day 2,/ }).click();
   await btn('Start workout').click();
   await p.waitForTimeout(300);
-  await btn('Finish').click();
+  await btn('Finish workout').click();
   await p.waitForTimeout(500);
   check('Finish with nothing logged stops the clock', (await toast()).includes('Nothing was logged') && await btn('Start workout').isVisible());
 
@@ -122,8 +122,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
   check('the clock survives a reload', /^Workout time 5:\d\d/.test(await clock()), await clock());
-  await btn('Finish').click();
-  await p.waitForTimeout(1200);
+  await finishAll();
   check('Finish saves both days in one workout', (await p.getByLabel('Sets: 2').isVisible()) || (await p.getByText(/^2$/).first().isVisible()));
   await shot('c-5-both-days');
   await btn('Done').click();

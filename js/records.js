@@ -62,7 +62,7 @@ function showSummary({ session, previous }) {
     }
   }
   document.getElementById('summary-compare').innerHTML = compare;
-  document.getElementById('summary-calories').innerHTML = caloriesRowHtml(session);
+  document.getElementById('summary-calories').innerHTML = effortRowHtml(session) + caloriesRowHtml(session);
 
   document.getElementById('summary-prs').innerHTML = prs.length ? `
     <div class="summary-section">Personal records</div>
@@ -87,6 +87,50 @@ function showSummary({ session, previous }) {
   haptic('success');
   setTimeout(() => haptic('success'), 180);
   if (prs.length) setTimeout(playChime, 150);
+}
+
+/* Effort: how hard the whole workout felt, asked at Finish. Stored on the 0–10 scale used for session RPE
+   (effort × minutes is the session's training load); the four choices are the points people actually use. */
+const EFFORT_LEVELS = [
+  { value: 3, label: 'Easy', hint: 'could do lots more' },
+  { value: 5, label: 'Moderate', hint: 'solid work' },
+  { value: 7, label: 'Hard', hint: 'pushed it' },
+  { value: 10, label: 'All out', hint: 'nothing left' }
+];
+
+// The closest level's name ("Hard"), or '' when none was given
+function effortLabel(value) {
+  if (!(value > 0)) return '';
+  return EFFORT_LEVELS.reduce((a, l) => (Math.abs(l.value - value) < Math.abs(a.value - value) ? l : a)).label;
+}
+
+function effortButtonsHtml(selected, handler) {
+  return EFFORT_LEVELS.map((l, i) => `
+    <button aria-pressed="${l.value === selected}" onclick="${handler}(${l.value})">
+      <span class="effort-bars" aria-hidden="true">${[6, 9, 12, 16].map((h, j) => `<span class="${j <= i ? 'on' : ''}" style="height:${h}px"></span>`).join('')}</span>
+      ${l.label}<i>${l.hint}</i>
+    </button>`).join('');
+}
+
+// On the summary and in a workout's details: change the effort later (tap the chosen one again to clear it)
+function effortRowHtml(session) {
+  return `
+    <div class="effort-row">
+      <div class="fin-label" id="effort-${session.id}">Effort</div>
+      <div class="effort" role="group" aria-labelledby="effort-${session.id}">${effortButtonsHtml(session.effort || null, `setSessionEffort.bind(null, ${session.id})`)}</div>
+    </div>`;
+}
+
+function setSessionEffort(sessionId, value) {
+  const history = getHistory();
+  const session = history.find(s => s.id === sessionId);
+  if (!session) return;
+  if (session.effort === value) delete session.effort;
+  else session.effort = value;
+  saveHistory(history);
+  haptic('light');
+  document.querySelectorAll(`[aria-labelledby="effort-${sessionId}"]`).forEach(el => { el.innerHTML = effortButtonsHtml(session.effort || null, `setSessionEffort.bind(null, ${sessionId})`); });
+  if (typeof renderCalendarAndHistory === 'function') renderCalendarAndHistory();
 }
 
 /* Calories burned, typed from a fitness watch (the app can't measure them). Saved on the workout as whole kcal. */

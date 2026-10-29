@@ -17,14 +17,20 @@ const Grid = memo(function Grid({ color }: { color: string }) {
   );
 });
 
-/** tabBar: leave room for the floating tab bar (off for pages opened over the tabs) */
-export function Screen({ children, tabBar = true }: { children: ReactNode; tabBar?: boolean }) {
+/** tabBar: leave room for the floating tab bar (off for pages opened over the tabs).
+    pinned: stays at the top while the rest scrolls under it (the live workout panel) */
+export function Screen({ children, tabBar = true, pinned }: { children: ReactNode; tabBar?: boolean; pinned?: ReactNode }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, overflow: 'hidden' }}>
       {theme.grid && <Grid color={theme.grid} />}
-      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom + (tabBar ? TAB_BAR_SPACE : 32), paddingHorizontal: 20, gap: 14 }}>
+      {pinned ? (
+        <View style={{ paddingTop: insets.top + 10, paddingBottom: 12, paddingHorizontal: 20, backgroundColor: theme.colors.bg, borderBottomWidth: 1, borderBottomColor: theme.colors.line, zIndex: 2 }}>
+          {pinned}
+        </View>
+      ) : null}
+      <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive" contentContainerStyle={{ paddingTop: pinned ? 16 : insets.top + 20, paddingBottom: insets.bottom + (tabBar ? TAB_BAR_SPACE : 32), paddingHorizontal: 20, gap: 14 }}>
         {children}
       </ScrollView>
     </View>

@@ -27,7 +27,8 @@ const ORIGIN = 'http://127.0.0.1:' + (process.env.PORT || 8796);
   await p.getByLabel('Set 1 weight in kg').first().fill('50');
   await p.getByLabel('Set 1 reps').first().fill('8');
   await p.getByRole('button', { name: 'Done with set 1', exact: true }).first().click(); await p.waitForTimeout(500);
-  await p.getByRole('button', { name: 'Finish workout', exact: true }).click(); await p.waitForTimeout(1200);
+  await p.getByRole('button', { name: 'Finish workout', exact: true }).first().click(); await p.waitForTimeout(900);
+  await p.getByRole('button', { name: 'Finish workout', exact: true }).last().click(); await p.waitForTimeout(1200);
   check('a workout saves', await p.getByText('Workout complete').isVisible());
   // Reloading on the summary (an inner address) brings it back, via the site's 404 page
   await p.reload({ waitUntil: 'networkidle' }); await p.waitForTimeout(2500);

@@ -16,7 +16,7 @@ const GUIDE: [string, string][] = [
   ['Rest', 'The rest timer starts on its own after each set, and your phone alerts you when it ends, even when locked. Use − / + under a set to change the rest after it, or the Rest chip to change it for every set. The same weight and reps on less rest is progress too, and earns a Less rest record.'],
   ['Drop sets, warm-ups and swaps', 'Tap + Drop under any set to add a lighter set straight after it. Warm-up chips show suggested ramp-up sets; tick them as you go, or tap ✎ Edit to set your own. Machine taken? Tap ⇄ to swap to the exercise\'s alternative.'],
   ['Getting stronger', 'When you hit the top of the rep range, the tip next to Last suggests adding weight or cutting rest. Record badges mark heavier weight, best estimated 1RM, more reps, or less rest.'],
-  ['Finishing', 'Tap Finish workout at the bottom to save and see your summary. Mixing days? Save and keep going stores what you\'ve done and lets you add exercises from another day.'],
+  ['Start and finish', 'Tap Start workout at the top, then log any day of your plan and switch days as you go. A finished exercise turns green with a ✓. Finish workout at the bottom saves every day you trained and asks how hard it was.'],
   ['History and Progress', 'History shows every workout on a calendar. Progress charts each exercise (top set, 1RM, volume, reps and rest) and your bodyweight trend.'],
   ['Your data', 'Everything stays on this phone. Export a backup from Settings now and then, especially before deleting the app.']
 ];

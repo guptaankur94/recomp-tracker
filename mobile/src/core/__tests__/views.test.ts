@@ -92,7 +92,7 @@ test('week summary and weight change match the web app header', () => {
     const plan = { ...templatePlan(TEMPLATES[0]), ...(sched ? { schedule: sched } : { schedule: undefined }) };
     const hist = history.slice(cut);
     const entries = bw.slice(0, bw.length - cut);
-    const hero = { id: 'hero', innerHTML: '' };
+    const hero = { id: 'hero', innerHTML: '', classList: { toggle: () => undefined } };
     const web = loadWebApp({
       store: { recomp_history: JSON.stringify(hist), recomp_bodyweight: JSON.stringify(entries), recomp_plan: JSON.stringify(plan), ...(goal ? { recomp_profile: JSON.stringify({ goalKg: goal }) } : {}) },
       now: NOW, fields: { hero }, stubs: { icon: () => '' }

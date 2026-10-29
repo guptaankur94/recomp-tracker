@@ -72,6 +72,8 @@ export interface Session {
   days?: string[];
   exercises: SavedExercise[];
   durationSec?: number;
+  /** How hard it felt, on the 0–10 session RPE scale (3 Easy, 5 Moderate, 7 Hard, 10 All out) */
+  effort?: number;
   /** Calories burned, typed from a fitness watch (whole kcal) */
   calories?: number;
   updatedAt?: number;

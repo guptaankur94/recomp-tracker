@@ -29,8 +29,12 @@ export interface Theme {
     accentSoft: string;
     /** Text on an accent fill */
     onAccent: string;
-    /** Personal records */
+    /** Personal records, and goals */
     record: string;
+    /** Still to do (and Start): a to-do bar on exercises, outlined ticks */
+    todo: string;
+    /** Done (and Finish): filled ticks, finished exercises. Always with a ✓ or "Done" too, never colour alone */
+    done: string;
     danger: string;
     /** The tab bar's frosted fill */
     bar: string;
@@ -61,7 +65,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     colors: {
       bg: '#0B0C0E', surface: '#111316', surfaceHigh: '#171A1E', ink: '#EDE6D6', inkSoft: '#B9B3A5', muted: '#8A8578',
       line: 'rgba(237,230,214,0.12)', accent: '#5EE7F0', accentSoft: 'rgba(94,231,240,0.12)', onAccent: '#0B0C0E',
-      record: '#D9B45A', danger: '#E5484D', bar: 'rgba(17,19,22,0.97)'
+      record: '#D9B45A', todo: '#5EE7F0', done: '#7DD68E', danger: '#E5484D', bar: 'rgba(17,19,22,0.97)'
     },
     fonts: {
       display: 'CormorantGaramond_600SemiBold', body: 'SpaceGrotesk_400Regular', bodyBold: 'SpaceGrotesk_700Bold',
@@ -78,7 +82,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     colors: {
       bg: '#07060D', surface: '#100E1A', surfaceHigh: '#181528', ink: '#F2F0FF', inkSoft: '#BDB8D6', muted: '#8C87A8',
       line: 'rgba(242,240,255,0.12)', accent: '#19F0FF', accentSoft: 'rgba(25,240,255,0.12)', onAccent: '#07060D',
-      record: '#FF2E88', danger: '#FF5470', bar: 'rgba(16,14,26,0.97)'
+      record: '#FF2E88', todo: '#19F0FF', done: '#B4FF4A', danger: '#FF5470', bar: 'rgba(16,14,26,0.97)'
     },
     fonts: {
       display: 'ChakraPetch_700Bold', body: 'ChakraPetch_400Regular', bodyBold: 'ChakraPetch_700Bold',
@@ -95,7 +99,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     colors: {
       bg: '#1A140D', surface: '#221A11', surfaceHigh: '#2B2116', ink: '#EAD9B4', inkSoft: '#D8C69E', muted: '#A8987A',
       line: 'rgba(234,217,180,0.18)', accent: '#C2593A', accentSoft: 'rgba(194,89,58,0.16)', onAccent: '#1A140D',
-      record: '#C9A24A', danger: '#D9534F', bar: 'rgba(34,26,17,0.97)'
+      record: '#C9A24A', todo: '#DB7552', done: '#A3C46C', danger: '#D9534F', bar: 'rgba(34,26,17,0.97)'
     },
     fonts: {
       display: 'Cinzel_600SemiBold', body: 'EBGaramond_400Regular', bodyBold: 'EBGaramond_600SemiBold',

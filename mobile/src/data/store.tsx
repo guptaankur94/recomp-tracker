@@ -53,7 +53,9 @@ interface DataContext extends State {
   setClock: (clock: WorkoutClock | null) => void;
   /** Finish: saves today's sets from every day (this one first; or only this one's, when they're from an earlier
       date), stops the clock and returns the workout to show, or null when nothing was logged */
-  finishWorkout: (dayIdx: number) => Promise<Session | null>;
+  finishWorkout: (dayIdx: number, extra?: { effort?: number | null; calories?: number | null }) => Promise<Session | null>;
+  /** How hard a saved workout felt (0–10); null clears it */
+  setEffort: (id: number, effort: number | null) => Promise<void>;
   setRestTimer: (timer: repo.RestTimer | null) => void;
   updateProfile: (patch: Partial<Profile>) => Promise<void>;
   /** Deletes everything on this phone; setup runs again */
@@ -181,6 +183,15 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       await repo.setKv(db, repo.KEYS.warmups, warmups);
       update(s => ({ ...s, warmups }));
     },
+    setEffort: async (id, effort) => {
+      const found = state.history.find(h => h.id === id);
+      if (!found) return;
+      const session = { ...found };
+      if (effort) session.effort = effort;
+      else delete session.effort;
+      await repo.saveSession(db, session);
+      update(s => ({ ...s, history: s.history.map(h => (h.id === id ? session : h)) }));
+    },
     setCalories: async (id, kcal) => {
       const found = state.history.find(h => h.id === id);
       if (!found) return;
@@ -223,7 +234,7 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       update(s => ({ ...s, clock }));
       background(repo.setKv(db, repo.KEYS.clock, clock));
     },
-    finishWorkout: async dayIdx => {
+    finishWorkout: async (dayIdx, extra = {}) => {
       const now = Date.now();
       const today = localDateStr(new Date(now));
       const draftDate = (d: number) => (state.drafts[d] ? localDateStr(new Date(state.drafts[d].startedAt)) : null);
@@ -237,6 +248,13 @@ export function DataProvider({ children, fallback }: { children: ReactNode; fall
       }
       // A day with nothing logged keeps no draft
       if (!hasDraft(state.drafts[dayIdx] ?? null) && state.drafts[dayIdx]) result.cleared.push(dayIdx);
+      // From the Finish screen: how hard it was, and calories
+      const target = result.saved ? result.history.find(h => h.id === result.saved!.id) : todaysSession(result.history, new Date(now));
+      if (target && (extra.effort || extra.calories)) {
+        const withExtra = { ...target, ...(extra.effort ? { effort: extra.effort } : {}), ...(extra.calories ? { calories: extra.calories } : {}) };
+        result.history = result.history.map(h => (h.id === target.id ? withExtra : h));
+        if (!result.saved) result.saved = withExtra;
+      }
       await commitSaved(result);
       return result.saved ? result.history.find(h => h.id === result.saved!.id) ?? result.saved : todaysSession(result.history, new Date(now));
     },

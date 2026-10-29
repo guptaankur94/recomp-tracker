@@ -139,7 +139,7 @@ function keepFieldInView(el) {
     const foot = scroller.querySelector('#templates-sheet .sheet-actions, #ai-sheet .sheet-actions');
     if (foot) maxBottom = Math.min(maxBottom, foot.getBoundingClientRect().top - top - 8);
   } else if (!scroller) {
-    document.querySelectorAll('.session-bar, .app-header').forEach(bar => {
+    document.querySelectorAll('.live, .app-header').forEach(bar => {
       const b = bar.getBoundingClientRect();
       if (getComputedStyle(bar).position !== 'static' && b.top <= 1) minTop = Math.max(minTop, b.bottom - top + 8);
     });

@@ -6,7 +6,7 @@ import { Platform, Pressable, ScrollView, View } from 'react-native';
 
 import { clockActiveMs, dayExercises, dayProgress, draftSets, freshClock, hasDraft, pauseClock, removeExtra, resumeClock, startClock, type WorkoutClock as Clock } from '@/core/draft';
 import { fmtClock, localDateStr } from '@/core/format';
-import { daysDoneThisWeek, todaysSession } from '@/core/history';
+import { daysDoneThisWeek, sessionStats, todaysSession } from '@/core/history';
 import { isRestDay, nextScheduled, planSchedule, scheduledDay, upNextDayIdx, weekdayIdx, weekdaysFor, WEEKDAY_NAMES } from '@/core/schedule';
 import { shortDayTitle } from '@/core/workout';
 import { useData } from '@/data/store';
@@ -23,7 +23,7 @@ import { Body, Mono } from '@/ui/text';
 import { useToast } from '@/ui/toast';
 
 export default function WorkoutScreen() {
-  const { activePlan, history, drafts, swaps, restTimer, clock: storedClock, dayAt, setDraft, setSwaps, saveDay, setClock, finishWorkout } = useData();
+  const { activePlan, history, drafts, swaps, restTimer, clock: storedClock, dayAt, setDraft, setSwaps, setClock, finishWorkout } = useData();
   const { theme } = useTheme();
   const toast = useToast();
   const c = theme.colors;
@@ -49,7 +49,6 @@ export default function WorkoutScreen() {
   const draft = drafts[dayIdx] ?? null;
   const daySwaps = new Set(swaps[dayIdx] || []);
   const exercises = dayExercises(day, draft, daySwaps);
-  const progress = dayProgress(draft, exercises);
   const unsaved = hasDraft(draft);
   const now = nowMs();
   // One clock for the whole app: started on any day, it shows on every day
@@ -99,16 +98,6 @@ export default function WorkoutScreen() {
     setSwaps(dayIdx, after.swaps);
     toast(`${exercises[exIdx].name} removed`, { actionLabel: 'Undo', onAction: () => { setDraft(dayIdx, before.draft); setSwaps(dayIdx, before.swaps); } });
   };
-  const saveAndContinue = async () => {
-    const session = await saveDay(dayIdx);
-    if (!session) {
-      haptic('error');
-      toast('Log at least one set first', { error: true });
-      return;
-    }
-    haptic('success');
-    toast(`Saved. Today: ${session.exercises.length} exercise${session.exercises.length === 1 ? '' : 's'} logged`);
-  };
   const start = () => {
     setClock(startClock(nowMs()));
     setPicked(dayIdx);
@@ -119,8 +108,20 @@ export default function WorkoutScreen() {
     setClock(clock.pausedAt ? resumeClock(clock, nowMs()) : pauseClock(clock, nowMs()));
     haptic('light');
   };
-  // Finish saves today's sets from every day you trained, and stops the clock
+  // Today's ticked sets on each day (unsaved, started today): the live panel's chips and the tab badges
+  const todayStr = localDateStr(new Date(now));
+  const setsToday = [...days.map((_, i) => i), customIdx].map(d => {
+    const dr = drafts[d] ?? null;
+    const n = dr && hasDraft(dr) && localDateStr(new Date(dr.startedAt)) === todayStr ? dayProgress(dr, dayExercises(dayAt(d), dr, new Set(swaps[d] || []))).done : 0;
+    return { d, n, label: d === customIdx ? 'Custom' : `D${d + 1}` };
+  }).filter(x => x.n > 0);
+  const savedToday = todaysSession(history);
+  // Finish: with sets to save, the Finish screen asks how hard it was; with nothing new, the workout just ends
   const finish = async () => {
+    if (setsToday.length || (savedToday && running && !fromEarlier)) {
+      router.push({ pathname: '/finish', params: { day: String(dayIdx) } });
+      return;
+    }
     const session = await finishWorkout(dayIdx);
     if (!session) {
       if (running) {
@@ -143,11 +144,20 @@ export default function WorkoutScreen() {
   };
 
   return (
-    <Screen>
+    <Screen pinned={clock ? (
+      <LivePanel clock={clock} savedSec={savedToday?.durationSec ?? 0} sets={setsToday.reduce((n, x) => n + x.n, 0) + (savedToday ? sessionStats(savedToday).sets : 0)}
+        days={setsToday} onPauseOrResume={pauseOrResume} onPick={pick} />
+    ) : undefined}>
       {(unsaved || running || restTimer) && <KeepAwake />}
       <Header eyebrow={`Workout · ${activePlan.planName}`} title={day.title}
         sub={isCustom ? 'Build it from any exercises. It saves to History without changing your plan.' : `${day.day}${wd.length ? ` · ${wd.join(' / ')}` : ''} · ${exercises.length} exercises`} />
-      {!unsaved && !running && <WeekHero />}
+      {!running && (
+        <View style={{ gap: 8 }}>
+          {!unsaved && <WeekHero />}
+          <BigAction label="Start workout" color={c.todo} onPress={start} />
+          <Mono color={c.muted} style={{ textAlign: 'center', fontSize: 12 }}>Then log any day of your plan, and switch between days as you go.</Mono>
+        </View>
+      )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }} style={{ marginHorizontal: -20, flexGrow: 0 }}>
         {[...days, null].map((d, i) => {
           const on = i === dayIdx;
@@ -160,13 +170,21 @@ export default function WorkoutScreen() {
               </Pressable>
             );
           }
-          const badge = draftDot ? 'Unsaved' : i === today && !trainedToday ? 'Today' : i === next && !done.has(d.day) ? 'Next' : '';
+          const logged = setsToday.find(x => x.d === i)?.n ?? 0;
+          const badge = logged ? '' : draftDot ? 'Unsaved' : i === today && !trainedToday ? 'Today' : i === next && !done.has(d.day) ? 'Next' : '';
           const w = weekdaysFor(i, schedule, days.length);
           return (
             <Pressable key={d.day} onPress={() => pick(i)} accessibilityRole="tab" aria-selected={on}
-              accessibilityLabel={`${d.day}, ${d.title}${done.has(d.day) ? ', done this week' : ''}${badge ? `, ${badge}` : ''}`}
+              accessibilityLabel={`${d.day}, ${d.title}${done.has(d.day) ? ', done this week' : ''}${badge ? `, ${badge}` : ''}${logged ? `, ${logged} sets logged` : ''}`}
               style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: theme.radius, borderWidth: 1, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface, minWidth: 92, gap: 2 }}>
-              <Mono style={{ fontSize: 11 }} color={draftDot ? c.record : on ? c.accent : c.muted}>{done.has(d.day) ? '✓ ' : ''}{w.length ? w.join('/') : `D${i + 1}`}{badge ? ` · ${badge}` : ''}</Mono>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Mono style={{ fontSize: 11 }} color={draftDot && !logged ? c.record : on ? c.accent : c.muted}>{done.has(d.day) ? '✓ ' : ''}{w.length ? w.join('/') : `D${i + 1}`}{badge ? ` · ${badge}` : ''}</Mono>
+                {logged > 0 && (
+                  <View style={{ minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: c.done, alignItems: 'center', justifyContent: 'center' }}>
+                    <Mono bold style={{ fontSize: 11 }} color={c.onAccent}>{logged}</Mono>
+                  </View>
+                )}
+              </View>
               <Body bold={on} style={{ fontSize: 14 }} numberOfLines={1}>{shortDayTitle(d.title)}</Body>
             </Pressable>
           );
@@ -178,15 +196,6 @@ export default function WorkoutScreen() {
           <Body color={c.inkSoft}>{upcoming ? `Next up: ${days[upcoming.dayIdx].title} on ${WEEKDAY_NAMES[upcoming.w]}. ` : ''}Recovery is when the muscle gets built. Want to train anyway? This is the next day in your plan.</Body>
         </Card>
       )}
-      {clock ? (
-        <WorkoutClock clock={clock} done={progress.done} total={progress.total} savedSec={todaysSession(history)?.durationSec ?? 0}
-          onPauseOrResume={pauseOrResume} onFinish={finish} />
-      ) : exercises.length > 0 && !fromEarlier ? (
-        <View style={{ gap: 6 }}>
-          <Button label="Start workout" kind="primary" onPress={start} />
-          <Mono color={c.muted} style={{ textAlign: 'center', fontSize: 12 }}>Starts the clock. Ticking your first set starts it too.</Mono>
-        </View>
-      ) : null}
       {exercises.map((ex, i) => (
         <View key={`${dayIdx}-${i}-${ex.name}`} style={{ gap: 8 }}>
           {tip && tip.at === i && tip.id === 'swap' && <CoachTip id="swap" title={TIPS.swap[0]} text={TIPS.swap[1]} />}
@@ -203,13 +212,13 @@ export default function WorkoutScreen() {
         </Card>
       )}
       <Button label="+ Add exercise" onPress={() => router.push({ pathname: '/add-exercise', params: { day: String(dayIdx) } })} />
-      {(unsaved || running) && (
-        <View style={{ gap: 8, marginTop: 6 }}>
-          <Button label="Finish workout" kind="primary" onPress={finish} />
-          {unsaved && <Button label="Save and keep going" onPress={saveAndContinue} />}
-          {unsaved && <Button label="Clear unsaved sets" kind="danger" onPress={clear} />}
+      {(running || setsToday.length > 0 || fromEarlier) && (
+        <View style={{ gap: 8, marginTop: 10 }}>
+          <BigAction label="✓ Finish workout" color={c.done} onPress={finish} />
+          <Mono color={c.muted} style={{ textAlign: 'center', fontSize: 12 }}>{setsToday.length ? `Saves today's sets from ${setsToday.map(x => x.label).join(' + ')}` : fromEarlier ? 'Saves these sets to the day you did them' : 'Nothing logged yet'}</Mono>
         </View>
       )}
+      {unsaved && <Button label="Clear unsaved sets" kind="danger" onPress={clear} />}
       {!unsaved && trainedToday && (
         <Button label="See today's summary" onPress={() => router.push({ pathname: '/summary/[id]', params: { id: String(todaysSession(history)!.id) } })} />
       )}
@@ -228,9 +237,20 @@ function KeepAwakeNative() {
   return null;
 }
 
-/** The workout clock: time so far (plus what's already saved today), sets done, Pause / Resume and Finish */
-function WorkoutClock({ clock, done, total, savedSec, onPauseOrResume, onFinish }: {
-  clock: Clock; done: number; total: number; savedSec: number; onPauseOrResume: () => void; onFinish: () => void;
+/** A big, coloured action: Start (to-do colour) and Finish (done colour) */
+function BigAction({ label, color, onPress }: { label: string; color: string; onPress: () => void }) {
+  const { theme } = useTheme();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label.replace('✓ ', '')}
+      style={({ pressed }) => ({ height: 56, borderRadius: theme.radius, backgroundColor: color, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.85 : 1 })}>
+      <Body bold style={{ fontSize: 18 }} color={theme.colors.onAccent}>{label}</Body>
+    </Pressable>
+  );
+}
+
+/** The live panel, pinned at the top during a workout: the clock, Pause, and each day trained so far (tap to go) */
+function LivePanel({ clock, savedSec, sets, days, onPauseOrResume, onPick }: {
+  clock: Clock; savedSec: number; sets: number; days: { d: number; n: number; label: string }[]; onPauseOrResume: () => void; onPick: (d: number) => void;
 }) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -244,18 +264,24 @@ function WorkoutClock({ clock, done, total, savedSec, onPauseOrResume, onFinish 
   const active = clockActiveMs(clock, now);
   const elapsed = savedSec + (active < 5 * 3600e3 ? Math.max(0, active - (clock.creditedMs || 0)) / 1000 : 0);
   return (
-    <Card>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1, gap: 2 }}>
-          <Mono bold color={paused ? c.muted : c.ink} style={{ fontSize: 26 }} accessibilityLabel={`Workout time ${fmtClock(elapsed)}${paused ? ', paused' : ''}`}>{fmtClock(elapsed)}</Mono>
-          <Mono style={{ fontSize: 12 }} color={paused ? c.record : c.muted}>{paused ? 'PAUSED' : `${done} / ${total} sets`}</Mono>
+          <Mono bold color={paused ? c.muted : c.todo} style={{ fontSize: 30 }} accessibilityLabel={`Workout time ${fmtClock(elapsed)}${paused ? ', paused' : ''}`}>{fmtClock(elapsed)}</Mono>
+          <Mono style={{ fontSize: 12 }} color={c.inkSoft}>{paused ? 'PAUSED' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${days.length ? ` · ${days.length} day${days.length === 1 ? '' : 's'}` : ''}`}</Mono>
         </View>
-        <Button label={paused ? 'Resume' : 'Pause'} onPress={onPauseOrResume} style={{ minWidth: 96 }} />
-        <Button label="Finish" kind="primary" onPress={onFinish} style={{ minWidth: 88 }} />
+        <Button label={paused ? 'Resume' : 'Pause'} onPress={onPauseOrResume} style={{ minWidth: 100 }} />
       </View>
-      <View style={{ height: 4, borderRadius: 2, backgroundColor: c.line, overflow: 'hidden', opacity: paused ? 0.5 : 1 }}>
-        <View style={{ height: 4, width: `${Math.min(100, (done / Math.max(1, total)) * 100)}%`, backgroundColor: c.accent }} />
-      </View>
-    </Card>
+      {days.length > 0 && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {days.map(x => (
+            <Pressable key={x.d} onPress={() => onPick(x.d)} accessibilityRole="button" accessibilityLabel={`${x.label}, ${x.n} sets. Go to this day`}
+              style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, justifyContent: 'center', backgroundColor: c.surfaceHigh, borderWidth: 1, borderColor: c.done }}>
+              <Mono bold style={{ fontSize: 12 }} color={c.done}>{x.label} · {x.n} set{x.n === 1 ? '' : 's'}</Mono>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
   );
 }

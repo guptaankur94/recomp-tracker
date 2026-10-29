@@ -76,11 +76,11 @@
 .wu-badge { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-numbers); font-size: 12px; font-weight: 700; color: var(--accent); border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent); }
 .wu-val { font-family: var(--font-numbers); font-size: 18px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .wu-hint { min-width: 0; font-size: var(--t-caption); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wu-chk { flex-shrink: 0; margin-left: auto; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; border: 1.5px solid color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+.wu-chk { flex-shrink: 0; margin-left: auto; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; border: 1.5px solid color-mix(in srgb, var(--todo) 60%, transparent); background: color-mix(in srgb, var(--todo) 10%, transparent); color: var(--todo); }
 .wu-chk svg { width: 20px; height: 20px; }
 .wu-r.done .wu-val, .wu-r.done .wu-hint { color: var(--text-3); }
-.wu-r.done .wu-badge { background: var(--accent); border-color: var(--accent); color: var(--on-fill); }
-.wu-r.done .wu-chk { background: var(--accent); border-color: var(--accent); color: var(--on-fill); }
+.wu-r.done .wu-badge { background: var(--done); border-color: var(--done); color: var(--on-fill); }
+.wu-r.done .wu-chk { background: var(--done); border-color: var(--done); color: var(--on-fill); }
 .wu-line { margin-top: 12px; width: 100%; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; border: 0; border-radius: var(--r-lg); background: var(--surface-2); color: var(--text); text-align: left; }
 .wu-line-title { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: var(--t-footnote); font-weight: 700; }
 .wu-line-title svg { width: 14px; height: 14px; }
@@ -219,9 +219,9 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
   flex-shrink: 0;
   height: 48px;
   border-radius: var(--r-sm);
-  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  color: color-mix(in srgb, var(--accent) 80%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--todo) 30%, transparent);
+  background: color-mix(in srgb, var(--todo) 7%, transparent);
+  color: color-mix(in srgb, var(--todo) 80%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -230,11 +230,11 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 }
 .check-btn svg { width: 22px; height: 22px; }
 /* The next set to do in each exercise stands out a little more */
-.check-btn.next { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); color: var(--accent); }
-.check-btn:active { background: var(--accent); border-color: var(--accent); color: var(--on-fill); }
+.check-btn.next { background: color-mix(in srgb, var(--todo) 16%, transparent); border-color: color-mix(in srgb, var(--todo) 60%, transparent); color: var(--todo); }
+.check-btn:active { background: var(--todo); border-color: var(--todo); color: var(--on-fill); }
 .set-block.completed {
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface)); /* opaque, so the swipe action can't show through */
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--done) 16%, var(--surface)); /* opaque, so the swipe action can't show through */
+  border-color: color-mix(in srgb, var(--done) 35%, transparent);
   cursor: pointer;
 }
 .locked-row { display: flex; align-items: center; gap: 8px; min-height: 30px; }
@@ -242,7 +242,7 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--done);
   color: var(--on-fill);
   display: flex;
   align-items: center;
@@ -265,7 +265,7 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
   margin-left: 6px;
   vertical-align: middle;
 }
-.ex-progress.all-done { background: var(--accent); color: var(--on-fill); }
+.ex-progress.all-done { background: var(--done); color: var(--on-fill); }
 
 /* Drop sets */
 .drop-row {
@@ -355,3 +355,31 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .goal-panel[role="button"] { cursor: pointer; }
 .goal-empty { margin-top: 12px; width: 100%; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: var(--r-lg); border: 1px dashed color-mix(in srgb, var(--gold) 55%, transparent); background: none; color: var(--gold); font-size: var(--t-footnote); font-weight: 700; text-align: left; }
 .goal-empty svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* To do and done, at a glance: an exercise still to do has a to-do bar; a finished one turns green with a ✓ and "Done" */
+.ex-card { border-left: 4px solid var(--todo); }
+.ex-progress { color: var(--todo); background: color-mix(in srgb, var(--todo) 14%, transparent); }
+.ex-card.collapsed { border-left-color: var(--done); background: color-mix(in srgb, var(--done) 10%, var(--surface)); }
+.ex-card.collapsed .locked-num { background: var(--done); }
+.done-tag { flex-shrink: 0; font-size: var(--t-caption); font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--done); }
+.tab-badge { display: inline-block; margin-left: 4px; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--done); color: var(--on-fill); font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; }
+
+/* Top: Start before a workout, the live clock during it */
+.hero-start { margin-top: 12px; width: 100%; height: 54px; border: 0; border-radius: var(--r-lg); background: var(--todo); color: var(--on-fill); font-size: var(--t-headline); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.hero-start svg { width: 18px; height: 18px; }
+.hero-hint { margin-top: 8px; font-size: var(--t-footnote); color: var(--text-2); text-align: center; }
+#hero.is-live { position: sticky; top: env(safe-area-inset-top); z-index: 50; }
+.live { margin: 0 -16px 10px; padding: 10px 16px 12px; background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid var(--separator); }
+.live-row { display: flex; align-items: center; gap: 12px; }
+.live-main { flex: 1; min-width: 0; }
+.live-time { font-family: var(--font-numbers); font-size: 32px; font-weight: 800; line-height: 1.05; color: var(--todo); }
+.live-sub { font-size: var(--t-caption); font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live.paused .live-time { color: var(--text-3); }
+.live-pause { width: auto; flex: none; height: 40px; padding: 0 18px; border-radius: 999px; }
+.live-days { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.live-day { height: 28px; padding: 0 10px; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--done) 16%, transparent); color: var(--done); font-size: var(--t-caption); font-weight: 800; }
+
+/* Bottom: Finish, at the end of the list (not floating, so it isn't hit by accident) */
+.finish-btn { width: 100%; height: 56px; margin-top: 18px; border: 0; border-radius: var(--r-lg); background: var(--done); color: var(--on-fill); font-size: var(--t-headline); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.finish-btn svg { width: 20px; height: 20px; }
+.finish-hint { margin-top: 8px; font-size: var(--t-footnote); color: var(--text-2); text-align: center; }

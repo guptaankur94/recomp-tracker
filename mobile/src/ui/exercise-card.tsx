@@ -139,8 +139,8 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
     const prs = sets.filter(s => s.pr).length;
     return (
       <Pressable onPress={() => setFolded(false)} accessibilityRole="button" accessibilityLabel={`${ex.name}, done. Show sets`}
-        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: theme.radius, borderWidth: 1, borderColor: c.line, backgroundColor: pressed ? c.surfaceHigh : c.surface })}>
-        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: theme.radius, borderWidth: 1, borderLeftWidth: 4, borderColor: c.line, borderLeftColor: c.done, backgroundColor: pressed ? c.surfaceHigh : c.surface })}>
+        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: c.done, alignItems: 'center', justifyContent: 'center' }}>
           <Body bold color={c.onAccent}>✓</Body>
         </View>
         <View style={{ flex: 1, gap: 2 }}>
@@ -148,12 +148,13 @@ export function ExerciseCard({ dayIdx, exIdx, ex, exercises, draft, history, onS
           <Mono style={{ fontSize: 12 }}>{sets.length} sets · best {best && best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × {best?.r ?? 0} · {fmtVolume(volume)}</Mono>
         </View>
         {prs > 0 && <PrBadge label={`${prs} PR`} />}
+        <Mono bold style={{ fontSize: 11, letterSpacing: 1 }} color={c.done}>DONE</Mono>
       </Pressable>
     );
   }
 
   return (
-    <View style={{ backgroundColor: c.surface, borderRadius: theme.radius, borderWidth: 1, borderColor: c.line, padding: 16, gap: 8 }}>
+    <View style={{ backgroundColor: c.surface, borderRadius: theme.radius, borderWidth: 1, borderLeftWidth: 4, borderColor: c.line, borderLeftColor: c.todo, padding: 16, gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
         <Pressable onPress={() => setShowInfo(v => !v)} style={{ flex: 1 }} accessibilityRole="button" aria-expanded={showInfo} accessibilityLabel={`${ex.name}, ${ex.sets} by ${ex.repTarget}. ${showInfo ? 'Hide' : 'Show'} tips`}>
           <Title size={22}>{ex.name}</Title>
@@ -210,8 +211,8 @@ function SetRow(props: {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Pressable onLongPress={props.canDelete ? props.onDelete : undefined} accessibilityRole="text" accessibilityLabel={`Set ${setNum}`}
           accessibilityActions={props.canDelete ? [{ name: 'delete', label: 'Delete set' }] : []} onAccessibilityAction={e => { if (e.nativeEvent.actionName === 'delete') props.onDelete(); }}
-          style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: done ? c.accent : c.line, alignItems: 'center', justifyContent: 'center' }}>
-          <Mono bold color={done ? c.accent : c.inkSoft}>{setNum}</Mono>
+          style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: done ? c.done : c.line, backgroundColor: done ? c.done : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+          <Mono bold color={done ? c.onAccent : c.inkSoft}>{setNum}</Mono>
         </Pressable>
         {done ? (
           <Pressable onPress={props.onEdit} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }} accessibilityRole="button"
@@ -227,8 +228,8 @@ function SetRow(props: {
           </>
         )}
         <Pressable onPress={done ? props.onEdit : props.onTick} accessibilityRole="button" accessibilityLabel={done ? `Set ${setNum} done. Edit` : `Done with set ${setNum}`}
-          style={({ pressed }) => ({ width: 48, height: 44, borderRadius: theme.radius, alignItems: 'center', justifyContent: 'center', backgroundColor: done ? c.accent : 'transparent', borderWidth: done ? 0 : 1.5, borderColor: c.accent, opacity: pressed ? 0.7 : 1 })}>
-          <Body bold style={{ fontSize: 18 }} color={done ? c.onAccent : c.accent}>✓</Body>
+          style={({ pressed }) => ({ width: 48, height: 44, borderRadius: theme.radius, alignItems: 'center', justifyContent: 'center', backgroundColor: done ? c.done : 'transparent', borderWidth: done ? 0 : 1.5, borderColor: c.todo, opacity: pressed ? 0.7 : 1 })}>
+          <Body bold style={{ fontSize: 18 }} color={done ? c.onAccent : c.todo}>✓</Body>
         </Pressable>
       </View>
       {(set.drops || []).map((d, j) => (

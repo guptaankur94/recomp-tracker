@@ -86,8 +86,6 @@
 .choice-section { display: flex; align-items: center; gap: 8px; font-size: var(--t-footnote); font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; margin: 18px 4px 8px; }
 .day-dots { display: inline-flex; gap: 3px; flex-shrink: 0; }
 .day-dots .day-dot { margin-right: 0; }
-.save-log-btn { margin-top: 4px; }
-.save-log-hint { font-size: var(--t-footnote); color: var(--text-2); text-align: center; margin: 6px 12px 14px; line-height: 1.35; }
 .empty-list { padding: 24px 16px; text-align: center; color: var(--text-2); font-size: var(--t-body); }
 
 /* Personal records */
@@ -239,3 +237,19 @@
 .cal-field { display: flex; align-items: center; gap: 6px; }
 .cal-field input { width: 84px; height: 40px; text-align: right; }
 .cal-unit { font-size: var(--t-footnote); color: var(--text-2); }
+
+/* Finish sheet: the workout so far, how hard it was, calories */
+.fin-stats { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 4px 0 2px; font-size: var(--t-footnote); color: var(--text-2); }
+.fin-stats b { color: var(--text); font-family: var(--font-numbers); font-size: var(--t-body); }
+.fin-label { margin: 18px 0 8px; font-size: var(--t-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.effort { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.effort button { min-height: 76px; padding: 8px 4px; border-radius: var(--r-md); border: 1.5px solid var(--separator); background: var(--surface-2); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: var(--t-footnote); font-weight: 700; }
+.effort button i { font-style: normal; font-size: 11px; font-weight: 600; color: var(--text-2); text-align: center; line-height: 1.2; }
+.effort-bars { display: flex; gap: 2px; align-items: flex-end; height: 16px; }
+.effort-bars span { width: 5px; border-radius: 2px; background: color-mix(in srgb, var(--text) 22%, transparent); }
+.effort button[aria-pressed="true"] { border-color: var(--todo); background: color-mix(in srgb, var(--todo) 14%, var(--surface-2)); color: var(--todo); }
+.effort button[aria-pressed="true"] .effort-bars span.on { background: var(--todo); }
+.fin-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 6px; }
+.fin-actions .finish-btn { margin-top: 0; }
+.effort-row { margin: 4px 0 14px; padding: 12px 14px; border-radius: var(--r-lg); background: var(--surface); }
+.effort-row .fin-label { margin-top: 0; }
