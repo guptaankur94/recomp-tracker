@@ -63,6 +63,11 @@ function renderSettings() {
       ${settingsRow({ iconName: ROW_ICONS.plan, color: '#3987e5', title: 'Workout plan', sub: `${escapeHtml(getPlanName())} · ${programData.length} days · ${totalEx} exercises`, onclick: "switchView('plan')" })}
     </div>
 
+    <div class="group-label">Smart</div>
+    <div class="group">
+      ${settingsRow({ iconName: ROW_ICONS.ai, color: '#c47a1f', title: 'Smart suggestions', sub: 'Learns your habits on this phone and offers changes you can undo', value: smartOn() ? 'On' : 'Off', onclick: 'toggleSmart()', label: `Smart suggestions, ${smartOn() ? 'on' : 'off'}. Tap to turn ${smartOn() ? 'off' : 'on'}` })}
+    </div>
+
     <div class="group-label">Appearance</div>
     <div class="group">
       ${settingsRow({ iconName: ROW_ICONS.theme, color: '#9085e9', title: 'Theme', sub: themeName(), onclick: 'openThemeSheet()' })}

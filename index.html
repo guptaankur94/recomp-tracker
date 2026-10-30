@@ -76,6 +76,12 @@
   <div id="view-progress" class="view" hidden>
     <div class="range-bar"><div class="segmented" id="range-seg" role="group" aria-label="Time range"></div></div>
 
+    <div class="card" id="coach-card">
+      <div class="section-title">Coach</div>
+      <div class="section-meta lead">Worked out on this phone from your workouts and weigh-ins. Each tip shows why.</div>
+      <div id="coach-list"></div>
+    </div>
+
     <div class="card">
       <div class="section-title">Bodyweight</div>
       <div class="stat-tiles" id="bw-stats"></div>
@@ -560,7 +566,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.10.30';
+    const APP_VERSION = '2026.10.30b';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -581,6 +587,8 @@
   <script src="js/history.js"></script>
   <script src="js/progress.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/coach.js"></script>
   <script src="js/backup.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/plan.js"></script>

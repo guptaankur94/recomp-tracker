@@ -582,7 +582,7 @@ function openFinishSheet() {
     <div class="fin-label" id="effort-label">How hard was today?</div>
     <div class="effort" role="group" aria-labelledby="effort-label" id="finish-effort">${effortButtonsHtml(finishEffort, 'pickFinishEffort')}</div>
     <div class="fin-label">Calories burned · optional</div>
-    <label class="cal-field fin-cal"><input type="number" id="finish-cal" inputmode="numeric" min="0" max="${MAX_CALORIES}" placeholder="—" value="${today && today.calories || ''}" aria-label="Calories burned, kcal"><span class="cal-unit">kcal, active, from your watch</span></label>
+    <label class="cal-field fin-cal"><input type="number" id="finish-cal" inputmode="numeric" min="0" max="${MAX_CALORIES}" placeholder="${usualCalories(minutes) ? `usual ~${usualCalories(minutes)}` : '—'}" value="${today && today.calories || ''}" aria-label="Calories burned, kcal"><span class="cal-unit">kcal, active, from your watch</span></label>
     <div class="fin-actions">
       <button class="finish-btn" onclick="confirmFinish()">${icon('check', 3)}Finish workout</button>
       <button class="btn btn-plain" onclick="closeSheet('finish-sheet')">Keep training</button>

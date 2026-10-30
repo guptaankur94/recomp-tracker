@@ -5,7 +5,10 @@ function updateStats() {
   const hero = document.getElementById('hero');
   if (!hero) return;
   const history = getHistory();
-  const profileLink = getProfile() ? '' : `<button class="hero-link" onclick="openProfileSheet()">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`;
+  const coachCount = getProfile() ? coachAlertCount() : 0;
+  const profileLink = !getProfile()
+    ? `<button class="hero-link" onclick="openProfileSheet()">Set up your profile for goal and nutrition targets ${icon('chevron', 2.6)}</button>`
+    : coachCount ? `<button class="hero-link" onclick="switchView('progress')">Coach: ${coachCount} tip${coachCount === 1 ? '' : 's'} for you ${icon('chevron', 2.6)}</button>` : '';
 
 
   const weekStart = startOfWeek(new Date()).getTime();
@@ -560,6 +563,11 @@ function completeSet(exIdx, setNum) {
     return;
   }
 
+  const count = getSetCount(currentDayIdx, exIdx, ex.sets);
+  let started = false;
+  for (let s = 1; s <= count && !started; s++) started = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true';
+  if (!started) noteExerciseStart(currentDayIdx, ex.name);
+
   localStorage.setItem(key('w'), w);
   localStorage.setItem(key('r'), r);
   localStorage.setItem(key('done'), 'true');
@@ -572,7 +580,6 @@ function completeSet(exIdx, setNum) {
   clockOnSet();
 
   // Was this the exercise's last open set?
-  const count = getSetCount(currentDayIdx, exIdx, ex.sets);
   let finished = true;
   for (let s = 1; s <= count && finished; s++) finished = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true';
 

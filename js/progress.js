@@ -281,6 +281,7 @@ function renderProgress() {
   document.getElementById('range-seg').innerHTML = Object.entries(RANGES).map(([key, r]) =>
     `<button class="seg-btn ${key === progressRange ? 'active' : ''}" onclick="selectRange('${key}')">${r.label}</button>`
   ).join('');
+  renderCoach();
   renderBodyweight();
   renderLiftCards();
   renderExerciseProgress();
