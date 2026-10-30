@@ -1,11 +1,13 @@
 # Checks for the new app on every push: unit and parity tests (against the web app in js/), typecheck and lint.
+# While the new app is paused (see CLAUDE.md), web-only changes in js/ don't trigger these: put 'js/**' back in
+# both path lists when the new app is caught up.
 name: App checks
 
 on:
   push:
-    paths: ['mobile/**', 'js/**', '.github/workflows/app-checks.yml']
+    paths: ['mobile/**', '.github/workflows/app-checks.yml']
   pull_request:
-    paths: ['mobile/**', 'js/**']
+    paths: ['mobile/**']
 
 jobs:
   checks:

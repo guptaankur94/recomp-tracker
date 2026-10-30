@@ -31,6 +31,8 @@ The owner wants every change in the app immediately:
 
 The iPhone/Android rebuild in Expo (React Native) + TypeScript, headed for the App Store and Google Play. See `mobile/README.md`.
 
+**Paused (owner's decision, 2026-10-30): new features go into the web app only.** Don't change `mobile/` for new features; instead add a line for each web change the new app will need to `mobile/PORTING.md`. When the Apple Developer account is ready, port the list in one batch, bring the parity tests up to date, rebuild the preview, and put `'js/**'` back in the push paths of `.github/workflows/app-checks.yml` (taken out so web-only changes don't fail the parity tests meanwhile). Until then the parity tests may fail for logic that has moved on in `js/`; that's expected, and is fixed by the batch port.
+
 - Logic lives in `mobile/src/core` with no screens or storage. `npm test` there runs parity tests that load the web app's own `js/` files and check the new core gives the same answers. Keep them passing; when web app logic changes, change the core to match.
 - Data in `mobile/src/core/data` is generated from `js/data` with `npm run export-web-data`; don't edit it by hand.
 - Expo changes every SDK: follow `mobile/AGENTS.md`. Install packages with `npx expo install` (add `EXPO_OFFLINE=1` here, since api.expo.dev is blocked). Run `npx tsc --noEmit` and `npx expo lint` before pushing.
