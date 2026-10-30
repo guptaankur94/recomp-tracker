@@ -383,3 +383,9 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .finish-btn { width: 100%; height: 56px; margin-top: 18px; border: 0; border-radius: var(--r-lg); background: var(--done); color: var(--on-fill); font-size: var(--t-headline); font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .finish-btn svg { width: 20px; height: 20px; }
 .finish-hint { margin-top: 8px; font-size: var(--t-footnote); color: var(--text-2); text-align: center; }
+
+/* Finish in the live panel: top right, always reachable. Outlined while you train, filled green once every set
+   is done. It only opens the Finish sheet, so a mis-tap costs nothing ("Keep training") */
+.live-finish { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; margin-left: 4px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--done); background: none; color: var(--done); font-size: var(--t-footnote); font-weight: 800; }
+.live-finish svg { width: 14px; height: 14px; }
+.live-finish.ready { background: var(--done); color: var(--on-fill); }

@@ -112,13 +112,16 @@ export default function WorkoutScreen() {
   const todayStr = localDateStr(new Date(now));
   const setsToday = [...days.map((_, i) => i), customIdx].map(d => {
     const dr = drafts[d] ?? null;
-    const n = dr && hasDraft(dr) && localDateStr(new Date(dr.startedAt)) === todayStr ? dayProgress(dr, dayExercises(dayAt(d), dr, new Set(swaps[d] || []))).done : 0;
-    return { d, n, label: d === customIdx ? 'Custom' : `D${d + 1}` };
+    const prog = dr && hasDraft(dr) && localDateStr(new Date(dr.startedAt)) === todayStr ? dayProgress(dr, dayExercises(dayAt(d), dr, new Set(swaps[d] || []))) : null;
+    return { d, n: prog?.done ?? 0, total: prog?.total ?? 0, label: d === customIdx ? 'Custom' : `D${d + 1}` };
   }).filter(x => x.n > 0);
   const savedToday = todaysSession(history);
-  // Finish: with sets to save, the Finish screen asks how hard it was; with nothing new, the workout just ends
+  // Every set on the days trained so far is done: the panel's Finish fills in green (until then it stays quiet)
+  const ready = setsToday.length > 0 && setsToday.every(x => x.total > 0 && x.n >= x.total);
+  // Finish: the Finish screen asks how hard it was (or, with nothing logged, whether to end the workout), so a
+  // mis-tap on the always-visible Finish costs nothing
   const finish = async () => {
-    if (setsToday.length || (savedToday && running && !fromEarlier)) {
+    if (setsToday.length || (running && !fromEarlier)) {
       router.push({ pathname: '/finish', params: { day: String(dayIdx) } });
       return;
     }
@@ -146,7 +149,7 @@ export default function WorkoutScreen() {
   return (
     <Screen pinned={clock ? (
       <LivePanel clock={clock} savedSec={savedToday?.durationSec ?? 0} sets={setsToday.reduce((n, x) => n + x.n, 0) + (savedToday ? sessionStats(savedToday).sets : 0)}
-        days={setsToday} onPauseOrResume={pauseOrResume} onPick={pick} />
+        days={setsToday} ready={ready} onPauseOrResume={pauseOrResume} onPick={pick} onFinish={finish} />
     ) : undefined}>
       {(unsaved || running || restTimer) && <KeepAwake />}
       <Header eyebrow={`Workout · ${activePlan.planName}`} title={day.title}
@@ -249,8 +252,9 @@ function BigAction({ label, color, onPress }: { label: string; color: string; on
 }
 
 /** The live panel, pinned at the top during a workout: the clock, Pause, and each day trained so far (tap to go) */
-function LivePanel({ clock, savedSec, sets, days, onPauseOrResume, onPick }: {
-  clock: Clock; savedSec: number; sets: number; days: { d: number; n: number; label: string }[]; onPauseOrResume: () => void; onPick: (d: number) => void;
+function LivePanel({ clock, savedSec, sets, days, ready, onPauseOrResume, onPick, onFinish }: {
+  clock: Clock; savedSec: number; sets: number; days: { d: number; n: number; label: string }[]; ready: boolean;
+  onPauseOrResume: () => void; onPick: (d: number) => void; onFinish: () => void;
 }) {
   const { theme } = useTheme();
   const c = theme.colors;
@@ -270,7 +274,12 @@ function LivePanel({ clock, savedSec, sets, days, onPauseOrResume, onPick }: {
           <Mono bold color={paused ? c.muted : c.todo} style={{ fontSize: 30 }} accessibilityLabel={`Workout time ${fmtClock(elapsed)}${paused ? ', paused' : ''}`}>{fmtClock(elapsed)}</Mono>
           <Mono style={{ fontSize: 12 }} color={c.inkSoft}>{paused ? 'PAUSED' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${days.length ? ` · ${days.length} day${days.length === 1 ? '' : 's'}` : ''}`}</Mono>
         </View>
-        <Button label={paused ? 'Resume' : 'Pause'} onPress={onPauseOrResume} style={{ minWidth: 100 }} />
+        <Button label={paused ? 'Resume' : 'Pause'} onPress={onPauseOrResume} style={{ minWidth: 92 }} />
+        {/* Finish: top right, always reachable; outlined while you train, filled once every set is done */}
+        <Pressable onPress={onFinish} accessibilityRole="button" accessibilityLabel={ready ? 'Finish workout, every set done' : 'Finish workout'} hitSlop={4}
+          style={({ pressed }) => ({ height: 44, paddingHorizontal: 16, marginLeft: 4, borderRadius: 22, borderWidth: 1.5, borderColor: c.done, backgroundColor: ready ? c.done : 'transparent', alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 })}>
+          <Body bold style={{ fontSize: 15 }} color={ready ? c.onAccent : c.done}>{ready ? '✓ Finish' : 'Finish'}</Body>
+        </Pressable>
       </View>
       {days.length > 0 && (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>

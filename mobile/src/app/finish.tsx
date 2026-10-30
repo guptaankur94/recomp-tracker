@@ -61,6 +61,26 @@ export default function FinishScreen() {
     haptic('success');
     router.replace({ pathname: '/summary/[id]', params: { id: String(session.id) } });
   };
+  // Started, but nothing logged: the only question is whether to end the workout
+  if (!sets && !days.length) {
+    const end = async () => {
+      await finishWorkout(dayIdx);
+      toast('Workout ended. Nothing was logged, so nothing was saved.');
+      router.back();
+    };
+    return (
+      <Screen tabBar={false}>
+        <Header eyebrow="Finish" title="End this workout?" sub="Nothing is logged yet, so nothing will be saved." />
+        <Pressable onPress={end} accessibilityRole="button" accessibilityLabel="End workout"
+          style={({ pressed }) => ({ height: 56, borderRadius: theme.radius, borderWidth: 1.5, borderColor: c.danger, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1 })}>
+          <Body bold style={{ fontSize: 17 }} color={c.danger}>End workout</Body>
+        </Pressable>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Keep training" style={{ alignSelf: 'center', padding: 10 }}>
+          <Body color={c.inkSoft}>Keep training</Body>
+        </Pressable>
+      </Screen>
+    );
+  }
   const stat = (value: string, label: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
       <Mono bold style={{ fontSize: 18 }} color={c.ink}>{value}</Mono>

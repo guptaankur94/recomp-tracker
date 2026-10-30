@@ -28,7 +28,7 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await shot('c-1-start');
   await btn('Start workout').click();
   await p.waitForTimeout(300);
-  check('Start shows the clock with Pause, and Finish at the bottom', await btn('Pause').isVisible() && await btn('Finish workout').isVisible());
+  check('Start shows the clock with Pause and Finish, and Finish at the bottom', await btn('Pause').isVisible() && (await btn('Finish workout').count()) === 2);
   check('Start is gone once started', !(await btn('Start workout').isVisible()));
   await p.clock.fastForward('10:00');
   check('the clock runs', /^Workout time 10:0\d$/.test(await clock()), await clock());
@@ -89,8 +89,16 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.getByRole('tab', { name: /^Day 2,/ }).click();
   await btn('Start workout').click();
   await p.waitForTimeout(300);
-  await btn('Finish workout').click();
-  await p.waitForTimeout(500);
+  await btn('Finish workout').first().click();
+  await p.waitForTimeout(800);
+  check('nothing logged: asks before ending', await p.getByText('End this workout?').isVisible());
+  await btn('Keep training').click();
+  await p.waitForTimeout(600);
+  check('Keep training keeps it running', await p.getByLabel(/^Workout time/).isVisible());
+  await btn('Finish workout').first().click();
+  await p.waitForTimeout(800);
+  await btn('End workout').click();
+  await p.waitForTimeout(800);
   check('Finish with nothing logged stops the clock', (await toast()).includes('Nothing was logged') && await btn('Start workout').isVisible());
 
   // One clock for the whole app: Start on one day, go to another, then Finish saves both days' sets

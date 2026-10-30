@@ -86,6 +86,8 @@ function livePanelHtml(clock) {
   const today = todaysSession();
   const saved = today ? sessionStats(today).sets : 0;
   const sets = byDay.reduce((n, x) => n + x.n, 0) + saved;
+  // Every set on the days trained so far is done: Finish fills in green (until then it stays quiet)
+  const ready = byDay.length > 0 && byDay.every(x => { const p = dayProgress(x.d); return p.total > 0 && p.done >= p.total; });
   return `
     <div class="live ${paused ? 'paused' : ''}" role="region" aria-label="Workout in progress">
       <div class="live-row">
@@ -94,6 +96,7 @@ function livePanelHtml(clock) {
           <div class="live-sub">${paused ? 'Paused' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${byDay.length ? ` · ${byDay.length} day${byDay.length === 1 ? '' : 's'}` : ''}`}</div>
         </div>
         <button class="btn btn-secondary live-pause" onclick="${paused ? 'resumeWorkout()' : 'pauseWorkout()'}">${paused ? 'Resume' : 'Pause'}</button>
+        <button class="live-finish ${ready ? 'ready' : ''}" onclick="openFinishSheet()" aria-label="Finish workout">${ready ? icon('check', 3) : ''}Finish</button>
       </div>
       ${byDay.length ? `<div class="live-days">${byDay.map(x => `<button class="live-day" onclick="selectDay(${x.d})">${dayShortLabel(x.d)} · ${x.n} set${x.n === 1 ? '' : 's'}</button>`).join('')}</div>` : ''}
     </div>`;

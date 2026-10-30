@@ -10,7 +10,9 @@ export const TAB_BAR_SPACE = 110;
 /** Vitruvian's faint blueprint grid, 24 pt squares */
 const Grid = memo(function Grid({ color }: { color: string }) {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    // Clipped to the screen: lines running past it would make the screen itself scrollable (it shifted when a
+    // browser scrolled a tapped or focused element into view)
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
       {Array.from({ length: 60 }, (_, i) => <View key={`h${i}`} style={{ position: 'absolute', left: 0, right: 0, top: i * 24, height: 1, backgroundColor: color }} />)}
       {Array.from({ length: 40 }, (_, i) => <View key={`v${i}`} style={{ position: 'absolute', top: 0, bottom: 0, left: i * 24, width: 1, backgroundColor: color }} />)}
     </View>

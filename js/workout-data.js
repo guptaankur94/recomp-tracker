@@ -563,8 +563,12 @@ let finishEffort = null;
 function openFinishSheet() {
   const byDay = setsTodayByDay();
   const today = todaysSession();
-  // Nothing new to save: Finish just ends the workout (or says there's nothing to save)
-  if (!byDay.length && !(today && workoutClock())) return finishAndSaveWorkout();
+  // Nothing new to save: with a workout running, ask before ending it (Finish is always on screen, so a mis-tap
+  // must not end anything); otherwise say there's nothing to save
+  if (!byDay.length && !(today && workoutClock())) {
+    if (!workoutClock()) return finishAndSaveWorkout();
+    return confirmSheet('End this workout?', 'Nothing is logged yet, so nothing will be saved.', 'End workout').then(yes => { if (yes) finishAndSaveWorkout(); });
+  }
   let sets = today ? sessionStats(today).sets : 0;
   let volume = today ? sessionStats(today).volume : 0;
   byDay.forEach(({ d }) => collectDaySets(d).forEach(ex => ex.sets.forEach(s => { sets++; volume += setVolume(s); })));

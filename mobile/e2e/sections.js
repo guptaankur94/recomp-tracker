@@ -50,7 +50,10 @@ const check = (name, ok, extra = '') => results.push(`${ok ? 'PASS' : 'FAIL'} ${
   await p.waitForTimeout(500);
   const box = await p.getByLabel(/^Workout time/).boundingBox();
   check('the live panel stays at the top while scrolling', box && box.y < 80, JSON.stringify(box));
-  check('Finish sits at the end of the list', await btn('Finish workout').isVisible() && await p.getByText("Saves today's sets from D1 + D2").isVisible());
+  check('Finish sits at the end of the list, and in the pinned panel', (await btn('Finish workout').count()) === 2 && await p.getByText("Saves today's sets from D1 + D2").isVisible());
+  const fb = await btn('Finish workout').first().boundingBox();
+  check('the panel Finish stays at the top right while scrolling', fb && fb.y >= 0 && fb.y < 80 && fb.x > 250, JSON.stringify(fb));
+  check('it stays quiet until every set is done', (await p.getByRole('button', { name: 'Finish workout, every set done' }).count()) === 0);
   await shot('s-2-bottom');
   // Finish: effort and calories
   await btn('Finish workout').first().click();
