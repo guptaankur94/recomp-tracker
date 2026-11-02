@@ -20,13 +20,11 @@ function fmtDuration(sec) {
 function sessionStats(session) {
   let sets = 0;
   let volume = 0;
-  let prs = 0;
   session.exercises.forEach(e => e.sets.forEach(s => {
     sets++;
     volume += setVolume(s);
-    if (s.pr) prs++;
   }));
-  return { sets, volume, prs, durationSec: session.durationSec || 0 };
+  return { sets, volume, prs: sessionPrs(session).length, durationSec: session.durationSec || 0 };
 }
 
 function previousSameDay(session) {

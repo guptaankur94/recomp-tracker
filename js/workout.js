@@ -418,7 +418,8 @@ function renderWorkout() {
       const moreBtn = `<button class="set-more-btn" onclick="event.stopPropagation(); openSetMenu(${exIdx}, ${s})" aria-label="Set ${s} options">${icon('more', 2)}</button>`;
       // Always-visible line under the set: add a drop set, and the rest that follows it
       const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
-      const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr')) === 'rest';
+      // Gold when the set after this rest was a rest record (the rest before a set is what counts)
+      const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s + 1, 'pr')) === 'rest';
       const setLink = `
         <div class="set-link">
           <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
@@ -705,9 +706,7 @@ function completeSet(exIdx, setNum) {
   localStorage.setItem(key('w'), w);
   localStorage.setItem(key('r'), r);
   localStorage.setItem(key('done'), 'true');
-  const pr = detectPr(ex, exIdx, setNum, parseFloat(w) || 0, parseInt(r, 10));
-  if (pr) localStorage.setItem(key('pr'), pr);
-  else localStorage.removeItem(key('pr'));
+  const pr = refreshPrs(currentDayIdx, exIdx)[setNum] || null;
   const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
   localStorage.setItem(key('rested'), 'true');
   touchDraft();
@@ -720,9 +719,10 @@ function completeSet(exIdx, setNum) {
   haptic('success');
   if (pr || finished) setTimeout(() => haptic('success'), 160);
   if (pr) {
-    const restNote = pr === 'rest' ? ` · rest ${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))}` : '';
-    showToast(`New PR · ${ex.name}: ${parseFloat(w) > 0 ? `${fmtNum(parseFloat(w))} kg` : 'BW'} × ${r}${restNote}`, { type: 'pr' });
+    const restNote = pr === 'rest' ? ` after ${fmtClock(getSetRest(currentDayIdx, exIdx, setNum - 1, ex))} rest` : '';
+    showToast(`New PR · ${ex.name}: ${parseFloat(w) > 0 ? `${fmtNum(parseFloat(w))} kg` : 'BW'} × ${r}${restNote} · ${PR_LABELS[pr].toLowerCase()}`, { type: 'pr' });
   }
+
   justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
   anchorOn(justCompletedBlock, `ex-card-${exIdx}`);
   if (finished) {
@@ -762,7 +762,7 @@ function nextSetLabel(exIdx, setNum) {
 
 function editSet(exIdx, setNum) {
   localStorage.setItem(setKey(currentDayIdx, exIdx, setNum, 'done'), 'false');
-  localStorage.removeItem(setKey(currentDayIdx, exIdx, setNum, 'pr'));
+  refreshPrs(currentDayIdx, exIdx);
   haptic('light');
   renderWorkout();
   const input = document.getElementById(setKey(currentDayIdx, exIdx, setNum, 'w'));
@@ -837,6 +837,7 @@ function removeSet(exIdx, setNum) {
   fields.forEach(f => localStorage.removeItem(key(currentCount, f)));
 
   saveSetCount(currentDayIdx, exIdx, currentCount - 1);
+  refreshPrs(currentDayIdx, exIdx);
   initNav();
   renderWorkout();
 }

@@ -118,6 +118,7 @@ function addDrop(exIdx, setNum) {
   drops.push({ w: '', r: '' });
   saveDrops(exIdx, setNum, drops);
   localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
+  refreshPrs(currentDayIdx, exIdx);
   renderWorkout();
 }
 
@@ -230,6 +231,8 @@ function toggleSwap(exIdx) {
   const key = swapKey(currentDayIdx, exIdx);
   if (localStorage.getItem(key) === 'true') localStorage.removeItem(key);
   else localStorage.setItem(key, 'true');
+  // A different exercise has different records
+  refreshPrs(currentDayIdx, exIdx);
   haptic('light');
   renderWorkout();
 }
@@ -326,12 +329,8 @@ function setSetRest(exIdx, setNum, choice) {
   const key = f => setKey(currentDayIdx, exIdx, setNum, f);
   if (choice === getExerciseRest(currentDayIdx, exIdx, ex)) localStorage.removeItem(key('rest'));
   else localStorage.setItem(key('rest'), String(choice));
-  // A finished set's record can change with its rest
-  if (localStorage.getItem(key('done')) === 'true') {
-    const pr = detectPr(ex, exIdx, setNum, parseFloat(localStorage.getItem(key('w'))) || 0, parseInt(localStorage.getItem(key('r')), 10) || 0);
-    if (pr) localStorage.setItem(key('pr'), pr);
-    else localStorage.removeItem(key('pr'));
-  }
+  // The next set's rest record depends on this rest
+  refreshPrs(currentDayIdx, exIdx);
   touchDraft();
   haptic('light');
   renderWorkout();
@@ -414,6 +413,7 @@ function collectDaySets(dayIdx) {
   const dayData = dayAt(dayIdx);
   const logged = [];
   getAllExercisesForDay(dayIdx).forEach((ex, exIdx) => {
+    refreshPrs(dayIdx, exIdx);
     const performedSets = [];
     for (let s = 1; s <= getSetCount(dayIdx, exIdx, ex.sets); s++) {
       const weightVal = parseFloat(localStorage.getItem(setKey(dayIdx, exIdx, s, 'w')) || '0');
