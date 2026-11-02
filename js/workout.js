@@ -151,8 +151,6 @@ setInterval(updateSessionBar, 1000);
 // A finished exercise folds to one line with a tick; these are the ones the user opened again.
 const openedDone = new Set();
 
-let justFinishedEx = null;
-
 let justCollapsedEx = null;
 
 const infoOpen = new Set();
@@ -335,7 +333,7 @@ function renderWorkout() {
     if (allDone && !openedDone.has(exStateKey(exIdx)) && !finishingEx.has(exStateKey(exIdx))) {
       const best = bestDraftSet(exIdx, totalSets);
       html += `
-        <div class="card ex-card collapsed ${justFinishedEx === exIdx ? 'pop' : justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
+        <div class="card ex-card collapsed ${justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
           <span class="locked-num">${icon('check', 3)}</span>
           <div class="collapsed-text">
             <div class="ex-name">${escapeHtml(ex.name)}</div>
@@ -577,9 +575,12 @@ function reveal(el) {
 }
 
 /* Finishing an exercise, in three beats: the last tick lands with the card still open (all sets ticked, a green
-   glow); then the card folds smoothly to its one-line "Done" row while staying put; and the next exercise glides
-   up to sit just under the workout panel, ready for set 1. */
+   glow); then, as one motion, the card folds to its one-line "Done" row while that row glides to just under the
+   workout panel; the next exercise rises with it, ready for set 1. The fold and the scroll are driven together,
+   frame by frame on one easing curve, so nothing moves one way and then back. */
 const finishingEx = new Set();
+const FINISH_BEAT_MS = 650;
+const FOLD_MS = 420;
 
 function finishExerciseSequence(exIdx) {
   const key = exStateKey(exIdx);
@@ -589,19 +590,56 @@ function finishExerciseSequence(exIdx) {
     const before = document.getElementById(`ex-card-${exIdx}`);
     if (!before || document.getElementById('view-workout').hidden) return renderWorkout();
     const oldH = before.getBoundingClientRect().height;
-    justFinishedEx = exIdx;
+    // Hold the page's height through the re-draw: near the bottom, a page suddenly 500 px shorter would make
+    // the browser pull the scroll up before the fold could start
+    const main = document.getElementById('workout-content');
+    main.style.minHeight = `${main.offsetHeight}px`;
     anchorOn(`ex-card-${exIdx}`);
     renderWorkout();
-    justFinishedEx = null;
     const card = document.getElementById(`ex-card-${exIdx}`);
-    if (!card) return;
+    if (!card) {
+      main.style.minHeight = '';
+      return;
+    }
     const newH = card.getBoundingClientRect().height;
-    // The folded Done row slides up to just under the workout panel, with the next exercise right below it
-    const { top } = clearArea();
-    const delta = card.getBoundingClientRect().top - top;
-    if (Math.abs(delta) >= 2) window.scrollBy({ top: delta, behavior: reduceMotion() ? 'instant' : 'smooth' });
+    if (!reduceMotion()) card.style.height = `${oldH}px`;
+    main.style.minHeight = '';
+    foldInPlace(card, oldH, newH);
     celebrate(card);
-  }, 650);
+  }, FINISH_BEAT_MS);
+}
+
+// card has just been re-drawn folded (held at oldH, newH when done), its top where the open card's top was. Shrink it while
+// scrolling so its top ends just under the workout panel, or as near as the page can scroll. Both follow one
+// curve, so everything below moves one way only.
+function foldInPlace(card, oldH, newH) {
+  const from = card.getBoundingClientRect().top;
+  const cardDocTop = window.scrollY + from;
+  const maxScrollAfter = document.documentElement.scrollHeight - (oldH - newH) - window.innerHeight;
+  const to = cardDocTop - Math.max(0, Math.min(cardDocTop - clearArea().top, maxScrollAfter));
+  const placeAt = top => {
+    const delta = card.getBoundingClientRect().top - top;
+    if (Math.abs(delta) >= 0.5) window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+  };
+  if (reduceMotion()) {
+    card.style.height = '';
+    return placeAt(to);
+  }
+  const ease = t => 1 - (1 - t) ** 3;
+  card.style.overflow = 'hidden';
+  let start = null;
+  const step = now => {
+    if (start === null) start = now;
+    const t = Math.min(1, (now - start) / FOLD_MS);
+    const e = ease(t);
+    card.style.height = `${oldH + (newH - oldH) * e}px`;
+    placeAt(from + (to - from) * e);
+    if (t < 1) return requestAnimationFrame(step);
+    card.style.height = '';
+    card.style.overflow = '';
+    placeAt(to);
+  };
+  requestAnimationFrame(step);
 }
 
 function dayKicker() {
