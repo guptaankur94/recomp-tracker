@@ -389,3 +389,14 @@ input::placeholder, textarea::placeholder { color: var(--text-2); }
 .live-finish { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; margin-left: 4px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--done); background: none; color: var(--done); font-size: var(--t-footnote); font-weight: 800; }
 .live-finish svg { width: 14px; height: 14px; }
 .live-finish.ready { background: var(--done); color: var(--on-fill); }
+
+/* Finishing an exercise: the open card glows green for a beat, then folds smoothly to its Done row */
+.ex-card.finishing { box-shadow: 0 0 0 2px color-mix(in srgb, var(--done) 70%, transparent), 0 0 24px color-mix(in srgb, var(--done) 25%, transparent); transition: box-shadow 0.25s ease-out; }
+.ex-card.folding { transition: height 0.36s var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .ex-card.finishing, .ex-card.folding { transition: none; } }
+
+/* Under the day's title: muscles this day trains that aren't fresh yet */
+.day-recovery { display: block; width: 100%; text-align: left; margin: -4px 0 12px; padding: 9px 12px; border: none; border-radius: var(--r-sm); background: var(--orange-soft); color: var(--text); font: inherit; }
+.day-recovery.low { background: var(--danger-soft); }
+.day-recovery-title { display: block; font-weight: 700; font-size: var(--t-footnote); }
+.day-recovery-sub { display: block; margin-top: 2px; font-size: var(--t-caption); color: var(--text-2); line-height: 1.4; }

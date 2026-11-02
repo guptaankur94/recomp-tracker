@@ -282,6 +282,7 @@ function renderProgress() {
     `<button class="seg-btn ${key === progressRange ? 'active' : ''}" onclick="selectRange('${key}')">${r.label}</button>`
   ).join('');
   renderCoach();
+  renderRecovery();
   renderBodyweight();
   renderLiftCards();
   renderExerciseProgress();

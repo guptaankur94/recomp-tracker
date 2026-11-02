@@ -253,3 +253,20 @@ select { width: 100%; }
 .cc-group { margin-top: 16px; font-size: var(--t-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
 .cc-empty { font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; }
 .cc-actions .btn + .btn { margin-top: 0; }
+
+/* Coach: forecast check and Ask an AI coach */
+.cc-check { margin-top: 12px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.45; }
+.cc-check b { color: var(--text); font-weight: 600; }
+.cc-ask { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.cc-ask svg { width: 18px; height: 18px; color: var(--gold); }
+.cc-ask-hint { margin-top: 6px; font-size: var(--t-caption); color: var(--text-3); text-align: center; line-height: 1.35; }
+
+/* Muscle recovery: bar plus a word (Ready / Recovering / Tired), so colour is never the only cue */
+.rec-row { display: grid; grid-template-columns: 92px 1fr 40px; align-items: center; column-gap: 10px; padding: 7px 0; }
+.rec-name { font-weight: 600; font-size: var(--t-footnote); }
+.rec-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.rec-bar span { display: block; height: 100%; border-radius: 4px; background: var(--done); }
+.rec-row.mid .rec-bar span { background: var(--orange); }
+.rec-row.low .rec-bar span { background: var(--danger); }
+.rec-pct { text-align: right; font-family: var(--font-numbers); font-size: var(--t-footnote); }
+.rec-sub { grid-column: 2 / 4; font-size: var(--t-caption); color: var(--text-2); margin-top: 2px; }

@@ -28,6 +28,28 @@ function dismissCoach(id, days) {
   localStorage.setItem(COACH_KEY, JSON.stringify({ dismissed }));
 }
 
+// The muscle an exercise trains: from the library, else guessed from its name (plans from an AI or the
+// original plan spell names their own way, e.g. "Incline DB Press"). Most specific words first.
+const MUSCLE_WORDS = [
+  [/leg curl|hamstring|romanian|\brdls?\b|good morning|nordic|stiff.?leg/i, 'Hamstrings'],
+  [/calf|calves/i, 'Calves'],
+  [/tricep|pushdown|push-down|skull|close.?grip|diamond|\bdips?\b|french press|overhead (?:\w+ )?ext/i, 'Triceps'],
+  [/hip thrust|glute|bridge|kickback|abduct/i, 'Glutes'],
+  [/curl|\b21s\b/i, 'Biceps'],
+  [/lateral raise|rear delt|face pull|shoulder|overhead press|military|\bohp\b|arnold|upright row|delt|pike/i, 'Shoulders'],
+  [/plank|crunch|\babs?\b|core|sit.?up|leg raise|knee raise|dead ?bug|pallof|wood ?chop|hollow|russian twist|farmer|carr(?:y|ies)|grip hold/i, 'Core'],
+  [/squat|leg press|lunge|leg extension|quad|split|step.?up|hack/i, 'Legs'],
+  [/row|pull.?up|chin.?up|pull.?down|\blats?\b|pullover|deadlift|back extension|shrug/i, 'Back'],
+  [/bench|chest|fly|flye|pec|push.?up|press/i, 'Chest']
+];
+
+function exerciseMuscle(name) {
+  const lib = LIBRARY.get(name) || [...LIBRARY.values()].find(e => e.name.toLowerCase() === String(name).toLowerCase());
+  if (lib) return lib.muscle;
+  const hit = MUSCLE_WORDS.find(([re]) => re.test(name));
+  return hit ? hit[1] : null;
+}
+
 function planNames() {
   return [...new Set(programData.flatMap(d => d.exercises.map(e => e.name)))];
 }
@@ -76,8 +98,8 @@ function plateauTips(history, now) {
 function weeklySetsByMuscle(history, now) {
   const counts = {};
   history.filter(s => now - s.id < 14 * DAY_MS).forEach(s => s.exercises.forEach(e => {
-    const lib = LIBRARY.get(e.name);
-    if (lib) counts[lib.muscle] = (counts[lib.muscle] || 0) + e.sets.length / 2;
+    const m = exerciseMuscle(e.name);
+    if (m) counts[m] = (counts[m] || 0) + e.sets.length / 2;
   }));
   return counts;
 }
@@ -86,7 +108,7 @@ function volumeTips(history, now) {
   const oldest = history.length ? history[history.length - 1].id : now;
   const recent = history.filter(s => now - s.id < 14 * DAY_MS);
   if (now - oldest < 14 * DAY_MS || recent.length < 3) return [];
-  const trained = new Set(planNames().map(n => LIBRARY.get(n)).filter(Boolean).map(l => l.muscle).filter(m => m !== 'Core'));
+  const trained = new Set(planNames().map(exerciseMuscle).filter(m => m && m !== 'Core'));
   const perWeek = weeklySetsByMuscle(history, now);
   const low = [...trained].map(m => ({ m, n: perWeek[m] || 0 })).filter(x => x.n < 10).sort((a, b) => a.n - b.n);
   if (!low.length) {
@@ -267,7 +289,82 @@ function renderCoach() {
     ${suggestions.length ? `<div class="cc-group">From your habits</div>${suggestions.map((s, i) => coachItemHtml(s, i, 'suggestion')).join('')}` : ''}
     ${!tips.length && !suggestions.length ? `<div class="cc-empty">${history.length < 5
       ? 'Tips appear after about two weeks of workouts and a few weigh-ins.'
-      : 'Nothing to change right now. Keep logging.'}</div>` : ''}`;
+      : 'Nothing to change right now. Keep logging.'}</div>` : ''}
+    ${forecastCheckHtml(history)}
+    <button class="btn btn-secondary cc-ask" onclick="askAiCoach()">${ROW_ICONS.ai}Ask an AI coach about your training</button>
+    <div class="cc-ask-hint">Copies your recent training and the tips above, ready to paste into Claude or ChatGPT.</div>`;
+}
+
+/* Checking the coach against your own history: at each past session, forecast each lift 3–5 weeks ahead from
+   the 6 weeks before (the same straight-line trend the program forecast uses), then compare with what you
+   actually lifted. "No change" (your last result) is the baseline a forecast has to beat. */
+function forecastBacktest(history = getHistory()) {
+  const errs = [];
+  const naive = [];
+  planNames().forEach(name => {
+    const { weighted, points } = liftSeries(name, history);
+    if (!weighted) return;
+    points.forEach((p, k) => {
+      const past = points.slice(0, k + 1).filter(q => p.t - q.t <= 42 * DAY_MS);
+      if (past.length < 3) return;
+      const later = points.find(q => q.t - p.t >= 21 * DAY_MS && q.t - p.t <= 35 * DAY_MS);
+      if (!later) return;
+      const predicted = p.v + slopePerDay(past) * (later.t - p.t) / DAY_MS;
+      errs.push(Math.abs(predicted - later.v) / later.v);
+      naive.push(Math.abs(p.v - later.v) / later.v);
+    });
+  });
+  if (errs.length < 5) return null;
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length * 100;
+  return { n: errs.length, error: mean(errs), naive: mean(naive) };
+}
+
+function forecastCheckHtml(history) {
+  const r = forecastBacktest(history);
+  if (!r) return '';
+  const better = r.error < r.naive;
+  return `<div class="cc-check"><b>Forecast check:</b> on your own history, 4-week strength forecasts were off by ${fmtNum(Math.round(r.error * 10) / 10)}% on average (${r.n} checks), against ${fmtNum(Math.round(r.naive * 10) / 10)}% for assuming no change. ${better ? 'The trend forecast is the better guide for you.' : 'For you, assuming no change has been as good, so read the forecast loosely.'}</div>`;
+}
+
+/* Ask an AI coach: everything a chatbot needs, as text you paste in. Free and works today; nothing is sent
+   anywhere by the app. */
+function aiCoachPrompt(history = getHistory(), now = Date.now()) {
+  const profile = getProfile() || {};
+  const lines = [];
+  lines.push('You are an evidence-based strength and nutrition coach. Here is my training data from my workout app. Please review it and tell me: what is going well, the 3 most useful changes for the next 4 weeks, and anything worrying. Explain your reasoning and say how confident you are. No medical advice; tell me to see a professional for pain or injury.');
+  lines.push('');
+  const goal = GOAL_TYPES[profile.goalType] ? GOAL_TYPES[profile.goalType].label : 'Body recomposition';
+  lines.push(`Goal: ${goal}${profile.goalKg ? `, target weight ${profile.goalKg} kg` : ''}.${profile.sex ? ` ${profile.sex}` : ''}${profileAge(profile) ? `, ${profileAge(profile)} years` : ''}${profile.heightCm ? `, ${profile.heightCm} cm` : ''}.`);
+  const status = programStatus(getProgram(), new Date(now));
+  lines.push(`Plan: ${getPlanName()}, ${programData.length} days${status ? `; week ${status.week} of a ${status.weeks}-week program` : ''}.`);
+  programData.forEach(d => lines.push(`- ${d.day} ${d.title}: ${d.exercises.map(e => `${e.name} ${e.sets}×${e.repTarget}`).join('; ')}`));
+  lines.push('');
+  const recent = history.filter(s => now - s.id < 56 * DAY_MS);
+  lines.push(`Last 8 weeks: ${recent.length} workouts.`);
+  recent.slice().reverse().forEach(s => {
+    const extra = [s.durationSec ? `${Math.round(s.durationSec / 60)} min` : '', s.effort ? `effort ${s.effort}/10` : '', s.calories ? `${s.calories} kcal` : ''].filter(Boolean).join(', ');
+    lines.push(`${sessionDateStr(s)} ${s.title || s.day}${extra ? ` (${extra})` : ''}: ${s.exercises.map(e => `${e.name} ${e.sets.map(x => `${x.weight > 0 ? `${x.weight}kg` : 'BW'}×${x.reps}`).join(', ')}`).join(' | ')}`);
+  });
+  const bw = getBodyweight().filter(e => now - bwDateMs(e.dateStr) < 56 * DAY_MS);
+  if (bw.length) {
+    lines.push('');
+    lines.push(`Weigh-ins (kg): ${bw.map(e => `${e.dateStr} ${e.kg}`).join(', ')}.`);
+    const rate = weeklyRate(getBodyweight());
+    if (rate != null) lines.push(`Trend: ${rate > 0 ? '+' : ''}${Math.round(rate * 100) / 100} kg a week.`);
+  }
+  const t = profile.sex ? nutritionTargets(profile) : null;
+  if (t) lines.push(`Current targets: ${t.calories} kcal, ${t.protein} g protein a day.`);
+  const tips = coachTips(history, now);
+  if (tips.length) {
+    lines.push('');
+    lines.push('My app\'s own rule-based coach says:');
+    tips.forEach(tip => lines.push(`- ${tip.title.replace(/<[^>]+>/g, '')}. ${tip.why.replace(/<[^>]+>/g, '')}`));
+  }
+  return lines.join('\n').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+}
+
+function askAiCoach() {
+  copyText(aiCoachPrompt(), 'Copied. Paste it into Claude or ChatGPT and ask anything about your training.', 'Ask an AI coach');
 }
 
 function snoozeCoach(kind, i) {

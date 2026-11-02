@@ -153,6 +153,8 @@ const openedDone = new Set();
 
 let justFinishedEx = null;
 
+let justCollapsedEx = null;
+
 const infoOpen = new Set();
 
 // Warm-up panels opened again after they folded away (all ticked, or the first working set done)
@@ -222,7 +224,9 @@ function expandExercise(exIdx) {
 function collapseExercise(exIdx) {
   openedDone.delete(exStateKey(exIdx));
   haptic('light');
+  justCollapsedEx = exIdx;
   renderWorkout();
+  justCollapsedEx = null;
 }
 
 
@@ -262,6 +266,7 @@ function bestDraftSet(exIdx, totalSets) {
 
 
 function renderWorkout() {
+  const anchor = findAnchor();
   updateStats();
   const main = document.getElementById('workout-content');
   const data = dayAt(currentDayIdx);
@@ -285,6 +290,7 @@ function renderWorkout() {
         <button class="icon-btn" onclick="openDayMenu()" aria-label="Workout options">${icon('more', 2)}</button>
       </div>
     </div>
+    ${dayRecoveryHtml(currentDayIdx)}
   `;
 
   // Unsaved sets left over from an earlier date (e.g. forgot to tap Finish)
@@ -326,10 +332,10 @@ function renderWorkout() {
     const allDone = doneSets === totalSets;
 
     // Finished exercise: one line with a tick, tap to open
-    if (allDone && !openedDone.has(exStateKey(exIdx))) {
+    if (allDone && !openedDone.has(exStateKey(exIdx)) && !finishingEx.has(exStateKey(exIdx))) {
       const best = bestDraftSet(exIdx, totalSets);
       html += `
-        <div class="card ex-card collapsed ${justFinishedEx === exIdx ? 'pop' : 'just-collapsed'}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
+        <div class="card ex-card collapsed ${justFinishedEx === exIdx ? 'pop' : justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
           <span class="locked-num">${icon('check', 3)}</span>
           <div class="collapsed-text">
             <div class="ex-name">${escapeHtml(ex.name)}</div>
@@ -358,7 +364,7 @@ function renderWorkout() {
     }
 
     html += `
-      <div class="card ex-card ${allDone ? 'done' : ''}" id="ex-card-${exIdx}">
+      <div class="card ex-card ${allDone ? 'done' : ''} ${finishingEx.has(exStateKey(exIdx)) ? 'finishing' : ''}" id="ex-card-${exIdx}">
         <div class="ex-header">
           <div class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? `<span class="ex-tag">${ex.fromDay && ex.fromDay !== data.day ? `From ${escapeHtml(ex.fromDay.replace('Day ', 'D'))}` : 'Extra'}</span>` : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
           <span class="ex-progress ${allDone ? 'all-done' : ''}">${doneSets}/${totalSets}</span>
@@ -505,7 +511,97 @@ function renderWorkout() {
     ${finishSectionHtml(clockRunning)}
   `;
   main.innerHTML = html;
+  restoreAnchor(anchor);
   syncWakeLock();
+}
+
+/* Keeping the screen still. Re-drawing the workout (after ticking a set, a warm-up, a rest change…) used to let
+   the page jump when something above the tap grew or shrank, like a warm-up folding away. Now the thing you
+   tapped, or failing that its exercise card, stays exactly where it was on screen. */
+let tapAnchor = null; // { ids, at }
+
+document.addEventListener('pointerdown', e => {
+  const main = document.getElementById('workout-content');
+  if (!main || !main.contains(e.target)) return;
+  const ids = [];
+  for (let el = e.target; el && el !== main; el = el.parentElement) if (el.id) ids.push(el.id);
+  tapAnchor = { ids, at: Date.now() };
+}, true);
+
+function anchorOn(...ids) {
+  tapAnchor = { ids, at: Date.now() };
+}
+
+function findAnchor() {
+  if (!tapAnchor || Date.now() - tapAnchor.at > 1500 || document.getElementById('view-workout').hidden) return null;
+  const tops = {};
+  tapAnchor.ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) tops[id] = el.getBoundingClientRect().top;
+  });
+  return { ids: tapAnchor.ids, tops };
+}
+
+function restoreAnchor(anchor) {
+  if (!anchor) return;
+  const id = anchor.ids.find(i => anchor.tops[i] !== undefined && document.getElementById(i));
+  if (!id) return;
+  const delta = document.getElementById(id).getBoundingClientRect().top - anchor.tops[id];
+  if (Math.abs(delta) >= 1) window.scrollTo({ top: window.scrollY + delta, behavior: 'instant' });
+}
+
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// The clear part of the screen: below the pinned workout panel, above the rest timer and the tab bar
+function clearArea() {
+  let top = 8;
+  let bottom = window.innerHeight - 8;
+  const live = document.querySelector('#hero.is-live');
+  if (live && !document.getElementById('view-workout').hidden) top = Math.max(top, live.getBoundingClientRect().bottom + 8);
+  document.querySelectorAll('.bottom-tab-bar, .rest-pill').forEach(bar => {
+    const b = bar.getBoundingClientRect();
+    if (b.height && getComputedStyle(bar).display !== 'none' && getComputedStyle(bar).visibility !== 'hidden') bottom = Math.min(bottom, b.top - 8);
+  });
+  return { top, bottom };
+}
+
+// Scroll gently, only as far as needed, so el is fully in the clear area (its top part, if it's tall)
+function reveal(el) {
+  if (!el) return;
+  const { top, bottom } = clearArea();
+  const r = el.getBoundingClientRect();
+  let delta = 0;
+  if (Math.min(r.bottom, r.top + (bottom - top)) > bottom) delta = Math.min(r.bottom, r.top + (bottom - top)) - bottom;
+  if (r.top - delta < top) delta = r.top - top;
+  if (Math.abs(delta) >= 2) window.scrollBy({ top: delta, behavior: reduceMotion() ? 'instant' : 'smooth' });
+}
+
+/* Finishing an exercise, in three beats: the last tick lands with the card still open (all sets ticked, a green
+   glow); then the card folds smoothly to its one-line "Done" row while staying put; and the next exercise glides
+   up to sit just under the workout panel, ready for set 1. */
+const finishingEx = new Set();
+
+function finishExerciseSequence(exIdx) {
+  const key = exStateKey(exIdx);
+  finishingEx.add(key);
+  setTimeout(() => {
+    if (!finishingEx.delete(key) || openedDone.has(key) || exStateKey(exIdx) !== key) return;
+    const before = document.getElementById(`ex-card-${exIdx}`);
+    if (!before || document.getElementById('view-workout').hidden) return renderWorkout();
+    const oldH = before.getBoundingClientRect().height;
+    justFinishedEx = exIdx;
+    anchorOn(`ex-card-${exIdx}`);
+    renderWorkout();
+    justFinishedEx = null;
+    const card = document.getElementById(`ex-card-${exIdx}`);
+    if (!card) return;
+    const newH = card.getBoundingClientRect().height;
+    // The folded Done row slides up to just under the workout panel, with the next exercise right below it
+    const { top } = clearArea();
+    const delta = card.getBoundingClientRect().top - top;
+    if (Math.abs(delta) >= 2) window.scrollBy({ top: delta, behavior: reduceMotion() ? 'instant' : 'smooth' });
+    celebrate(card);
+  }, 650);
 }
 
 function dayKicker() {
@@ -590,19 +686,21 @@ function completeSet(exIdx, setNum) {
     showToast(`New PR · ${ex.name}: ${parseFloat(w) > 0 ? `${fmtNum(parseFloat(w))} kg` : 'BW'} × ${r}${restNote}`, { type: 'pr' });
   }
   justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
+  anchorOn(justCompletedBlock, `ex-card-${exIdx}`);
   if (finished) {
     openedDone.delete(exStateKey(exIdx));
-    justFinishedEx = exIdx;
+    finishExerciseSequence(exIdx);
   }
   initNav();
   renderWorkout();
   justCompletedBlock = null;
-  if (finished) {
-    justFinishedEx = null;
-    celebrate(document.getElementById(`ex-card-${exIdx}`));
-  }
 
   if (firstCompletion) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
+  // The next set to do comes into view (gently, only if it's hidden behind the rest timer or off screen)
+  if (!finished) {
+    const nextBlock = document.querySelector(`#ex-card-${exIdx} .set-block:not(.completed)`);
+    setTimeout(() => reveal(nextBlock && nextBlock.closest('.set-swipe')), reduceMotion() ? 0 : 380);
+  }
 }
 
 // "Set 2 · 50 kg × 8", or the next exercise's first open set
