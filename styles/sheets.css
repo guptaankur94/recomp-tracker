@@ -235,7 +235,7 @@
 .cal-label { font-weight: 600; }
 .cal-hint { font-size: var(--t-caption); color: var(--text-2); }
 .cal-field { display: flex; align-items: center; gap: 6px; }
-.cal-field input { width: 84px; height: 40px; text-align: right; }
+.cal-field input { width: 116px; height: 40px; text-align: right; }
 .cal-unit { font-size: var(--t-footnote); color: var(--text-2); }
 
 /* Finish sheet: the workout so far, how hard it was, calories */

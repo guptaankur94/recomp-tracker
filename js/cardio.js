@@ -274,13 +274,13 @@ function cardioTips(history, now) {
   const eq = Math.round(week.reduce((n, c) => n + moderateMinutes(c), 0));
   tips.push(eq >= 150 ? {
     id: `cardio:ok:${localDateStr(startOfWeek(new Date(now)))}`, tone: 'good',
-    title: `${eq} cardio minutes this week: aim met`,
+    title: `${eq} cardio minutes in the last 7 days: aim met`,
     body: 'The WHO aim for adults is 150–300 moderate minutes a week (hard minutes count double). More cardio than that is fine; keep it from eating into leg recovery.',
     why: `${cardioMinutes(week)} min logged in the last 7 days, ${eq} moderate-equivalent.`,
     source: 'WHO 2020 guidelines on physical activity (Bull et al., BJSM)'
   } : {
     id: `cardio:low:${localDateStr(startOfWeek(new Date(now)))}`, tone: 'info',
-    title: `${eq} of 150 cardio minutes this week`,
+    title: `${eq} of 150 cardio minutes in the last 7 days`,
     body: `About ${150 - eq} moderate minutes to go for the WHO aim, e.g. ${Math.ceil((150 - eq) / 20)} × 20 min after lifting. Hard minutes count double.`,
     why: `${cardioMinutes(week)} min logged in the last 7 days, ${eq} moderate-equivalent (easy counts half, hard double).`,
     source: 'WHO 2020 guidelines on physical activity (Bull et al., BJSM)'
@@ -316,7 +316,9 @@ function renderCardioProgress() {
     const list = history.filter(s => s.id >= from && s.id < from + 7 * DAY_MS).flatMap(sessionCardio);
     return { from, min: cardioMinutes(list), eq: list.reduce((n, c) => n + moderateMinutes(c), 0) };
   });
-  const thisWeek = weeks[weeks.length - 1];
+  // The headline uses the last 7 days, like the Coach; the bars are calendar weeks
+  const last7 = history.filter(s => now - s.id < 7 * DAY_MS).flatMap(sessionCardio);
+  const last7Eq = Math.round(last7.reduce((n, c) => n + moderateMinutes(c), 0));
   const max = Math.max(150, ...weeks.map(w => w.eq));
   const paces = ['run', 'walk', 'bike', 'row'].map(type => {
     const list = history.flatMap(s => sessionCardio(s).filter(c => c.type === type && cardioPace(c)).map(c => ({ c, t: s.id })));
@@ -326,7 +328,7 @@ function renderCardioProgress() {
     return `<div class="cp-pace"><span>${cardioType(type).icon} ${cardioType(type).label}</span><b>${fmtPace(cardioPace(latest.c))}</b><span class="${diff < 0 ? 'up' : ''}">${prev ? (diff === 0 ? 'same as last time' : `${Math.abs(diff)} s ${diff < 0 ? 'faster' : 'slower'} than last time`) : 'first time'}</span></div>`;
   }).filter(Boolean);
   document.getElementById('cardio-progress').innerHTML = `
-    <div class="cp-head"><b>${Math.round(thisWeek.eq)}</b> of 150 moderate minutes this week<span>${thisWeek.min} min logged</span></div>
+    <div class="cp-head"><b>${last7Eq}</b> of 150 moderate minutes in the last 7 days<span>${cardioMinutes(last7)} min logged</span></div>
     <div class="cp-bars" role="img" aria-label="Cardio minutes per week, last 8 weeks: ${weeks.map(w => Math.round(w.eq)).join(', ')}">
       <span class="cp-aim" style="bottom:${150 / max * 100}%"></span>
       ${weeks.map((w, i) => `<span class="cp-bar ${w.eq >= 150 ? 'met' : ''} ${i === weeks.length - 1 ? 'now' : ''}" style="height:${Math.max(2, w.eq / max * 100)}%"></span>`).join('')}

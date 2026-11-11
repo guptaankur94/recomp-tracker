@@ -471,11 +471,11 @@ function renderWorkout() {
             <div class="set-row">
               <span class="set-num">${s}</span>
               <label class="input-group">
-                <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${suggestion ? fmtNum(suggestion.w) : '0'}" value="${escapeHtml(valW)}" onfocus="this.select()" onchange="saveVal('${wKey}', this.value); pulse(this)">
+                <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${suggestion ? fmtNum(suggestion.w) : '0'}" value="${escapeHtml(valW)}" onfocus="this.select()" oninput="saveVal('${wKey}', this.value)" onchange="pulse(this)">
                 <span class="unit-label">kg</span>
               </label>
               <label class="input-group">
-                <input type="number" id="${rKey}" inputmode="numeric" placeholder="${suggestion ? suggestion.r : '0'}" value="${escapeHtml(valR)}" onfocus="this.select()" onchange="saveVal('${rKey}', this.value); pulse(this)">
+                <input type="number" id="${rKey}" inputmode="numeric" placeholder="${suggestion ? suggestion.r : '0'}" value="${escapeHtml(valR)}" onfocus="this.select()" oninput="saveVal('${rKey}', this.value)" onchange="pulse(this)">
                 <span class="unit-label">reps</span>
               </label>
               ${moreBtn}
@@ -683,8 +683,60 @@ function refreshDraftIndicators() {
   initNav();
 }
 
+/* Checks before a set is committed, so a slip never becomes a record. Returns null when the set is fine, or
+   { field, message } for a value that can't be right, or { confirm } for one that is possible but unlikely. */
+function isBodyweightExercise(ex) {
+  const lib = LIBRARY.get(ex.name);
+  return /\bBW\b|bodyweight/i.test(ex.weightTarget || '') || (lib && ['Bodyweight', 'Bar'].includes(lib.equipment)) || /\d\s*(s|sec|secs|seconds)\b/i.test(ex.repTarget || '');
+}
+
+function checkSetValues(ex, w, r) {
+  const timed = /\d\s*(s|sec|secs|seconds)\b/i.test(ex.repTarget || '');
+  if (w < 0) return { field: 'w', message: 'Weight can\'t be negative' };
+  if (r > (timed ? 3600 : 100)) return { field: 'r', message: `${r} ${timed ? 'seconds' : 'reps'} looks like a typo` };
+  if (w > 1000) return { field: 'w', message: `${fmtNum(w)} kg looks like a typo` };
+  const best = Math.max(0, ...savedSetsFor(ex.name, getHistory()).map(x => x.w));
+  // Much heavier than ever (more than 1.5× and 20 kg over your best), or very heavy with no history: ask
+  if (best > 0 && w > best * 1.5 && w > best + 20) {
+    const tenth = Math.round(w / 10 * 2) / 2;
+    return { confirm: true, best, likely: tenth >= best * 0.5 && tenth <= best * 1.5 ? tenth : null };
+  }
+  if (!best && w > 250) return { confirm: true, best: 0, likely: null };
+  return null;
+}
+
+function flagSetField(exIdx, setNum, field, message) {
+  haptic('error');
+  const block = document.getElementById(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`);
+  block.classList.remove('shake');
+  void block.offsetWidth;
+  block.classList.add('shake');
+  if (message) showToast(message, { type: 'error' });
+  const input = document.getElementById(setKey(currentDayIdx, exIdx, setNum, field));
+  if (input) input.focus();
+}
+
+async function confirmUnusualWeight(exIdx, setNum, w, check) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  const choices = [
+    ...(check.likely ? [{ label: `Log ${fmtNum(check.likely)} kg`, value: 'likely' }] : []),
+    { label: `Log ${fmtNum(w)} kg`, value: 'as-typed' },
+    { label: 'Change it', value: 'edit' }
+  ];
+  const pick = await actionSheet(`${fmtNum(w)} kg?`, check.best
+    ? `${ex.name}: that's ${fmtNum(Math.round(w / check.best * 10) / 10)}× your best of ${fmtNum(check.best)} kg.`
+    : `${ex.name}: that's a lot for a first time.`, choices);
+  const wInput = document.getElementById(setKey(currentDayIdx, exIdx, setNum, 'w'));
+  if (pick === 'likely' && wInput) {
+    wInput.value = String(check.likely);
+    saveVal(wInput.id, wInput.value);
+  }
+  if (pick === 'likely' || pick === 'as-typed') completeSet(exIdx, setNum, true);
+  else if (wInput) wInput.focus();
+}
+
 // Commit a set: fill from the suggestion if left empty, lock the row, and start the rest timer the first time.
-function completeSet(exIdx, setNum) {
+function completeSet(exIdx, setNum, confirmed = false) {
   const key = f => setKey(currentDayIdx, exIdx, setNum, f);
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), setNum));
@@ -696,13 +748,13 @@ function completeSet(exIdx, setNum) {
   if (!r && suggestion && suggestion.r) r = String(suggestion.r);
   if (!w && suggestion && suggestion.w) w = String(suggestion.w);
 
-  if (!(parseInt(r, 10) > 0)) {
-    haptic('error');
-    const block = document.getElementById(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`);
-    block.classList.remove('shake');
-    void block.offsetWidth;
-    block.classList.add('shake');
-    rInput.focus();
+  if (!(parseInt(r, 10) > 0)) return flagSetField(exIdx, setNum, 'r');
+  // A weighted exercise with no weight would be saved as bodyweight: ask for it (type 0 for none)
+  if (w === '' && !isBodyweightExercise(ex)) return flagSetField(exIdx, setNum, 'w', 'Add the weight for this set (0 if none)');
+  const problem = checkSetValues(ex, parseFloat(w) || 0, parseInt(r, 10));
+  if (problem && problem.field) return flagSetField(exIdx, setNum, problem.field, problem.message);
+  if (problem && problem.confirm && !confirmed) {
+    confirmUnusualWeight(exIdx, setNum, parseFloat(w), problem);
     return;
   }
 
