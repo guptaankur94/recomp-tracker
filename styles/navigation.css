@@ -177,3 +177,26 @@
   font-weight: 600;
 }
 .rest-skip { max-width: 220px; }
+
+/* The number pad: slides up over the tab bar (which, with the rest timer, steps aside while it's open) */
+.numpad { position: fixed; left: 0; right: 0; bottom: 0; z-index: 980; padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); border-top: 0.5px solid var(--separator); transform: translateY(100%); transition: transform 0.22s var(--ease-out); }
+.numpad.open { transform: none; }
+body.pad-open .bottom-tab-bar, body.pad-open .rest-pill { visibility: hidden; }
+body.pad-open { padding-bottom: 300px; }
+.pad-head { display: flex; align-items: center; gap: 8px; padding: 2px 4px 8px; }
+.pad-label { font-size: var(--t-footnote); color: var(--text-2); }
+.pad-label b { color: var(--text); }
+.pad-ex { flex: 1; min-width: 0; text-align: right; font-size: var(--t-caption); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pad-hide { flex: none; width: 36px; height: 30px; border: none; border-radius: 8px; background: var(--surface-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; }
+.pad-hide svg { width: 16px; height: 16px; transform: rotate(90deg); }
+.pad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pad-key { height: 50px; border: none; border-radius: 12px; background: var(--surface-2); color: var(--text); font-family: var(--font-numbers); font-size: 22px; font-weight: 600; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.pad-key:active { background: var(--surface-3); transform: scale(0.97); }
+.pad-fn { background: var(--surface-3); font-size: 17px; }
+.pad-blank { visibility: hidden; }
+.pad-next, .pad-log { grid-column: span 2; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-body); font-size: var(--t-headline); font-weight: 700; }
+.pad-next { background: var(--todo); color: var(--on-fill); }
+.pad-log { background: var(--done); color: var(--on-fill); }
+.pad-log svg { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) { .numpad { transition: none; } }
+.pad-key[data-act="back"] { font-family: var(--font-body); font-size: 22px; }

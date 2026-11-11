@@ -162,7 +162,8 @@ function keepFieldInView(el) {
 }
 
 document.addEventListener('focusin', e => {
-  if (!isTypingField(e.target)) return;
+  // Fields that use the app's number pad have no keyboard to dodge
+  if (!isTypingField(e.target) || e.target.inputMode === 'none') return;
   const el = e.target;
   // Once now for hardware keyboards, again after the iPhone keyboard has slid up
   requestAnimationFrame(() => keepFieldInView(el));

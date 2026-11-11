@@ -471,6 +471,25 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="set-edit-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="set-edit-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="set-edit-title">Set</div>
+        <div class="sheet-sub" id="set-edit-sub"></div>
+      </div>
+      <div class="set-edit-fields">
+        <label class="cardio-field"><span>Weight, kg</span><input type="text" inputmode="decimal" id="set-edit-w" autocomplete="off" placeholder="BW" aria-label="Weight in kg"></label>
+        <label class="cardio-field"><span>Reps</span><input type="text" inputmode="numeric" id="set-edit-r" autocomplete="off" aria-label="Reps"></label>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="saveSetEdit()">Save changes</button>
+        <button class="btn btn-secondary" onclick="untickSetFromEdit()">Untick set</button>
+        <button class="btn btn-plain" onclick="closeSheet('set-edit-sheet')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="cardio-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cardio-title">
       <div class="sheet-head">
@@ -544,6 +563,8 @@
   </div>
 
   <!-- Bottom tab bar -->
+  <div class="numpad" id="numpad" hidden role="group" aria-label="Number pad"></div>
+
   <nav class="bottom-tab-bar" aria-label="Sections">
     <span class="nav-indicator" aria-hidden="true"></span>
     <button class="nav-item" id="tab-nav-plan" onclick="switchView('plan')" aria-label="Plan">
@@ -594,7 +615,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.11b';
+    const APP_VERSION = '2026.11.12';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -607,6 +628,7 @@
   <script src="js/goals.js"></script>
   <script src="js/add-exercise.js"></script>
   <script src="js/workout.js"></script>
+  <script src="js/numpad.js"></script>
   <script src="js/warmup-editor.js"></script>
   <script src="js/cardio.js"></script>
   <script src="js/rest-timer.js"></script>

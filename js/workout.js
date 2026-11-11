@@ -39,6 +39,7 @@ function updateStats() {
   // During a workout the top panel is the live clock; before, it's the week with one Start button
   const clock = workoutClock();
   hero.classList.toggle('is-live', !!clock);
+  syncHeaderVisibility();
   if (clock) {
     hero.innerHTML = livePanelHtml(clock);
     return;
@@ -84,6 +85,12 @@ function dayShortLabel(d) {
 }
 
 // The live panel: the clock, Pause, and each day you've trained so far (tap one to go to it)
+// During a workout the live panel is the top of the Workout tab: the greeting steps aside
+function syncHeaderVisibility() {
+  const view = document.getElementById('view-workout');
+  document.body.classList.toggle('in-workout', !!workoutClock() && !!view && !view.hidden);
+}
+
 function livePanelHtml(clock) {
   const paused = !!clock.pausedAt;
   const byDay = setsTodayByDay();
@@ -211,6 +218,34 @@ function warmupPanelHtml(ex, exIdx, warmups, suggestion, set1Done) {
     </div>`;
 }
 
+/* Focus mode: one exercise open at a time. It's the one you're finishing, else one you opened, else the first
+   with sets still to do; the others show as one-line previews (tap to open). Done ones fold to their Done row. */
+const focusChoice = {}; // dayIdx → the exercise you opened
+
+function exerciseAllDone(dayIdx, exIdx, ex) {
+  const count = getSetCount(dayIdx, exIdx, ex.sets);
+  for (let s = 1; s <= count; s++) if (localStorage.getItem(setKey(dayIdx, exIdx, s, 'done')) !== 'true') return false;
+  return true;
+}
+
+function focusedExercise(exs) {
+  const finishing = exs.findIndex((_, i) => finishingEx.has(exStateKey(i)));
+  if (finishing !== -1) return finishing;
+  const chosen = focusChoice[currentDayIdx];
+  if (chosen != null && exs[chosen] && !exerciseAllDone(currentDayIdx, chosen, exs[chosen])) return chosen;
+  delete focusChoice[currentDayIdx];
+  return exs.findIndex((ex, i) => !exerciseAllDone(currentDayIdx, i, ex));
+}
+
+function focusExercise(exIdx) {
+  focusChoice[currentDayIdx] = exIdx;
+  haptic('light');
+  anchorOn(`ex-card-${exIdx}`);
+  renderWorkout();
+  // Opened near the bottom: bring its top part into view
+  requestAnimationFrame(() => reveal(document.querySelector(`#ex-card-${exIdx} .ex-header`)));
+}
+
 function exStateKey(exIdx) {
   return `${currentDayIdx}:${exIdx}`;
 }
@@ -324,6 +359,7 @@ function renderWorkout() {
   html += cardioCardsHtml('before');
 
   let tipShown = false;
+  const focusIdx = focusedExercise(allExercises);
   allExercises.forEach((ex, exIdx) => {
     const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
     const last = getLastPerformance(ex.name, history);
@@ -347,6 +383,22 @@ function renderWorkout() {
           <span class="chevron">${icon('chevron')}</span>
         </div>
       `;
+      return;
+    }
+
+    // Not in focus: a one-line preview (what's coming, and the goal), tap to open
+    if (exIdx !== focusIdx && !allDone) {
+      const goal = exerciseGoal(ex);
+      const lastTop = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
+      html += `
+        <div class="card ex-card preview" id="ex-card-${exIdx}" onclick="focusExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, ${doneSets} of ${totalSets} sets done. Open">
+          <span class="preview-num ${doneSets ? 'started' : ''}">${doneSets ? `${doneSets}/${totalSets}` : exIdx + 1}</span>
+          <div class="collapsed-text">
+            <div class="ex-name">${escapeHtml(ex.name)}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
+            <div class="ex-meta">${totalSets} × ${escapeHtml(ex.repTarget)}${goal ? ` · <span class="preview-goal">goal ${goalLabel(goal)}</span>` : lastTop ? ` · last ${lastTop.weight > 0 ? fmtSetLine(lastTop) : `BW × ${lastTop.reps}`}` : ''}</div>
+          </div>
+          <span class="chevron">${icon('chevron')}</span>
+        </div>`;
       return;
     }
 
@@ -375,7 +427,6 @@ function renderWorkout() {
         </div>
         <div class="ex-meta">${warmups.length ? `${warmups.length} warm-up + ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
         ${allDone ? '' : goalPanelHtml(ex, last, exIdx)}
-        ${lastBest ? `<div class="ex-last">Last time ${lastBest.weight > 0 ? fmtSetLine(lastBest) : `BW × ${lastBest.reps}`}${lastRest ? ` · rest ${fmtClock(roundRest(lastRest))}` : ''}</div>` : ''}
         <div class="ex-chips">
           <button class="chip ${restDiff.startsWith('−') ? 'faster' : ''}" onclick="pickRest(${exIdx})" aria-label="Rest ${fmtClock(rest)}, change">${icon('clock', 2)}Rest ${fmtClock(rest)}${restDiff ? `<span class="chip-delta">· ${restDiff}</span>` : ''}</button>
           ${tip ? `<span class="chip tip">${icon('arrowUp', 2.4)}${tip}</span>` : ''}
@@ -408,6 +459,10 @@ function renderWorkout() {
     }
     if (tipHtml) tipShown = true;
 
+    // The set you just ticked (the last done one before the next open set)
+    const lastTicked = firstOpenSet ? firstOpenSet - 1 : totalSets;
+    if (tipAfterSet && tipHtml.includes('Rest timer')) tipAfterSet = lastTicked;
+
     for (let s = 1; s <= totalSets; s++) {
       const wKey = setKey(currentDayIdx, exIdx, s, 'w');
       const rKey = setKey(currentDayIdx, exIdx, s, 'r');
@@ -424,7 +479,10 @@ function renderWorkout() {
       const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
       // Gold when the set after this rest was a rest record (the rest before a set is what counts)
       const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s + 1, 'pr')) === 'rest';
-      const setLink = `
+      // Drop set + rest line: under the set you just ticked, or where it holds something (a drop, its own rest).
+      // Elsewhere it's in the set's ⋯ menu.
+      const showLink = (isDone && s === lastTicked) || drops.length > 0 || restPr || !!localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'rest'));
+      const setLink = !showLink ? '' : `
         <div class="set-link">
           <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
           <span class="set-link-line"></span>
@@ -443,7 +501,7 @@ function renderWorkout() {
         html += `
           <div class="set-swipe" ${swipe}>
             <button class="swipe-delete" onclick="deleteSetWithUndo(${exIdx}, ${s})">Delete</button>
-            <div class="set-block completed ${prType ? 'pr' : ''} ${blockId === justCompletedBlock ? 'just-completed' : ''}" id="${blockId}" onclick="editSet(${exIdx}, ${s})">
+            <div class="set-block completed ${prType ? 'pr' : ''} ${blockId === justCompletedBlock ? 'just-completed' : ''}" id="${blockId}" onclick="openSetEdit(${exIdx}, ${s})" role="button" aria-label="Set ${s}, ${shownW ? `${shownW} kg` : 'bodyweight'} × ${escapeHtml(valR)}. Edit">
               <div class="locked-row">
                 <span class="locked-num">${icon('check', 3)}</span>
                 <span class="locked-set">Set ${s}</span>
@@ -471,16 +529,17 @@ function renderWorkout() {
             <div class="set-row">
               <span class="set-num">${s}</span>
               <label class="input-group">
-                <input type="number" id="${wKey}" step="0.5" inputmode="decimal" placeholder="${suggestion ? fmtNum(suggestion.w) : '0'}" value="${escapeHtml(valW)}" onfocus="this.select()" oninput="saveVal('${wKey}', this.value)" onchange="pulse(this)">
+                <input type="text" id="${wKey}" inputmode="none" autocomplete="off" data-pad="w" placeholder="${suggestion ? fmtNum(suggestion.w) : '–'}" value="${escapeHtml(valW)}" onclick="openPad(this)" onkeydown="padKeydown(event)" oninput="saveVal('${wKey}', this.value)" onchange="pulse(this)" aria-label="Set ${s} weight in kg">
                 <span class="unit-label">kg</span>
               </label>
               <label class="input-group">
-                <input type="number" id="${rKey}" inputmode="numeric" placeholder="${suggestion ? suggestion.r : '0'}" value="${escapeHtml(valR)}" onfocus="this.select()" oninput="saveVal('${rKey}', this.value)" onchange="pulse(this)">
+                <input type="text" id="${rKey}" inputmode="none" autocomplete="off" data-pad="r" placeholder="${suggestion ? suggestion.r : '–'}" value="${escapeHtml(valR)}" onclick="openPad(this)" onkeydown="padKeydown(event)" oninput="saveVal('${rKey}', this.value)" onchange="pulse(this)" aria-label="Set ${s} reps">
                 <span class="unit-label">reps</span>
               </label>
               ${moreBtn}
               <button class="check-btn ${s === firstOpenSet ? 'next' : ''}" onclick="completeSet(${exIdx}, ${s})" aria-label="Complete set ${s}">${icon('check', 2.6)}</button>
             </div>
+            ${s === firstOpenSet ? setHintHtml(ex, last, s, suggestion, valW, valR) : ''}
             ${drops.map((drop, i) => `
               <div class="drop-row">
                 <span class="drop-label">↳ Drop ${i + 1}</span>
@@ -519,6 +578,7 @@ function renderWorkout() {
   `;
   main.innerHTML = html;
   restoreAnchor(anchor);
+  syncPad();
   syncWakeLock();
 }
 
@@ -601,18 +661,18 @@ function finishExerciseSequence(exIdx) {
     const oldH = before.getBoundingClientRect().height;
     // Hold the page's height through the re-draw: near the bottom, a page suddenly 500 px shorter would make
     // the browser pull the scroll up before the fold could start
+    // (and room for the card's old height, in case the next exercise to open is above and grows the page)
     const main = document.getElementById('workout-content');
     main.style.minHeight = `${main.offsetHeight}px`;
+    main.style.paddingBottom = `${oldH}px`;
     anchorOn(`ex-card-${exIdx}`);
     renderWorkout();
     const card = document.getElementById(`ex-card-${exIdx}`);
-    if (!card) {
-      main.style.minHeight = '';
-      return;
-    }
+    const release = () => { main.style.minHeight = ''; main.style.paddingBottom = ''; };
+    if (!card) return release();
     const newH = card.getBoundingClientRect().height;
     if (!reduceMotion()) card.style.height = `${oldH}px`;
-    main.style.minHeight = '';
+    release();
     foldInPlace(card, oldH, newH);
     celebrate(card);
   }, FINISH_BEAT_MS);
@@ -683,6 +743,66 @@ function refreshDraftIndicators() {
   initNav();
 }
 
+/* The line under the next set: what you did last time, what to try, and that ✓ logs it as shown */
+function setHintHtml(ex, last, s, suggestion, valW, valR) {
+  const prev = lastSetFor(last, s);
+  const fmt = x => `${Number(x.weight) > 0 ? `${fmtNum(Number(x.weight))} kg` : 'BW'} × ${x.reps}`;
+  if (!prev) return `<div class="set-hint">First time: enter ${isBodyweightExercise(ex) ? 'your reps' : 'weight and reps'}, then ✓</div>`;
+  const differs = suggestion && (suggestion.w !== Number(prev.weight) || suggestion.r !== Number(prev.reps));
+  const empty = !valW && !valR;
+  return `<div class="set-hint">Last time ${fmt(prev)}${differs ? ` · <b>try ${fmt({ weight: suggestion.w, reps: suggestion.r })}</b>` : ''}${empty && suggestion ? ' · ✓ logs it' : ''}</div>`;
+}
+
+/* Editing a ticked set: a small sheet; the set stays ticked (and keeps its place) */
+let setEditing = null;
+
+function openSetEdit(exIdx, setNum) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  if (!ex) return;
+  setEditing = { exIdx, setNum };
+  document.getElementById('set-edit-title').textContent = `Set ${setNum}`;
+  document.getElementById('set-edit-sub').textContent = ex.name;
+  document.getElementById('set-edit-w').value = localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'w')) || '';
+  document.getElementById('set-edit-r').value = localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'r')) || '';
+  haptic('light');
+  openSheet('set-edit-sheet');
+}
+
+async function saveSetEdit() {
+  if (!setEditing) return;
+  const { exIdx, setNum } = setEditing;
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  const wText = document.getElementById('set-edit-w').value.trim().replace(',', '.');
+  const rText = document.getElementById('set-edit-r').value.trim();
+  const w = parseFloat(wText) || 0;
+  const r = parseInt(rText, 10) || 0;
+  const fail = message => { haptic('error'); showToast(message, { type: 'error' }); };
+  if (!(r > 0)) return fail('Enter the reps');
+  if (wText === '' && !isBodyweightExercise(ex)) return fail('Add the weight (0 if none)');
+  const problem = checkSetValues(ex, w, r);
+  if (problem && problem.field) return fail(problem.message);
+  if (problem && problem.confirm) {
+    const ok = await actionSheet(`${fmtNum(w)} kg?`, problem.best ? `That's ${fmtNum(Math.round(w / problem.best * 10) / 10)}× your best of ${fmtNum(problem.best)} kg.` : 'That\'s a lot for a first time.',
+      [{ label: `Save ${fmtNum(w)} kg`, value: 'yes' }, { label: 'Change it', value: 'no' }]);
+    if (ok !== 'yes') return;
+  }
+  localStorage.setItem(setKey(currentDayIdx, exIdx, setNum, 'w'), wText === '' ? '' : String(w));
+  localStorage.setItem(setKey(currentDayIdx, exIdx, setNum, 'r'), String(r));
+  touchDraft();
+  refreshPrs(currentDayIdx, exIdx);
+  closeSheet('set-edit-sheet');
+  haptic('success');
+  anchorOn(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`);
+  renderWorkout();
+  showToast(`Set ${setNum} updated`);
+}
+
+function untickSetFromEdit() {
+  if (!setEditing) return;
+  closeSheet('set-edit-sheet');
+  editSet(setEditing.exIdx, setEditing.setNum);
+}
+
 /* Checks before a set is committed, so a slip never becomes a record. Returns null when the set is fine, or
    { field, message } for a value that can't be right, or { confirm } for one that is possible but unlikely. */
 function isBodyweightExercise(ex) {
@@ -713,7 +833,7 @@ function flagSetField(exIdx, setNum, field, message) {
   block.classList.add('shake');
   if (message) showToast(message, { type: 'error' });
   const input = document.getElementById(setKey(currentDayIdx, exIdx, setNum, field));
-  if (input) input.focus();
+  if (input) openPad(input);
 }
 
 async function confirmUnusualWeight(exIdx, setNum, w, check) {
@@ -732,7 +852,7 @@ async function confirmUnusualWeight(exIdx, setNum, w, check) {
     saveVal(wInput.id, wInput.value);
   }
   if (pick === 'likely' || pick === 'as-typed') completeSet(exIdx, setNum, true);
-  else if (wInput) wInput.focus();
+  else if (wInput) openPad(wInput);
 }
 
 // Commit a set: fill from the suggestion if left empty, lock the row, and start the rest timer the first time.
@@ -743,7 +863,7 @@ function completeSet(exIdx, setNum, confirmed = false) {
 
   const wInput = document.getElementById(key('w'));
   const rInput = document.getElementById(key('r'));
-  let w = wInput.value.trim();
+  let w = wInput.value.trim().replace(',', '.');
   let r = rInput.value.trim();
   if (!r && suggestion && suggestion.r) r = String(suggestion.r);
   if (!w && suggestion && suggestion.w) w = String(suggestion.w);
@@ -826,16 +946,18 @@ function editSet(exIdx, setNum) {
   haptic('light');
   renderWorkout();
   const input = document.getElementById(setKey(currentDayIdx, exIdx, setNum, 'w'));
-  if (input) input.focus();
+  if (input) openPad(input);
 }
 
 async function openSetMenu(exIdx, setNum) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);
-  // Drop sets and rest have their own line under each set; the menu edits the warm-up and deletes sets
-  const choices = [{ label: 'Edit warm-up', value: 'warmup' }];
+  // The drop/rest line shows under the set you just ticked; for any other set they're here
+  const choices = [{ label: 'Add a drop set', value: 'drop' }, { label: `Rest after this set (${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))})`, value: 'rest' }, { label: 'Edit warm-up', value: 'warmup' }];
   if (count > 1) choices.push({ label: 'Delete set', value: 'delete', destructive: true });
   const choice = await actionSheet(`Set ${setNum}`, ex.name, choices);
+  if (choice === 'drop') addDrop(exIdx, setNum);
+  if (choice === 'rest') pickSetRest(exIdx, setNum);
   if (choice === 'warmup') openWarmupEditor(exIdx);
   if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);
 }

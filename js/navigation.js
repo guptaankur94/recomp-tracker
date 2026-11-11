@@ -53,6 +53,7 @@ function switchView(viewName) {
     view.addEventListener('animationend', () => view.classList.remove(dir), { once: true });
   }
   updateHeader();
+  closePad();
   ['workout', 'plan', 'history', 'progress', 'settings'].forEach(name => {
     document.getElementById(`view-${name}`).hidden = viewName !== name;
     const tab = document.getElementById(`tab-nav-${name}`);
@@ -60,6 +61,7 @@ function switchView(viewName) {
     if (viewName === name) tab.setAttribute('aria-current', 'page');
     else tab.removeAttribute('aria-current');
   });
+  syncHeaderVisibility();
   moveNavIndicator(from !== viewName);
   // Fill the section once the pill is moving, so building it can't stall the first frames
   if (from !== viewName) return requestAnimationFrame(() => requestAnimationFrame(() => renderViewContent(viewName)));

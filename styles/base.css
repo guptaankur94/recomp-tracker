@@ -188,7 +188,7 @@ body { background: var(--backdrop), var(--bg); }
   text-transform: var(--display-case);
   letter-spacing: var(--display-tracking);
 }
-input[type="number"], .rest-pill-time, .rest-full-time, .hero-ring-num, .hero-val, .stat-tile-val, .detail-tile-val,
+input[type="number"], input[data-pad], .rest-pill-time, .rest-full-time, .hero-ring-num, .hero-val, .stat-tile-val, .detail-tile-val,
 .summary-tile-val, .detail-set-val, .locked-val, .lift-val, .target-val, .session-time {
   font-family: var(--font-numbers);
 }
