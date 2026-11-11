@@ -246,7 +246,7 @@ function weightTips(now) {
 
 function coachTips(history = getHistory(), now = Date.now()) {
   const dismissed = coachDismissed();
-  const tips = [...plateauTips(history, now), ...loadTips(history, now), ...forecastTips(history, now), ...weightTips(now), ...volumeTips(history, now)];
+  const tips = [...plateauTips(history, now), ...loadTips(history, now), ...forecastTips(history, now), ...weightTips(now), ...cardioTips(history, now), ...volumeTips(history, now)];
   return tips.filter(t => !(dismissed[t.id] > now));
 }
 
@@ -343,7 +343,8 @@ function aiCoachPrompt(history = getHistory(), now = Date.now()) {
   lines.push(`Last 8 weeks: ${recent.length} workouts.`);
   recent.slice().reverse().forEach(s => {
     const extra = [s.durationSec ? `${Math.round(s.durationSec / 60)} min` : '', s.effort ? `effort ${s.effort}/10` : '', s.calories ? `${s.calories} kcal` : ''].filter(Boolean).join(', ');
-    lines.push(`${sessionDateStr(s)} ${s.title || s.day}${extra ? ` (${extra})` : ''}: ${s.exercises.map(e => `${e.name} ${e.sets.map(x => `${x.weight > 0 ? `${x.weight}kg` : 'BW'}×${x.reps}`).join(', ')}`).join(' | ')}`);
+    const cardio = sessionCardio(s).map(c => `cardio ${c.when} lifting: ${cardioType(c.type).label} ${c.min} min${c.km ? ` ${c.km} km` : ''}, ${c.intensity}${c.hr ? `, ${c.hr} bpm` : ''}`);
+    lines.push(`${sessionDateStr(s)} ${s.title || s.day}${extra ? ` (${extra})` : ''}: ${[...s.exercises.map(e => `${e.name} ${e.sets.map(x => `${x.weight > 0 ? `${x.weight}kg` : 'BW'}×${x.reps}`).join(', ')}`), ...cardio].join(' | ')}`);
   });
   const bw = getBodyweight().filter(e => now - bwDateMs(e.dateStr) < 56 * DAY_MS);
   if (bw.length) {

@@ -270,3 +270,23 @@ select { width: 100%; }
 .rec-row.low .rec-bar span { background: var(--danger); }
 .rec-pct { text-align: right; font-family: var(--font-numbers); font-size: var(--t-footnote); }
 .rec-sub { grid-column: 2 / 4; font-size: var(--t-caption); color: var(--text-2); margin-top: 2px; }
+
+/* Cardio on Progress: this week against the aim, 8 weeks of bars, pace by kind */
+.cp-head { font-size: var(--t-body); }
+.cp-head b { font-family: var(--font-numbers); font-size: var(--t-title); }
+.cp-head span { display: block; font-size: var(--t-footnote); color: var(--text-2); margin-top: 2px; }
+.cp-bars { position: relative; display: flex; align-items: flex-end; gap: 6px; height: 84px; margin-top: 14px; }
+.cp-bar { flex: 1; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--orange) 45%, var(--surface-2)); }
+.cp-bar.met { background: var(--done); }
+.cp-bar.now { outline: 1.5px solid var(--text); outline-offset: 1px; }
+.cp-aim { position: absolute; left: 0; right: 0; border-top: 1.5px dashed var(--text-3); }
+.cp-axis { display: flex; justify-content: space-between; margin-top: 6px; font-size: var(--t-caption); color: var(--text-3); }
+.cp-pace { display: grid; grid-template-columns: 1fr auto; column-gap: 10px; padding: 10px 0 0; margin-top: 10px; border-top: 0.5px solid var(--separator); font-size: var(--t-footnote); }
+.cp-pace b { font-family: var(--font-numbers); text-align: right; }
+.cp-pace span:last-child { grid-column: 1 / 3; color: var(--text-2); font-size: var(--t-caption); }
+.cp-pace span.up { color: var(--done); }
+
+/* Cardio in a saved workout */
+.detail-cardio { margin: 10px 0; padding: 12px 14px; border-radius: var(--r-md); border-left: 3px solid var(--orange); background: color-mix(in srgb, var(--orange) 7%, var(--surface)); }
+.detail-cardio-head { font-size: var(--t-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-bottom: 6px; }
+.detail-cardio-row { font-size: var(--t-footnote); line-height: 1.5; }

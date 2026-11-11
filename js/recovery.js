@@ -19,6 +19,12 @@ function muscleFatigue(history = getHistory(), now = Date.now()) {
       if (s.id > m.lastAt) { m.lastAt = s.id; m.sets = 0; }
       if (s.id === m.lastAt) m.sets += e.sets.length;
     });
+    // Leg-heavy cardio: some fatigue, counted in sets
+    Object.entries(cardioFatigue(s)).forEach(([muscle, sets]) => {
+      const m = out[muscle] || (out[muscle] = { left: 0, lastAt: 0, sets: 0 });
+      m.left += sets * weight * 2 ** (-Math.max(0, hours) / RECOVERY_HALF_LIFE_H);
+      if (s.id > m.lastAt) { m.lastAt = s.id; m.sets = 0; }
+    });
   });
   return out;
 }

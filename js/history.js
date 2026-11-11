@@ -105,7 +105,8 @@ function renderCalendarAndHistory() {
           const meta = [
             new Date(item.id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
             st.durationSec ? fmtDuration(st.durationSec) : '',
-            `${st.sets} set${st.sets === 1 ? '' : 's'}`,
+            st.sets ? `${st.sets} set${st.sets === 1 ? '' : 's'}` : '',
+            sessionCardio(item).length ? `${cardioMinutes(sessionCardio(item))} min cardio` : '',
             st.volume ? fmtVolume(st.volume) : '',
             item.calories ? `${fmtNum(item.calories)} kcal` : '',
             effortLabel(item.effort)
@@ -153,6 +154,11 @@ function openSessionModal(sessionId) {
   if (session) openSessionsModal([session]);
 }
 
+function cardioDetailHtml(session, when) {
+  const list = sessionCardio(session).filter(c => c.when === when);
+  return list.length ? `<div class="detail-cardio"><div class="detail-cardio-head">Cardio ${when} lifting</div>${list.map(c => `<div class="detail-cardio-row">${cardioLine(c, { when: false })}</div>`).join('')}</div>` : '';
+}
+
 function sessionDetailHtml(session) {
   const st = sessionStats(session);
   const prev = previousSameDay(session);
@@ -175,6 +181,7 @@ function sessionDetailHtml(session) {
     ${compare}
     ${effortRowHtml(session)}
     ${caloriesRowHtml(session)}
+    ${cardioDetailHtml(session, 'before')}
     ${session.exercises.map(ex => `
       <div class="detail-ex">
         <div class="detail-ex-head">
@@ -192,7 +199,8 @@ function sessionDetailHtml(session) {
           (s.drops || []).map((d, j) => `<div class="detail-drop">↳ Drop ${j + 1}: ${Number(d.weight) > 0 ? `${fmtNum(Number(d.weight))} kg` : 'BW'} × ${Number(d.reps) || 0}</div>`).join('')
         ).join('')}
       </div>
-    `).join('')}`;
+    `).join('')}
+    ${cardioDetailHtml(session, 'after')}`;
 }
 
 // One session, or every session logged on a calendar date (e.g. Day 1 and Day 2 on the same day)

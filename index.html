@@ -88,6 +88,12 @@
       <div id="recovery-list"></div>
     </div>
 
+    <div class="card" id="cardio-progress-card" hidden>
+      <div class="section-title">Cardio</div>
+      <div class="section-meta lead">Moderate-equivalent minutes (hard counts double, easy half) against the WHO aim of 150 a week.</div>
+      <div id="cardio-progress"></div>
+    </div>
+
     <div class="card">
       <div class="section-title">Bodyweight</div>
       <div class="stat-tiles" id="bw-stats"></div>
@@ -465,6 +471,22 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="cardio-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cardio-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="cardio-title">Add cardio</div>
+        <div class="sheet-sub">Part of today's workout, saved when you tap Finish</div>
+      </div>
+      <div id="cardio-body"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="saveCardioSheet()">Save cardio</button>
+        <button class="btn btn-danger" id="cardio-delete" onclick="deleteCardioEntry()" hidden>Remove</button>
+        <button class="btn btn-plain" onclick="closeSheet('cardio-sheet')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay dialog" id="dialog-sheet">
     <div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title">
       <div class="sheet-head">
@@ -572,7 +594,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.02c';
+    const APP_VERSION = '2026.11.11';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -586,6 +608,7 @@
   <script src="js/add-exercise.js"></script>
   <script src="js/workout.js"></script>
   <script src="js/warmup-editor.js"></script>
+  <script src="js/cardio.js"></script>
   <script src="js/rest-timer.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/records.js"></script>

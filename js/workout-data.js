@@ -512,6 +512,8 @@ function finishAndSaveWorkout(opts = {}) {
   let saved = null;
   days.forEach(d => { saved = saveDayToLog(d) || saved; });
   if (!hadDraft) localStorage.removeItem(draftMetaKey(currentDayIdx));
+  // Cardio goes onto today's workout (or makes a cardio-only one), before the clock's time is credited to it
+  if (!fromEarlier && getCardioDraft().length) saved = commitCardio(saved || todaysSession());
   const clockWas = workoutClock();
   if (!fromEarlier) {
     // Time since the last save still belongs to today's workout
@@ -527,6 +529,15 @@ function finishAndSaveWorkout(opts = {}) {
       }
     }
     saveClock(null);
+    if (saved && sessionCardio(saved).length) {
+      // A workout is at least as long as its cardio
+      const history = getHistory();
+      const s = history.find(h => h.id === saved.id);
+      if (s && (s.durationSec || 0) < cardioMinutes(sessionCardio(s)) * 60) {
+        s.durationSec = cardioMinutes(sessionCardio(s)) * 60;
+        saveHistory(history);
+      }
+    }
   }
   const session = saved || todaysSession();
   if (!session) {
@@ -565,7 +576,8 @@ function openFinishSheet() {
   const today = todaysSession();
   // Nothing new to save: with a workout running, ask before ending it (Finish is always on screen, so a mis-tap
   // must not end anything); otherwise say there's nothing to save
-  if (!byDay.length && !(today && workoutClock())) {
+  const cardio = getCardioDraft();
+  if (!byDay.length && !cardio.length && !(today && workoutClock())) {
     if (!workoutClock()) return finishAndSaveWorkout();
     return confirmSheet('End this workout?', 'Nothing is logged yet, so nothing will be saved.', 'End workout').then(yes => { if (yes) finishAndSaveWorkout(); });
   }
@@ -577,7 +589,8 @@ function openFinishSheet() {
   document.getElementById('finish-stats').innerHTML = `
     <span><b>${minutes}</b> min</span><span><b>${sets}</b> set${sets === 1 ? '' : 's'}</span>
     ${volume ? `<span><b>${fmtVolume(volume)}</b></span>` : ''}
-    ${byDay.length ? `<span>${byDay.map(x => dayShortLabel(x.d)).join(' + ')}</span>` : ''}`;
+    ${byDay.length ? `<span>${byDay.map(x => dayShortLabel(x.d)).join(' + ')}</span>` : ''}
+    ${cardio.length ? `<span><b>${cardioMinutes(cardio)}</b> min cardio</span>` : ''}`;
   document.getElementById('finish-body').innerHTML = `
     <div class="fin-label" id="effort-label">How hard was today?</div>
     <div class="effort" role="group" aria-labelledby="effort-label" id="finish-effort">${effortButtonsHtml(finishEffort, 'pickFinishEffort')}</div>

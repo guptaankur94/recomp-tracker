@@ -2,7 +2,7 @@
 // Each request also refreshes the cache in the background. When a newer index.html arrives, every
 // file the app needs is fetched again before open pages are told they can reload, so a reload never
 // mixes old and new files.
-const CACHE = 'recomp-v11';
+const CACHE = 'recomp-v12';
 // Every file the app needs offline. Add new files here.
 const ASSETS = [
   './',
@@ -35,6 +35,7 @@ const ASSETS = [
   './js/add-exercise.js',
   './js/workout.js',
   './js/warmup-editor.js',
+  './js/cardio.js',
   './js/rest-timer.js',
   './js/sound.js',
   './js/records.js',

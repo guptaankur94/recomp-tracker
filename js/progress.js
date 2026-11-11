@@ -230,7 +230,8 @@ function renderExerciseProgress() {
   const names = [...new Set(history.flatMap(s => s.exercises.map(e => e.name)))].sort((a, b) => a.localeCompare(b));
   const select = document.getElementById('progress-ex-select');
   if (!names.includes(progressExercise)) {
-    progressExercise = history.length ? history[0].exercises[0].name : null;
+    const withLifts = history.find(s => s.exercises.length);
+    progressExercise = withLifts ? withLifts.exercises[0].name : null;
   }
   select.innerHTML = names.map(n => `<option value="${escapeHtml(n)}" ${n === progressExercise ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('');
   select.style.display = names.length ? 'block' : 'none';
@@ -283,6 +284,7 @@ function renderProgress() {
   ).join('');
   renderCoach();
   renderRecovery();
+  renderCardioProgress();
   renderBodyweight();
   renderLiftCards();
   renderExerciseProgress();

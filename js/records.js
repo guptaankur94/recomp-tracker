@@ -94,14 +94,17 @@ function showSummary({ session, previous }) {
   const sets = exercises.reduce((n, e) => n + e.sets.length, 0);
   const volume = exercises.reduce((sum, e) => sum + e.sets.reduce((v, s) => v + setVolume(s), 0), 0);
   const prs = sessionPrs(session);
+  const cardio = sessionCardio(session);
 
   document.getElementById('summary-title').textContent = `${session.day} · ${session.title}`;
   document.getElementById('summary-date').textContent = new Date(session.id).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const tile = (val, lbl, cls = '') => `<div class="summary-tile ${cls}"><div class="summary-tile-val">${val}</div><div class="summary-tile-lbl">${lbl}</div></div>`;
   document.getElementById('summary-grid').innerHTML =
     tile(durationSec ? `${Math.max(1, Math.round(durationSec / 60))}<small>min</small>` : '—', 'Duration') +
-    tile(sets, sets === 1 ? 'Set' : 'Sets') +
-    tile(`${volume >= 10000 ? fmtNum(volume / 1000) + '<small>t</small>' : `${fmtNum(volume)}<small>kg</small>`}`, 'Volume') +
+    (sets ? tile(sets, sets === 1 ? 'Set' : 'Sets') +
+      tile(`${volume >= 10000 ? fmtNum(volume / 1000) + '<small>t</small>' : `${fmtNum(volume)}<small>kg</small>`}`, 'Volume')
+      : tile(`${cardioMinutes(cardio)}<small>min</small>`, 'Cardio') +
+      tile(cardio.some(c => c.km > 0) ? `${fmtNum(Math.round(cardio.reduce((n, c) => n + (c.km || 0), 0) * 100) / 100)}<small>km</small>` : '—', 'Distance')) +
     tile(prs.length, prs.length === 1 ? 'Personal record' : 'Personal records', prs.length ? 'gold' : '');
 
   let compare = '';
@@ -123,13 +126,15 @@ function showSummary({ session, previous }) {
       <div class="summary-row"><span class="summary-row-name">${escapeHtml(p.name)}</span><span class="summary-row-sub">${fmtSetLine(p.set)} · ${PR_LABELS[p.set.pr]}${p.set.pr === 'rest' && p.restBefore ? ` (${fmtClock(p.restBefore)} rest)` : ''}</span></div>`).join('')}
     </div>` : '';
 
-  document.getElementById('summary-list').innerHTML = `
+  document.getElementById('summary-list').innerHTML = (cardio.length ? `
+    <div class="summary-section">Cardio</div>
+    <div class="summary-rows">${cardio.map(c => `<div class="summary-row"><span class="summary-row-name">${cardioType(c.type).icon} ${escapeHtml(cardioType(c.type).label)}</span><span class="summary-row-sub">${cardioLine(c).split(' · ').slice(1).join(' · ')}</span></div>`).join('')}</div>` : '') + (exercises.length ? `
     <div class="summary-section">Exercises</div>
     <div class="summary-rows">${exercises.map(e => {
       const best = e.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
       return `<div class="summary-row"><span class="summary-row-name">${escapeHtml(e.name)}</span><span class="summary-row-sub">${e.sets.length} × · best ${best.weight > 0 ? fmtSetLine(best) : `BW × ${best.reps}`}${avgRest(e.sets) ? ` · rest ${fmtClock(avgRest(e.sets))}` : ''}</span></div>`;
     }).join('')}
-    </div>`;
+    </div>` : '');
 
   const el = document.getElementById('summary');
   el.hidden = false;

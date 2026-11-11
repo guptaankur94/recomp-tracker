@@ -12,7 +12,8 @@ function updateStats() {
 
 
   const weekStart = startOfWeek(new Date()).getTime();
-  const thisWeek = history.filter(s => s.id >= weekStart).length;
+  // Plan workouts only: a cardio-only day doesn't count toward the week's lifting
+  const thisWeek = history.filter(s => s.id >= weekStart && s.exercises.length).length;
   const schedule = getSchedule();
   const target = schedule ? schedule.filter((_, w) => scheduledDay(w, schedule) !== null).length : programData.length;
   const streak = calcWeekStreak(history);
@@ -65,7 +66,7 @@ function updateStats() {
       </div>
     </div>
     <button class="hero-start" onclick="startWorkout()">${icon('arrowUp', 2.6)}Start workout</button>
-    <div class="hero-hint">Then log any day of your plan, and switch between days as you go.</div>`;
+    <div class="hero-hint">Then log any day of your plan, and switch between days as you go. <button class="hero-cardio" onclick="openCardioSheet()">Log cardio</button></div>`;
 }
 
 // Today's ticked sets, by day of the plan (unsaved, started today)
@@ -90,18 +91,19 @@ function livePanelHtml(clock) {
   const saved = today ? sessionStats(today).sets : 0;
   const sets = byDay.reduce((n, x) => n + x.n, 0) + saved;
   // Every set on the days trained so far is done: Finish fills in green (until then it stays quiet)
+  const cardioMin = cardioMinutes(getCardioDraft());
   const ready = byDay.length > 0 && byDay.every(x => { const p = dayProgress(x.d); return p.total > 0 && p.done >= p.total; });
   return `
     <div class="live ${paused ? 'paused' : ''}" role="region" aria-label="Workout in progress">
       <div class="live-row">
         <div class="live-main">
           <div class="live-time" id="session-elapsed">${fmtClock(sessionElapsedSec())}</div>
-          <div class="live-sub">${paused ? 'Paused' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${byDay.length ? ` · ${byDay.length} day${byDay.length === 1 ? '' : 's'}` : ''}`}</div>
+          <div class="live-sub">${paused ? 'Paused' : `Workout · ${sets} set${sets === 1 ? '' : 's'}${byDay.length ? ` · ${byDay.length} day${byDay.length === 1 ? '' : 's'}` : ''}${cardioMin ? ` · ${cardioMin} min cardio` : ''}`}</div>
         </div>
         <button class="btn btn-secondary live-pause" onclick="${paused ? 'resumeWorkout()' : 'pauseWorkout()'}">${paused ? 'Resume' : 'Pause'}</button>
         <button class="live-finish ${ready ? 'ready' : ''}" onclick="openFinishSheet()" aria-label="Finish workout">${ready ? icon('check', 3) : ''}Finish</button>
       </div>
-      ${byDay.length ? `<div class="live-days">${byDay.map(x => `<button class="live-day" onclick="selectDay(${x.d})">${dayShortLabel(x.d)} · ${x.n} set${x.n === 1 ? '' : 's'}</button>`).join('')}</div>` : ''}
+      <div class="live-days">${byDay.map(x => `<button class="live-day" onclick="selectDay(${x.d})">${dayShortLabel(x.d)} · ${x.n} set${x.n === 1 ? '' : 's'}</button>`).join('')}<button class="live-day live-cardio" onclick="openCardioSheet()">+ Cardio</button></div>
     </div>`;
 }
 
@@ -319,6 +321,8 @@ function renderWorkout() {
       </div>`;
   }
 
+  html += cardioCardsHtml('before');
+
   let tipShown = false;
   allExercises.forEach((ex, exIdx) => {
     const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
@@ -506,7 +510,11 @@ function renderWorkout() {
   });
 
   html += `
-    <button class="btn btn-secondary add-custom-ex-btn" onclick="addCustomExercise()">+ Add Exercise</button>
+    ${cardioCardsHtml('after')}
+    <div class="add-row">
+      <button class="btn btn-secondary add-custom-ex-btn" onclick="addCustomExercise()">+ Add Exercise</button>
+      <button class="btn btn-secondary add-cardio-btn" onclick="openCardioSheet()">+ Cardio</button>
+    </div>
     ${finishSectionHtml(clockRunning)}
   `;
   main.innerHTML = html;
