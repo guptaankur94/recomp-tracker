@@ -95,7 +95,7 @@ function repeatWorkout(sessionId) {
     }));
     if (!base && LIBRARY.get(e.name)) base = libExercise(e.name);
     const top = Math.max(...e.sets.map(x => Number(x.reps) || 0));
-    const ex = { name: e.name, repTarget: base ? base.repTarget : `${top} reps`, weightTarget: base ? base.weightTarget : 'Moderate', rest: base ? base.rest : (avgRest(e.sets) || 90), sets: e.sets.length, isCustom: true };
+    const ex = { name: e.name, repTarget: base ? base.repTarget : `${top} reps`, weightTarget: base ? base.weightTarget : 'Moderate', rest: base ? base.rest : (avgRest(e.sets) || pref('defaultRest')), sets: e.sets.length, isCustom: true };
     if (base && base.cue) ex.cue = base.cue;
     return ex;
   });

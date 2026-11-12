@@ -182,6 +182,8 @@ button:active:not(:disabled), .history-card:active, .cal-date.active-logged:acti
 
 /* Theme type and backdrop: Classic leaves these on the system font; other themes set the tokens */
 body { background: var(--backdrop), var(--bg); }
+/* Nothing ever pokes out sideways, not even a tab sliding in (clip keeps sticky headers working) */
+body { overflow-x: clip; }
 .header-title, .day-title, .sheet-title, .summary-title, .ex-name, .plan-hero-name, .tpl-name, .onb-title {
   font-family: var(--font-display);
   font-weight: var(--display-weight);

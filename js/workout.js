@@ -67,7 +67,8 @@ function updateStats() {
       </div>
     </div>
     <button class="hero-start" onclick="startWorkout()">${icon('arrowUp', 2.6)}Start workout</button>
-    <div class="hero-hint">Then log any day of your plan, and switch between days as you go. <button class="hero-cardio" onclick="openCardioSheet()">Log cardio</button></div>`;
+    <div class="hero-hint">Then log any day of your plan, and switch between days as you go. <button class="hero-cardio" onclick="openCardioSheet()">Log cardio</button></div>
+    ${backupBannerHtml()}`;
 }
 
 // Today's ticked sets, by day of the plan (unsaved, started today)
@@ -85,6 +86,26 @@ function dayShortLabel(d) {
 }
 
 // The live panel: the clock, Pause, and each day you've trained so far (tap one to go to it)
+// A week since the last backup: one tap saves it (to Files / iCloud Drive through the share sheet)
+function backupBannerHtml() {
+  if (typeof backupOverdue !== 'function' || !backupOverdue() || Number(localStorage.getItem('recomp_backup_snooze')) > Date.now()) return '';
+  const age = backupAgeDays();
+  return `
+    <div class="backup-banner" role="note">
+      <div class="backup-banner-text"><b>Back up your workouts</b><span>${age === null ? 'Never backed up yet' : `Last backup ${age} days ago`}. Everything lives on this phone only.</span></div>
+      <div class="backup-banner-actions">
+        <button class="btn btn-primary btn-sm" onclick="exportData()">Back up now</button>
+        <button class="btn btn-plain btn-sm" onclick="snoozeBackup()">Later</button>
+      </div>
+    </div>`;
+}
+
+function snoozeBackup() {
+  localStorage.setItem('recomp_backup_snooze', String(Date.now() + 3 * 864e5));
+  haptic('light');
+  updateStats();
+}
+
 // During a workout the live panel is the top of the Workout tab: the greeting steps aside
 function syncHeaderVisibility() {
   const view = document.getElementById('view-workout');
@@ -950,7 +971,7 @@ function completeSet(exIdx, setNum, confirmed = false) {
     }, reduceMotion() ? 0 : 380);
     return;
   }
-  if (firstCompletion) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
+  if (firstCompletion && pref('autoRest')) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
   // The next set to do comes into view (gently, only if it's hidden behind the rest timer or off screen)
   if (!finished) {
     const nextBlock = document.querySelector(`#ex-card-${exIdx} .set-block:not(.completed)`);
@@ -1044,6 +1065,7 @@ const hapticSwitch = (() => {
 })();
 
 function haptic(type) {
+  if (!pref('vibration')) return;
   try {
     if (navigator.vibrate) {
       navigator.vibrate(type === 'error' ? [30, 60, 30] : type === 'success' ? 20 : 10);
@@ -1186,10 +1208,11 @@ function workoutInProgress() {
 async function syncWakeLock() {
   if (!('wakeLock' in navigator) || document.hidden) return;
   try {
-    if (workoutInProgress() && !wakeLock) {
+    const want = workoutInProgress() && pref('keepAwake');
+    if (want && !wakeLock) {
       wakeLock = await navigator.wakeLock.request('screen');
       wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } else if (!workoutInProgress() && wakeLock) {
+    } else if (!want && wakeLock) {
       const lock = wakeLock;
       wakeLock = null;
       await lock.release();

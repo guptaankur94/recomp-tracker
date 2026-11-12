@@ -461,3 +461,10 @@ body.in-workout .app-header { display: none; }
 .check-btn.ready-pulse { animation: readyPulse 1.2s ease-out 2; }
 @keyframes readyPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--todo) 70%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
 @media (prefers-reduced-motion: reduce) { .check-btn.ready-pulse { animation: none; outline: 3px solid var(--todo); } }
+
+/* Home: a week since the last backup */
+.backup-banner { margin: 12px 0 0; padding: 12px 14px; border-radius: var(--r-md); background: color-mix(in srgb, var(--orange) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--orange) 35%, transparent); }
+.backup-banner-text b { display: block; font-size: var(--t-body); }
+.backup-banner-text span { display: block; margin-top: 2px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.35; }
+.backup-banner-actions { display: flex; gap: 8px; margin-top: 10px; }
+.backup-banner-actions .btn { width: auto; margin-top: 0; }

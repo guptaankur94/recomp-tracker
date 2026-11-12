@@ -1,5 +1,6 @@
 // The core loop: focus mode, number pad, set checks, PR rules, edit sheet, Finish, and every tab in every theme
 const { serve, counter, openApp, seedHistory, logSet, launch } = require('./helpers');
+const { sideScroll } = require('./helpers');
 
 (async () => {
   const server = await serve();
@@ -83,8 +84,8 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
     await page.reload(); await page.waitForTimeout(500);
     for (const v of ['workout', 'plan', 'history', 'progress', 'settings']) {
       await page.evaluate(v => switchView(v), v); await page.waitForTimeout(250);
-      const w = await page.evaluate(() => document.documentElement.scrollWidth);
-      if (w > 390) ok(false, `${t} ${v}: sideways scroll ${w}`);
+      const w = await sideScroll(page);
+      if (w > 0) ok(false, `${t} ${v}: sideways scroll ${w}`);
     }
   }
   ok(true, 'all tabs × 4 themes render');

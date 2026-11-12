@@ -1,5 +1,6 @@
 // Measurements and photos, Progress jump chips and the shorter Coach, History search and Repeat
 const { serve, counter, openApp, seedHistory, launch } = require('./helpers');
+const { sideScroll } = require('./helpers');
 const zlib = require('zlib');
 
 // A small solid-colour PNG, for photo uploads
@@ -113,8 +114,8 @@ function png(w, h, rgb) {
     await page.reload(); await page.waitForTimeout(500);
     for (const v of ['progress', 'history']) {
       await page.evaluate(v => switchView(v), v); await page.waitForTimeout(400);
-      const w = await page.evaluate(() => document.documentElement.scrollWidth);
-      if (w > 390) ok(false, `6 ${t} ${v}: sideways scroll ${w}`);
+      const w = await sideScroll(page);
+      if (w > 0) ok(false, `6 ${t} ${v}: sideways scroll ${w}`);
     }
   }
   ok(true, '6 Progress and History fit in all themes');

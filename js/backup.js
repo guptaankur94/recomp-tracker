@@ -286,14 +286,15 @@ async function copyText(text, successMsg, fallbackTitle) {
   }
 }
 
-/* Backups: remember when the last one was made and nudge after two weeks */
+/* Backups: remember when the last one was made and nudge after a week (Settings can turn it off) */
 const LAST_BACKUP_KEY = 'recomp_last_backup';
 
-const BACKUP_NUDGE_DAYS = 14;
+const BACKUP_NUDGE_DAYS = 7;
 
 function markBackedUp() {
   localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
   renderBackupBadge();
+  updateStats();
   if (!document.getElementById('view-settings').hidden) renderSettings();
 }
 
@@ -303,7 +304,7 @@ function backupAgeDays() {
 }
 
 function backupOverdue() {
-  if (getHistory().length < 3) return false;
+  if (!pref('backupWeekly') || getHistory().length < 3) return false;
   const age = backupAgeDays();
   return age === null || age >= BACKUP_NUDGE_DAYS;
 }

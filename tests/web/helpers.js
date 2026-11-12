@@ -94,4 +94,9 @@ async function launch() {
   return chromium.launch(exe ? { executablePath: exe } : {});
 }
 
-module.exports = { serve, counter, openApp, seedHistory, logSet, launch };
+// How far the page can actually be moved sideways (0 is right: nothing pokes out, or it's clipped)
+async function sideScroll(page) {
+  return page.evaluate(() => { const y = window.scrollY; window.scrollTo(100, y); const x = window.scrollX; window.scrollTo(0, y); return x; });
+}
+
+module.exports = { serve, counter, openApp, seedHistory, logSet, launch, sideScroll };

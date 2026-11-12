@@ -167,7 +167,7 @@ function addExerciseToDay({ template, fromDay = null }) {
     name,
     repTarget: t.repTarget || '8–12 reps',
     weightTarget: t.weightTarget || 'Custom',
-    rest: t.rest || 90,
+    rest: t.rest || pref('defaultRest'),
     sets: t.sets || 3,
     isCustom: true
   };

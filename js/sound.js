@@ -19,7 +19,7 @@ function unlockAudio() {
 document.addEventListener('pointerdown', unlockAudio, { passive: true });
 
 function tone(freq, startIn, duration, volume) {
-  if (!audioCtx) return;
+  if (!audioCtx || !pref('sound')) return;
   try {
     const t = audioCtx.currentTime + startIn;
     const osc = audioCtx.createOscillator();

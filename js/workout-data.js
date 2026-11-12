@@ -224,7 +224,7 @@ function toggleWarmup(exIdx, i) {
   const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), 1));
   const ramp = warmupSets(ex, exIdx, suggestion);
   const nextIdx = ramp.findIndex((_, j) => j > i && localStorage.getItem(warmupKey(currentDayIdx, exIdx, j)) !== 'true');
-  startRestTimer(60, nextIdx !== -1 ? `Next: warm-up ${nextIdx + 1} · ${ramp[nextIdx].label}` : nextSetLabel(exIdx, 0));
+  if (pref('autoRest')) startRestTimer(60, nextIdx !== -1 ? `Next: warm-up ${nextIdx + 1} · ${ramp[nextIdx].label}` : nextSetLabel(exIdx, 0));
 }
 
 // The swap choice is remembered (equipment rarely changes); entered values stay in place.

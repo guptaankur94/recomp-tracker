@@ -66,7 +66,7 @@ function finishRestTimer() {
   if (!wasVisible) return;
   playChime();
   haptic('success');
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (navigator.vibrate && pref('vibration')) navigator.vibrate([200, 100, 200]);
   showToast('Rest over. Time for your next set.', { type: 'info' });
   // The next set to do glows, ready to tick
   const next = document.querySelector('#workout-content .check-btn.next');
