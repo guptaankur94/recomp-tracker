@@ -526,10 +526,8 @@ function renderWorkout() {
       const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
       // Gold when the set after this rest was a rest record (the rest before a set is what counts)
       const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s + 1, 'pr')) === 'rest';
-      // Drop set + rest line: under the set you're about to do (so the last set, or an added one, can take a drop
-      // before you tick it and the card folds), under the one you just ticked, or where it holds something (a
-      // drop, its own rest). Elsewhere it's in the set's ⋯ menu.
-      const showLink = s === firstOpenSet || (isDone && s === lastTicked) || drops.length > 0 || restPr || !!localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'rest'));
+      // Drop set + rest line: under every set, the same each time, so a drop set is always one tap away
+      const showLink = true;
       const setLink = !showLink ? '' : `
         <div class="set-link">
           <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
@@ -1035,7 +1033,7 @@ function editSet(exIdx, setNum) {
 async function openSetMenu(exIdx, setNum) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);
-  // The drop/rest line shows under the set you just ticked; for any other set they're here
+  // Drop set and rest are also on the line under every set; the menu has them too, with the warm-up and delete
   const choices = [{ label: 'Add a drop set', value: 'drop' }, { label: `Rest after this set (${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))})`, value: 'rest' }, { label: 'Edit warm-up', value: 'warmup' }];
   if (count > 1) choices.push({ label: 'Delete set', value: 'delete', destructive: true });
   const choice = await actionSheet(`Set ${setNum}`, ex.name, choices);

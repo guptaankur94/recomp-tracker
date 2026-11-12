@@ -30,7 +30,8 @@ const { sideScroll } = require('./helpers');
   ok(await val(0, 1, 'done') === 'true' && await val(0, 1, 'pr') === 'weight', 'Log set → logged, a weight PR');
   ok(!(await page.isVisible('#numpad.open')) && await page.evaluate(() => !!restTimer), 'pad closes, rest starts');
   const links = await page.evaluate(() => document.querySelectorAll('#ex-card-0 .set-link').length);
-  ok(links === 2, 'drop/rest lines only under the set just ticked and the next set to do (' + links + ')');
+  const sets = await page.evaluate(() => document.querySelectorAll('#ex-card-0 .set-swipe').length);
+  ok(links === sets, `"+ Drop set" under every set, consistently (${links} of ${sets})`);
 
   // Set checks
   await logSet(page, 0, 2, 525, 8); await page.waitForTimeout(300);
