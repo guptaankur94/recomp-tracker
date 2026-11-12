@@ -72,6 +72,7 @@ function renderPad() {
       <span class="pad-ex">${ex ? escapeHtml(ex.name) : ''}</span>
       <button class="pad-hide" data-act="hide" aria-label="Hide number pad">${icon('chevron', 2.4)}</button>
     </div>
+    ${isW && ex && isBarbellExercise(ex) ? '<div class="pad-plates" id="pad-plates" aria-live="polite"></div>' : ''}
     <div class="pad-grid">
       ${key('1', '1')}${key('2', '2')}${key('3', '3')}${key(`−${fmtNum(step)}`, 'minus', 'pad-fn', `Minus ${fmtNum(step)}`)}
       ${key('4', '4')}${key('5', '5')}${key('6', '6')}${key(`+${fmtNum(step)}`, 'plus', 'pad-fn', `Plus ${fmtNum(step)}`)}
@@ -79,6 +80,17 @@ function renderPad() {
       ${isW ? key('.', 'dot', '', 'Decimal point') : key('', 'none', 'pad-blank', '')}${key('0', '0')}
       ${isW ? key('Next', 'next', 'pad-next', 'Next: reps') : key(`${icon('check', 3)}Log set`, 'log', 'pad-log', `Log set ${pad.setNum}`)}
     </div>`;
+  updatePlates();
+}
+
+// Barbell: the plates for each side, for what's typed (or the hint)
+function updatePlates() {
+  const el = document.getElementById('pad-plates');
+  const input = padTarget();
+  if (!el || !input) return;
+  const kg = parseFloat(input.value) || parseFloat(input.placeholder) || 0;
+  const plates = platesPerSide(kg);
+  el.innerHTML = plates ? `<b>${Math.round(kg * 1000) / 1000} kg</b> · ${plates.text}` : `Bar ${BAR_KG} kg · type a weight to see the plates`;
 }
 
 function setPadValue(value) {
@@ -87,6 +99,7 @@ function setPadValue(value) {
   input.value = value;
   saveVal(input.id, value);
   pad.fresh = false;
+  updatePlates();
 }
 
 function padPress(act) {

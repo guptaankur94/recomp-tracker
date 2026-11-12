@@ -86,6 +86,7 @@ function clearDayDraft(dayIdx) {
   removeKeysMatching(new RegExp(`^(active_)?d${dayIdx}_e\\d+_`));
   localStorage.removeItem(draftMetaKey(dayIdx));
   localStorage.removeItem(`custom_ex_d${dayIdx}`);
+  localStorage.removeItem(`active_d${dayIdx}_order`);
 }
 
 async function discardDraft() {

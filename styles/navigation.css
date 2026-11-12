@@ -200,3 +200,5 @@ body.pad-open { padding-bottom: 300px; }
 .pad-log svg { width: 18px; height: 18px; }
 @media (prefers-reduced-motion: reduce) { .numpad { transition: none; } }
 .pad-key[data-act="back"] { font-family: var(--font-body); font-size: 22px; }
+.pad-plates { margin: -2px 4px 8px; padding: 7px 10px; border-radius: 10px; background: var(--surface-2); font-size: var(--t-footnote); color: var(--text-2); }
+.pad-plates b { color: var(--text); font-family: var(--font-numbers); }

@@ -209,6 +209,8 @@ let dialogResolve = null;
 
 let dialogMatch = null;
 
+let dialogAllowEmpty = false;
+
 function openDialog({ title, message = '', confirmLabel = 'OK', destructive = false, input = null, choices = null, grid = false }) {
   if (dialogResolve) dialogResolve(null);
   document.getElementById('dialog-title').textContent = title;
@@ -220,7 +222,8 @@ function openDialog({ title, message = '', confirmLabel = 'OK', destructive = fa
   confirmBtn.className = `btn ${destructive ? 'btn-danger' : 'btn-primary'}`;
   const field = document.getElementById('dialog-input');
   field.hidden = !input;
-  field.value = '';
+  field.value = input && input.value ? input.value : '';
+  dialogAllowEmpty = !!(input && input.allowEmpty);
   dialogMatch = input && input.match ? input.match : null;
   field.autocapitalize = dialogMatch ? 'characters' : 'sentences';
   field.placeholder = input ? input.placeholder || '' : '';
@@ -259,7 +262,7 @@ function submitDialog() {
   const field = document.getElementById('dialog-input');
   if (!field.hidden) {
     const value = field.value.trim();
-    if (!value || (dialogMatch && value.toUpperCase() !== dialogMatch)) {
+    if ((!value && !dialogAllowEmpty) || (dialogMatch && value.toUpperCase() !== dialogMatch)) {
       fieldError(field);
       return;
     }

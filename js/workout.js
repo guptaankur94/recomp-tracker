@@ -129,6 +129,8 @@ function dayProgress(dayIdx) {
   let done = 0;
   let total = 0;
   getAllExercisesForDay(dayIdx).forEach((ex, exIdx) => {
+    // Skipped today: out of the count, so the day can still be complete
+    if (isSkipped(dayIdx, exIdx)) return;
     const count = getSetCount(dayIdx, exIdx, ex.sets);
     total += count;
     for (let s = 1; s <= count; s++) {
@@ -231,10 +233,18 @@ function exerciseAllDone(dayIdx, exIdx, ex) {
 function focusedExercise(exs) {
   const finishing = exs.findIndex((_, i) => finishingEx.has(exStateKey(i)));
   if (finishing !== -1) return finishing;
+  const todo = i => exs[i] && !isSkipped(currentDayIdx, i) && !exerciseAllDone(currentDayIdx, i, exs[i]);
   const chosen = focusChoice[currentDayIdx];
-  if (chosen != null && exs[chosen] && !exerciseAllDone(currentDayIdx, chosen, exs[chosen])) return chosen;
+  if (chosen != null && todo(chosen)) return chosen;
   delete focusChoice[currentDayIdx];
-  return exs.findIndex((ex, i) => !exerciseAllDone(currentDayIdx, i, ex));
+  const next = exerciseOrder(currentDayIdx, exs.length).find(todo);
+  return next === undefined ? -1 : next;
+}
+
+// The exercises open together: the one in focus, and its superset partner
+function openTogether(focusIdx) {
+  const pair = focusIdx >= 0 ? supersetPartner(currentDayIdx, focusIdx) : null;
+  return new Set(pair ? [focusIdx, pair.partner] : [focusIdx]);
 }
 
 function focusExercise(exIdx) {
@@ -360,7 +370,20 @@ function renderWorkout() {
 
   let tipShown = false;
   const focusIdx = focusedExercise(allExercises);
-  allExercises.forEach((ex, exIdx) => {
+  const openNow = openTogether(focusIdx);
+  exerciseOrder(currentDayIdx, allExercises.length).forEach(exIdx => {
+    const ex = allExercises[exIdx];
+    const pair = supersetPartner(currentDayIdx, exIdx);
+    const ssTag = pair ? `<span class="ss-tag" title="Superset">${supersetLetter(currentDayIdx, exIdx)}${pair.role}</span>` : '';
+    const note = exerciseNote(ex.name);
+    // Skipped today: a quiet row to bring it back
+    if (isSkipped(currentDayIdx, exIdx)) {
+      html += `
+        <div class="card ex-card skipped" id="ex-card-${exIdx}" onclick="unskip(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, skipped today. Bring back">
+          <div class="collapsed-text"><div class="ex-name">${escapeHtml(ex.name)}</div><div class="ex-meta">Skipped today · tap to bring back</div></div>
+        </div>`;
+      return;
+    }
     const totalSets = getSetCount(currentDayIdx, exIdx, ex.sets);
     const last = getLastPerformance(ex.name, history);
     let doneSets = 0;
@@ -387,15 +410,15 @@ function renderWorkout() {
     }
 
     // Not in focus: a one-line preview (what's coming, and the goal), tap to open
-    if (exIdx !== focusIdx && !allDone) {
+    if (!openNow.has(exIdx) && !allDone) {
       const goal = exerciseGoal(ex);
       const lastTop = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
       html += `
         <div class="card ex-card preview" id="ex-card-${exIdx}" onclick="focusExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, ${doneSets} of ${totalSets} sets done. Open">
           <span class="preview-num ${doneSets ? 'started' : ''}">${doneSets ? `${doneSets}/${totalSets}` : exIdx + 1}</span>
           <div class="collapsed-text">
-            <div class="ex-name">${escapeHtml(ex.name)}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
-            <div class="ex-meta">${totalSets} × ${escapeHtml(ex.repTarget)}${goal ? ` · <span class="preview-goal">goal ${goalLabel(goal)}</span>` : lastTop ? ` · last ${lastTop.weight > 0 ? fmtSetLine(lastTop) : `BW × ${lastTop.reps}`}` : ''}</div>
+            <div class="ex-name">${ssTag}${escapeHtml(ex.name)}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
+            <div class="ex-meta">${pair ? `Superset with ${escapeHtml(allExercises[pair.partner].name)} · ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)}${goal ? ` · <span class="preview-goal">goal ${goalLabel(goal)}</span>` : lastTop ? ` · last ${lastTop.weight > 0 ? fmtSetLine(lastTop) : `BW × ${lastTop.reps}`}` : ''}</div>
           </div>
           <span class="chevron">${icon('chevron')}</span>
         </div>`;
@@ -418,14 +441,17 @@ function renderWorkout() {
     }
 
     html += `
-      <div class="card ex-card ${allDone ? 'done' : ''} ${finishingEx.has(exStateKey(exIdx)) ? 'finishing' : ''}" id="ex-card-${exIdx}">
+      <div class="card ex-card ${allDone ? 'done' : ''} ${finishingEx.has(exStateKey(exIdx)) ? 'finishing' : ''} ${pair ? `ss ss-${pair.role}` : ''}" id="ex-card-${exIdx}">
+        ${pair && pair.role === 1 ? `<div class="ss-banner">${icon('swap', 2.2)}Superset ${supersetLetter(currentDayIdx, exIdx)}: one set of each, then rest</div>` : ''}
         <div class="ex-header">
-          <div class="ex-name">${escapeHtml(ex.name)}${ex.isCustom ? `<span class="ex-tag">${ex.fromDay && ex.fromDay !== data.day ? `From ${escapeHtml(ex.fromDay.replace('Day ', 'D'))}` : 'Extra'}</span>` : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
+          <div class="ex-name">${ssTag}${escapeHtml(ex.name)}${ex.isCustom ? `<span class="ex-tag">${ex.fromDay && ex.fromDay !== data.day ? `From ${escapeHtml(ex.fromDay.replace('Day ', 'D'))}` : 'Extra'}</span>` : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
           <span class="ex-progress ${allDone ? 'all-done' : ''}">${doneSets}/${totalSets}</span>
           ${allDone ? `<button class="icon-btn plain" onclick="collapseExercise(${exIdx})" aria-label="Fold exercise">${icon('chevronUp')}</button>` : ''}
           <button class="icon-btn plain ${showInfo ? 'on' : ''}" onclick="toggleExInfo(${exIdx})" aria-label="Exercise details" aria-expanded="${showInfo}">${icon('infoCircle', 1.8)}</button>
+          <button class="icon-btn plain" onclick="openExerciseMenu(${exIdx})" aria-label="${escapeHtml(ex.name)} options: note, superset, later, skip">${icon('more', 2)}</button>
         </div>
         <div class="ex-meta">${warmups.length ? `${warmups.length} warm-up + ` : ''}${totalSets} × ${escapeHtml(ex.repTarget)} · ${escapeHtml(ex.weightTarget)}</div>
+        ${note ? `<button class="ex-note" onclick="editNote(${exIdx})" aria-label="Note: ${escapeHtml(note)}. Edit">${icon('pencil', 2)}<span>${escapeHtml(note)}</span></button>` : ''}
         ${allDone ? '' : goalPanelHtml(ex, last, exIdx)}
         <div class="ex-chips">
           <button class="chip ${restDiff.startsWith('−') ? 'faster' : ''}" onclick="pickRest(${exIdx})" aria-label="Rest ${fmtClock(rest)}, change">${icon('clock', 2)}Rest ${fmtClock(rest)}${restDiff ? `<span class="chip-delta">· ${restDiff}</span>` : ''}</button>
@@ -913,6 +939,17 @@ function completeSet(exIdx, setNum, confirmed = false) {
   renderWorkout();
   justCompletedBlock = null;
 
+  // Superset: straight on to the partner's same set, no rest; the rest comes after the pair
+  const pairNext = supersetNextSet(exIdx, setNum);
+  if (pairNext) {
+    const partner = getAllExercisesForDay(currentDayIdx)[pairNext.exIdx];
+    if (!pr) showToast(`Superset · now ${partner.name}, set ${pairNext.setNum}`, { type: 'info', duration: 2200 });
+    setTimeout(() => {
+      const block = document.getElementById(`block_d${currentDayIdx}_e${pairNext.exIdx}_s${pairNext.setNum}`);
+      reveal(block && block.closest('.set-swipe'));
+    }, reduceMotion() ? 0 : 380);
+    return;
+  }
   if (firstCompletion) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
   // The next set to do comes into view (gently, only if it's hidden behind the rest timer or off screen)
   if (!finished) {
@@ -921,21 +958,45 @@ function completeSet(exIdx, setNum, confirmed = false) {
   }
 }
 
-// "Set 2 · 50 kg × 8", or the next exercise's first open set
+// In a superset, the partner's same set when it's still to do (that's where you go next, without rest)
+function supersetNextSet(exIdx, setNum) {
+  const pair = supersetPartner(currentDayIdx, exIdx);
+  if (!pair || isSkipped(currentDayIdx, pair.partner)) return null;
+  const partner = getAllExercisesForDay(currentDayIdx)[pair.partner];
+  if (!partner || setNum > getSetCount(currentDayIdx, pair.partner, partner.sets)) return null;
+  return localStorage.getItem(setKey(currentDayIdx, pair.partner, setNum, 'done')) === 'true' ? null : { exIdx: pair.partner, setNum };
+}
+
+// "Set 2 · 50 kg × 8", or the next exercise's first open set (in today's order, supersets set for set)
 function nextSetLabel(exIdx, setNum) {
   const exercises = getAllExercisesForDay(currentDayIdx);
   const history = getHistory();
-  for (let e = exIdx; e < exercises.length; e++) {
+  const isDone = (e, s) => localStorage.getItem(setKey(currentDayIdx, e, s, 'done')) === 'true';
+  const label = (e, s) => {
     const ex = exercises[e];
-    const count = getSetCount(currentDayIdx, e, ex.sets);
-    for (let s = e === exIdx ? setNum + 1 : 1; s <= count; s++) {
-      if (localStorage.getItem(setKey(currentDayIdx, e, s, 'done')) === 'true') continue;
-      const sug = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, history), s));
-      const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, e, s, 'w'))) || (sug ? sug.w : 0);
-      const r = parseInt(localStorage.getItem(setKey(currentDayIdx, e, s, 'r')), 10) || (sug ? sug.r : 0);
-      const target = r ? ` · ${w > 0 ? `${fmtNum(w)} kg` : 'BW'} × ${r}` : '';
-      return `Next: ${e === exIdx ? '' : `${ex.name} · `}Set ${s}${target}`;
+    const sug = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, history), s));
+    const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, e, s, 'w'))) || (sug ? sug.w : 0);
+    const r = parseInt(localStorage.getItem(setKey(currentDayIdx, e, s, 'r')), 10) || (sug ? sug.r : 0);
+    const target = r ? ` · ${w > 0 ? `${fmtNum(w)} kg` : 'BW'} × ${r}` : '';
+    return `Next: ${e === exIdx ? '' : `${ex.name} · `}Set ${s}${target}`;
+  };
+  // A superset: the pair's sets in turn (A1, B1, A2, B2…)
+  const pair = supersetPartner(currentDayIdx, exIdx);
+  if (pair) {
+    const [a, b] = pair.role === 1 ? [exIdx, pair.partner] : [pair.partner, exIdx];
+    const most = Math.max(getSetCount(currentDayIdx, a, exercises[a].sets), getSetCount(currentDayIdx, b, exercises[b].sets));
+    for (let s = 1; s <= most; s++) {
+      for (const e of [a, b]) {
+        if (s <= getSetCount(currentDayIdx, e, exercises[e].sets) && !isDone(e, s) && !isSkipped(currentDayIdx, e)) return label(e, s);
+      }
     }
+  }
+  const order = exerciseOrder(currentDayIdx, exercises.length);
+  const from = order.indexOf(exIdx);
+  for (const e of [...order.slice(from), ...order.slice(0, from)]) {
+    if (isSkipped(currentDayIdx, e)) continue;
+    const count = getSetCount(currentDayIdx, e, exercises[e].sets);
+    for (let s = e === exIdx ? setNum + 1 : 1; s <= count; s++) if (!isDone(e, s)) return label(e, s);
   }
   return 'All sets done. Finish when ready.';
 }

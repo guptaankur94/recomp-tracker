@@ -44,6 +44,7 @@ function tickRestTimer() {
   if (sec <= 3 && sec > 0 && sec !== lastTickSecond && !document.hidden) {
     lastTickSecond = sec;
     playTick();
+    haptic('light');
   }
   if (ms <= 0) finishRestTimer();
 }
@@ -67,6 +68,15 @@ function finishRestTimer() {
   haptic('success');
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   showToast('Rest over. Time for your next set.', { type: 'info' });
+  // The next set to do glows, ready to tick
+  const next = document.querySelector('#workout-content .check-btn.next');
+  if (next && !document.getElementById('view-workout').hidden) {
+    next.classList.remove('ready-pulse');
+    void next.offsetWidth;
+    next.classList.add('ready-pulse');
+    const row = next.closest('.set-swipe');
+    if (row) reveal(row);
+  }
 }
 
 function stopRestTimer() {

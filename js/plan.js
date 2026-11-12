@@ -23,6 +23,7 @@ function planExerciseOut(ex) {
   const out = { name: ex.name, warmup: ex.warmup, sets: ex.sets, reps: ex.repTarget, weight: ex.weightTarget, rest: ex.rest };
   if (out.warmup === undefined) delete out.warmup;
   if (ex.goal) out.goal = ex.goal;
+  if (ex.superset) out.superset = true;
   if (ex.cue) out.cue = ex.cue;
   return out;
 }

@@ -10,7 +10,8 @@ function buildBackupJson() {
     bodyweight: getBodyweight(),
     profile: getProfile(),
     plan: getCustomPlan(),
-    warmups: getWarmups()
+    warmups: getWarmups(),
+    notes: getNotes()
   }, null, 2);
 }
 
@@ -179,6 +180,21 @@ function restoreBackupText(text) {
     if (addedWu) {
       localStorage.setItem(WARMUPS_KEY, JSON.stringify(map));
       extras.push('warm-ups');
+    }
+  }
+
+  // Exercise notes: added for exercises that don't have one here
+  if (data && data.notes && typeof data.notes === 'object' && !Array.isArray(data.notes)) {
+    const notes = getNotes();
+    let addedNotes = 0;
+    Object.entries(data.notes).forEach(([name, text]) => {
+      if (typeof text !== 'string' || !text.trim() || Object.prototype.hasOwnProperty.call(notes, name)) return;
+      notes[name] = text.trim().slice(0, 200);
+      addedNotes++;
+    });
+    if (addedNotes) {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+      extras.push('exercise notes');
     }
   }
 

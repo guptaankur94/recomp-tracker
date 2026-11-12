@@ -154,6 +154,7 @@ function normalizePlan(data) {
       sets: int(raw.sets, 1, 10, 3)
     };
     if (text(raw.cue)) ex.cue = text(raw.cue);
+    if (raw.superset === true) ex.superset = true;
     const warmup = raw.warmup ?? raw.warmupSets ?? raw.warmups;
     if (warmup !== undefined && warmup !== null && !Number.isNaN(parseInt(warmup, 10))) ex.warmup = int(warmup, 0, 3, 0);
     // The goal for the end of the program: { weight, reps } or text like "60 kg × 8" / "15 reps"
