@@ -94,8 +94,9 @@
 /* New section slides in from the side you're heading to */
 .view.enter-right { animation: viewInRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .view.enter-left { animation: viewInLeft 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
-@keyframes viewInRight { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
-@keyframes viewInLeft { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+/* 12 px: less than the page's 16 px side margin, so a tab sliding in never pokes out past the edge */
+@keyframes viewInRight { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+@keyframes viewInLeft { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
 .nav-item.active .fill-active { fill: currentColor; }
 /* Workout keeps its green circle, sitting inside the capsule */
 .nav-item.center .nav-ico { width: 44px; height: 44px; max-width: none; background: var(--accent); color: var(--on-fill); }

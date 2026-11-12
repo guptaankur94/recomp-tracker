@@ -120,6 +120,10 @@ function addDrop(exIdx, setNum) {
   saveDrops(exIdx, setNum, drops);
   localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
   refreshPrs(currentDayIdx, exIdx);
+  // The set opens for the drop (to be ticked again): its exercise is the one you're on, and the set stays put
+  focusChoice[currentDayIdx] = exIdx;
+  haptic('light');
+  anchorOn(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`, `ex-card-${exIdx}`);
   renderWorkout();
 }
 

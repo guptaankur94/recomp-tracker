@@ -526,9 +526,10 @@ function renderWorkout() {
       const setRest = getSetRest(currentDayIdx, exIdx, s, ex);
       // Gold when the set after this rest was a rest record (the rest before a set is what counts)
       const restPr = isDone && localStorage.getItem(setKey(currentDayIdx, exIdx, s + 1, 'pr')) === 'rest';
-      // Drop set + rest line: under the set you just ticked, or where it holds something (a drop, its own rest).
-      // Elsewhere it's in the set's ⋯ menu.
-      const showLink = (isDone && s === lastTicked) || drops.length > 0 || restPr || !!localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'rest'));
+      // Drop set + rest line: under the set you're about to do (so the last set, or an added one, can take a drop
+      // before you tick it and the card folds), under the one you just ticked, or where it holds something (a
+      // drop, its own rest). Elsewhere it's in the set's ⋯ menu.
+      const showLink = s === firstOpenSet || (isDone && s === lastTicked) || drops.length > 0 || restPr || !!localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'rest'));
       const setLink = !showLink ? '' : `
         <div class="set-link">
           <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
