@@ -610,7 +610,7 @@ function renderWorkout() {
 
     html += `
         </div>
-        <button class="btn btn-plain add-set-btn" onclick="addSet(${exIdx})">+ Add Set</button>
+        <button class="btn btn-plain add-set-btn" id="add-set-${exIdx}" onclick="addSet(${exIdx})">+ Add Set</button>
       </div>
     `;
   });
@@ -1080,6 +1080,11 @@ function addSet(exIdx) {
   const allExercises = getAllExercisesForDay(currentDayIdx);
   const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
   saveSetCount(currentDayIdx, exIdx, currentCount + 1);
+  // The exercise you're adding to is the one you're on now (it would otherwise fold into a preview while
+  // another one is open), and the button stays under your finger with the new set just above it
+  focusChoice[currentDayIdx] = exIdx;
+  haptic('light');
+  anchorOn(`add-set-${exIdx}`, `ex-card-${exIdx}`);
   renderWorkout();
 }
 
