@@ -286,9 +286,30 @@ function renderProgress() {
   renderRecovery();
   renderCardioProgress();
   renderBodyweight();
+  renderBody();
   renderLiftCards();
   renderExerciseProgress();
+  renderJumpChips();
   chartAnimate = true;
+}
+
+/* Jump chips: one per section on screen, so a long Progress page is one tap from anywhere */
+const PROGRESS_SECTIONS = [['coach-card', 'Coach'], ['recovery-card', 'Recovery'], ['cardio-progress-card', 'Cardio'], ['bw-card', 'Weight'], ['body-card', 'Body'], ['lifts-card', 'Lifts'], ['ex-card', 'Exercises']];
+
+function renderJumpChips() {
+  const box = document.getElementById('progress-jump');
+  if (!box) return;
+  box.innerHTML = PROGRESS_SECTIONS.filter(([id]) => { const el = document.getElementById(id); return el && !el.hidden; })
+    .map(([id, label]) => `<button class="jump-chip" onclick="jumpTo('${id}')">${label}</button>`).join('');
+}
+
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const bar = document.querySelector('#view-progress .progress-top');
+  const offset = (bar ? bar.getBoundingClientRect().height : 0) + 8;
+  window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - offset, behavior: reduceMotion() ? 'instant' : 'smooth' });
+  haptic('light');
 }
 
 let resizeTimer = null;

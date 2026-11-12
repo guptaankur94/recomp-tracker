@@ -11,6 +11,7 @@ function buildBackupJson() {
     profile: getProfile(),
     plan: getCustomPlan(),
     warmups: getWarmups(),
+    measurements: getMeasurements(),
     notes: getNotes()
   }, null, 2);
 }
@@ -180,6 +181,19 @@ function restoreBackupText(text) {
     if (addedWu) {
       localStorage.setItem(WARMUPS_KEY, JSON.stringify(map));
       extras.push('warm-ups');
+    }
+  }
+
+  // Measurements: added for dates that have none here
+  if (data && Array.isArray(data.measurements)) {
+    const mine = getMeasurements();
+    const known = new Set(mine.map(m => m.dateStr));
+    const add = data.measurements.filter(m => m && /^\d{4}-\d{2}-\d{2}$/.test(m.dateStr) && !known.has(m.dateStr))
+      .map(m => { const e = { dateStr: m.dateStr }; MEASURES.forEach(x => { const v = Number(m[x.key]); if (v >= x.min && v <= x.max) e[x.key] = v; }); return e; })
+      .filter(e => Object.keys(e).length > 1);
+    if (add.length) {
+      saveMeasurements([...mine, ...add]);
+      extras.push('measurements');
     }
   }
 

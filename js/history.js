@@ -31,6 +31,80 @@ function previousSameDay(session) {
   return getHistory().find(s => s.day === session.day && s.id < session.id) || null;
 }
 
+/* Search: by exercise (showing that exercise's sets in each workout), workout name or day */
+let historyQuery = '';
+
+function searchHistory(value) {
+  historyQuery = value;
+  renderCalendarAndHistory();
+}
+
+function historySearchHtml(history, query) {
+  const rows = [];
+  history.forEach(s => {
+    const exs = s.exercises.filter(e => e.name.toLowerCase().includes(query));
+    const named = `${s.day} ${s.title}`.toLowerCase().includes(query) || sessionCardio(s).some(c => cardioType(c.type).label.toLowerCase().includes(query));
+    if (!exs.length && !named) return;
+    const lines = exs.map(e => {
+      const best = e.sets.reduce((a, b) => (Number(b.weight) > Number(a.weight) || (Number(b.weight) === Number(a.weight) && Number(b.reps) > Number(a.reps))) ? b : a);
+      return `<div class="hs-line"><b>${escapeHtml(e.name)}</b> · ${e.sets.length} × · best ${Number(best.weight) > 0 ? `${fmtNum(Number(best.weight))} kg` : 'BW'} × ${best.reps}${e.sets.some(x => x.pr) ? ' <span class="pr-badge">PR</span>' : ''}</div>`;
+    }).join('');
+    rows.push(`
+      <div class="history-card" onclick="openSessionModal(${s.id})">
+        <span class="day-dots">${sessionDayLabels(s).map(d => `<span class="day-dot" style="background:${dayColor(d)}"></span>`).join('')}</span>
+        <div class="history-main">
+          <div class="history-info-title">${escapeHtml(s.day)} · ${escapeHtml(s.title)}</div>
+          <div class="history-info-date">${new Date(s.id).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          ${lines}
+        </div>
+        <span class="chevron">${icon('chevron')}</span>
+      </div>`);
+  });
+  return `
+    <div class="week-head"><span>${rows.length} workout${rows.length === 1 ? '' : 's'} with “${escapeHtml(historyQuery.trim())}”</span></div>
+    ${rows.length ? `<div class="history-group">${rows.join('')}</div>` : '<div class="empty-card"><div class="empty-text">Nothing found. Try part of an exercise name, like “bench” or “curl”.</div></div>'}`;
+}
+
+/* Repeat a workout: its plan day when one has all its exercises, else a one-off workout with the same ones */
+function repeatWorkout(sessionId) {
+  const s = getHistory().find(x => x.id === sessionId);
+  if (!s || !s.exercises.length) return;
+  const names = s.exercises.map(e => e.name);
+  const has = (d, n) => d.exercises.some(e => e.name === n || (e.alt && e.alt.name === n));
+  const dayIdx = programData.findIndex(d => names.every(n => has(d, n)));
+  closeModal();
+  if (dayIdx !== -1) {
+    selectDay(dayIdx);
+    switchView('workout');
+    showToast(`${programData[dayIdx].day} ready. Hints show your last numbers.`);
+    return;
+  }
+  const custom = programData.length;
+  if (dayHasDraft(custom)) {
+    selectDay(custom);
+    switchView('workout');
+    showToast('Finish or clear your one-off workout first', { type: 'error' });
+    return;
+  }
+  const exercises = s.exercises.map(e => {
+    let base = null;
+    programData.some(d => d.exercises.some(x => {
+      if (x.name === e.name) base = x;
+      else if (x.alt && x.alt.name === e.name) base = x.alt;
+      return base;
+    }));
+    if (!base && LIBRARY.get(e.name)) base = libExercise(e.name);
+    const top = Math.max(...e.sets.map(x => Number(x.reps) || 0));
+    const ex = { name: e.name, repTarget: base ? base.repTarget : `${top} reps`, weightTarget: base ? base.weightTarget : 'Moderate', rest: base ? base.rest : (avgRest(e.sets) || 90), sets: e.sets.length, isCustom: true };
+    if (base && base.cue) ex.cue = base.cue;
+    return ex;
+  });
+  localStorage.setItem(`custom_ex_d${custom}`, JSON.stringify(exercises));
+  selectDay(custom);
+  switchView('workout');
+  showToast(`${exercises.length} exercises ready as a one-off workout`);
+}
+
 function renderCalendarAndHistory() {
   const history = getHistory();
   const now = new Date();
@@ -78,6 +152,11 @@ function renderCalendarAndHistory() {
         <div class="empty-text">When you finish a workout it lands on the calendar with its sets, volume, duration and personal records.</div>
         <button class="btn btn-primary btn-sm" onclick="switchView('workout')">Go to Today's Workout</button>
       </div>`;
+    return;
+  }
+  const query = historyQuery.trim().toLowerCase();
+  if (query) {
+    container.innerHTML = historySearchHtml(history, query);
     return;
   }
   const thisWeek = startOfWeek(now).getTime();
@@ -215,6 +294,9 @@ function openSessionsModal(sessions) {
     document.getElementById('modal-body').innerHTML = sessionDetailHtml(session);
     deleteBtn.hidden = false;
     deleteBtn.onclick = () => deleteSession(session.id);
+    const repeat = document.getElementById('modal-repeat-btn');
+    repeat.hidden = !session.exercises.length;
+    repeat.onclick = () => repeatWorkout(session.id);
   } else {
     document.getElementById('modal-title').innerText = `${sessions.length} Workouts`;
     document.getElementById('modal-date').innerText = when(sessions[0]);
@@ -226,6 +308,7 @@ function openSessionsModal(sessions) {
       ${sessionDetailHtml(session)}
     `).join('');
     deleteBtn.hidden = true;
+    document.getElementById('modal-repeat-btn').hidden = true;
   }
 
   openSheet('detail-modal');

@@ -70,11 +70,15 @@
       <div class="calendar-grid" id="calendar-grid"></div>
       <div class="cal-legend" id="cal-legend"></div>
     </div>
+    <div class="history-search"><input type="search" id="history-search" placeholder="Search exercises or workouts" oninput="searchHistory(this.value)" aria-label="Search history" autocomplete="off"></div>
     <div id="history-list-container"></div>
   </div>
 
   <div id="view-progress" class="view" hidden>
-    <div class="range-bar"><div class="segmented" id="range-seg" role="group" aria-label="Time range"></div></div>
+    <div class="progress-top">
+      <div class="range-bar"><div class="segmented" id="range-seg" role="group" aria-label="Time range"></div></div>
+      <nav class="jump-chips" id="progress-jump" aria-label="Jump to a section"></nav>
+    </div>
 
     <div class="card" id="coach-card">
       <div class="section-title">Coach</div>
@@ -94,7 +98,7 @@
       <div id="cardio-progress"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="bw-card">
       <div class="section-title">Bodyweight</div>
       <div class="stat-tiles" id="bw-stats"></div>
       <div id="bw-chart"></div>
@@ -105,6 +109,18 @@
       </div>
       <button class="btn btn-plain entries-btn" id="bw-entries-btn" onclick="toggleEntries('bw')" hidden></button>
       <div id="bw-list"></div>
+    </div>
+
+    <div class="card" id="body-card">
+      <div class="section-title">Body</div>
+      <div class="section-meta lead">Waist and other measurements, and progress photos. On a recomp these show change the scale hides.</div>
+      <div class="stat-tiles" id="body-stats"></div>
+      <div id="body-chart"></div>
+      <div id="body-others"></div>
+      <button class="btn btn-primary measure-btn" onclick="openMeasureSheet()">Log measurements</button>
+      <div class="photo-head">Progress photos <span>Kept on this phone only, not in backups</span></div>
+      <div class="photo-strip" id="photo-strip"></div>
+      <input type="file" id="photo-file" accept="image/*" hidden>
     </div>
 
     <div class="card" id="lifts-card" hidden>
@@ -140,6 +156,7 @@
       </div>
       <div id="modal-body"></div>
       <div class="sheet-actions">
+        <button class="btn btn-primary" id="modal-repeat-btn" hidden>Repeat this workout</button>
         <button class="btn btn-danger" id="modal-delete-action-btn">Delete Workout Session</button>
         <button class="btn btn-secondary" onclick="closeModal()">Close</button>
       </div>
@@ -471,6 +488,30 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="measure-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="measure-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="measure-title">Measurements</div>
+        <div class="sheet-sub">Any you have; waist matters most. Same time of day each time.</div>
+      </div>
+      <label class="measure-date"><span>Date</span><input type="date" id="measure-date" onchange="fillMeasureFields()" aria-label="Date"></label>
+      <div id="measure-fields"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="saveMeasureSheet()">Save</button>
+        <button class="btn btn-plain" onclick="closeSheet('measure-sheet')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-overlay" id="photo-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Progress photo">
+      <div class="sheet-head"><div class="sheet-grabber"></div></div>
+      <div id="photo-view"></div>
+      <div class="sheet-actions"><button class="btn btn-plain" onclick="closeSheet('photo-sheet')">Close</button></div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="set-edit-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="set-edit-title">
       <div class="sheet-head">
@@ -615,7 +656,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.12b';
+    const APP_VERSION = '2026.11.12c';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -639,6 +680,7 @@
   <script src="js/history.js"></script>
   <script src="js/progress.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/body.js"></script>
   <script src="js/habits.js"></script>
   <script src="js/coach.js"></script>
   <script src="js/recovery.js"></script>

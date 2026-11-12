@@ -269,3 +269,13 @@
 .cardio-when { width: 100%; }
 .cardio-when .seg-btn { flex: 1; }
 .cardio-est { margin-top: 12px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.4; }
+
+/* Measurements sheet */
+.measure-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 10px; font-weight: 600; }
+.measure-date input { height: 40px; }
+.measure-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 0.5px solid var(--separator); }
+.measure-name { display: flex; flex-direction: column; font-weight: 600; font-size: var(--t-body); }
+.measure-name i { font-style: normal; font-weight: 400; font-size: var(--t-caption); color: var(--text-2); margin-top: 1px; }
+.measure-field.main .measure-name { color: var(--gold); }
+.measure-input { display: grid; grid-template-columns: 96px 22px; align-items: center; gap: 6px; font-size: var(--t-footnote); color: var(--text-2); }
+.measure-input input { width: 96px; height: 42px; text-align: center; font-family: var(--font-numbers); font-size: var(--t-headline); font-weight: 600; }

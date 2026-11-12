@@ -246,7 +246,7 @@ function weightTips(now) {
 
 function coachTips(history = getHistory(), now = Date.now()) {
   const dismissed = coachDismissed();
-  const tips = [...plateauTips(history, now), ...loadTips(history, now), ...forecastTips(history, now), ...weightTips(now), ...cardioTips(history, now), ...volumeTips(history, now)];
+  const tips = [...plateauTips(history, now), ...loadTips(history, now), ...forecastTips(history, now), ...weightTips(now), ...bodyTips(now), ...cardioTips(history, now), ...volumeTips(history, now)];
   return tips.filter(t => !(dismissed[t.id] > now));
 }
 
@@ -278,14 +278,21 @@ function coachItemHtml(item, i, kind) {
 
 let coachShown = { tips: [], suggestions: [] };
 
+let coachExpanded = false;
+
 function renderCoach() {
   const box = document.getElementById('coach-list');
   if (!box) return;
   const history = getHistory();
   coachShown = { tips: coachTips(history), suggestions: coachSuggestions(history) };
   const { tips, suggestions } = coachShown;
+  // The two that matter most first (warnings, then advice, then good news); the rest behind "Show more"
+  const rank = { warn: 0, info: 1, good: 2 };
+  const order = tips.map((t, i) => i).sort((a, b) => (rank[tips[a].tone] ?? 1) - (rank[tips[b].tone] ?? 1) || a - b);
+  const shown = coachExpanded ? order : order.slice(0, 2);
   box.innerHTML = `
-    ${tips.map((t, i) => coachItemHtml(t, i, 'tip')).join('')}
+    ${shown.map(i => coachItemHtml(tips[i], i, 'tip')).join('')}
+    ${order.length > 2 ? `<button class="btn btn-plain cc-more" onclick="coachExpanded = !coachExpanded; renderCoach()" aria-expanded="${coachExpanded}">${coachExpanded ? 'Show fewer' : `Show ${order.length - 2} more tip${order.length - 2 === 1 ? '' : 's'}`}</button>` : ''}
     ${suggestions.length ? `<div class="cc-group">From your habits</div>${suggestions.map((s, i) => coachItemHtml(s, i, 'suggestion')).join('')}` : ''}
     ${!tips.length && !suggestions.length ? `<div class="cc-empty">${history.length < 5
       ? 'Tips appear after about two weeks of workouts and a few weigh-ins.'
@@ -353,6 +360,8 @@ function aiCoachPrompt(history = getHistory(), now = Date.now()) {
     const rate = weeklyRate(getBodyweight());
     if (rate != null) lines.push(`Trend: ${rate > 0 ? '+' : ''}${Math.round(rate * 100) / 100} kg a week.`);
   }
+  const body = getMeasurements().filter(m => now - bwDateMs(m.dateStr) < 56 * DAY_MS);
+  if (body.length) lines.push(`Measurements: ${body.map(m => `${m.dateStr} ${MEASURES.filter(x => m[x.key]).map(x => `${x.label.toLowerCase()} ${m[x.key]} ${x.unit}`).join(', ')}`).join('; ')}.`);
   const t = profile.sex ? nutritionTargets(profile) : null;
   if (t) lines.push(`Current targets: ${t.calories} kcal, ${t.protein} g protein a day.`);
   const tips = coachTips(history, now);
