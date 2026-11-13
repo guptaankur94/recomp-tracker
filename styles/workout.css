@@ -468,3 +468,30 @@ body.in-workout .app-header { display: none; }
 .backup-banner-text span { display: block; margin-top: 2px; font-size: var(--t-footnote); color: var(--text-2); line-height: 1.35; }
 .backup-banner-actions { display: flex; gap: 8px; margin-top: 10px; }
 .backup-banner-actions .btn { width: auto; margin-top: 0; }
+
+/* Warm-up vs working sets: the warm-up is preparation, not logged, so it looks lighter. An open tray with a dashed
+   outline and a warm orange edge, compact rows, softer numbers and round ticks; working sets keep their solid
+   boxes, big numbers and square ticks, under their own "Working sets" label. Done is green in both. */
+.wu-panel { margin-top: 12px; padding: 4px 10px 2px 12px; background: color-mix(in srgb, var(--orange) 4%, transparent); border: 1.5px dashed color-mix(in srgb, var(--orange) 40%, transparent); border-left: 3px solid var(--orange); border-radius: var(--r-md); }
+.wu-head { min-height: 34px; }
+.wu-title { color: var(--orange); }
+.wu-title::after { content: ' · not logged'; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text-3); }
+.wu-head-btn { height: 30px; padding: 0 10px; }
+.wu-head-btn.icon-only { width: 30px; }
+.wu-r { gap: 10px; min-height: 44px; border-top: 1px dashed color-mix(in srgb, var(--orange) 22%, transparent); cursor: pointer; }
+.wu-badge { width: 26px; height: 22px; border: 0; border-radius: 6px; font-size: 11px; color: var(--orange); background: color-mix(in srgb, var(--orange) 14%, transparent); }
+.wu-val { font-size: 15px; font-weight: 600; color: var(--text-2); }
+.wu-chk { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--orange) 60%, transparent); background: none; color: var(--orange); }
+.wu-chk svg { width: 16px; height: 16px; }
+.wu-r.done .wu-badge { background: color-mix(in srgb, var(--done) 18%, transparent); color: var(--done); }
+.wu-r.done .wu-val { color: var(--text-3); }
+.wu-r.done .wu-chk { background: var(--done); border-color: var(--done); color: var(--on-fill); }
+.wu-line { min-height: 42px; background: color-mix(in srgb, var(--orange) 4%, transparent); border: 1.5px dashed color-mix(in srgb, var(--orange) 40%, transparent); border-left: 3px solid var(--orange); border-radius: var(--r-md); }
+.wu-line-title { color: var(--orange); }
+.wu-line.done { background: color-mix(in srgb, var(--done) 6%, transparent); border-color: color-mix(in srgb, var(--done) 35%, transparent); border-left-color: var(--done); }
+.wu-line.done .wu-line-title { color: var(--done); }
+.wu-add-line { border-style: dashed; border-left: 3px solid color-mix(in srgb, var(--orange) 50%, transparent); }
+
+/* "Working sets" divider under the warm-up */
+.sets-label { display: flex; align-items: baseline; gap: 8px; margin: 14px 2px 8px; font-size: var(--t-caption); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); }
+.sets-label span { font-family: var(--font-numbers); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-2); }

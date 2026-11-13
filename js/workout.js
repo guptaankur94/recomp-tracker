@@ -492,6 +492,7 @@ function renderWorkout() {
             ${!ex.cue && !last && !ex.otherName && !ex.isCustom ? '<div class="ex-info-row">No details for this exercise yet.</div>' : ''}
           </div>` : ''}
         <div class="set-container">
+        ${warmups.length ? `<div class="sets-label">Working sets<span>${totalSets} × ${escapeHtml(ex.repTarget)}</span></div>` : ''}
     `;
 
     // One coach tip at a time: rest after the first logged set, then drop sets once an exercise is done
