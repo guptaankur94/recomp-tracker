@@ -74,8 +74,6 @@ function finishRestTimer() {
     next.classList.remove('ready-pulse');
     void next.offsetWidth;
     next.classList.add('ready-pulse');
-    const row = next.closest('.set-swipe');
-    if (row) reveal(row);
   }
 }
 

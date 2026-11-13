@@ -231,11 +231,11 @@ function warmupPanelHtml(ex, exIdx, warmups, suggestion, set1Done) {
         const on = isDone(i);
         const hint = [w.label.startsWith('Bar') ? `${fmtNum(w.kg)} kg` : '', w.kg && work > 0 ? `~${Math.round(w.kg / work * 100)}%` : ''].filter(Boolean).join(' · ');
         return `
-          <div class="wu-r ${on ? 'done' : ''}">
+          <div class="wu-r ${on ? 'done' : ''}" id="wu_d${currentDayIdx}_e${exIdx}_${i}" onclick="openWarmupRowEdit(${exIdx}, ${i})" role="button" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}. Edit">
             <span class="wu-badge">W${i + 1}</span>
             <span class="wu-val">${escapeHtml(w.label)}</span>
             ${hint ? `<span class="wu-hint">${hint}</span>` : ''}
-            <button class="wu-chk" onclick="toggleWarmup(${exIdx}, ${i})" aria-pressed="${on}" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}${on ? ', done' : ''}">${icon('check', 3)}</button>
+            <button class="wu-chk" onclick="event.stopPropagation(); toggleWarmup(${exIdx}, ${i})" aria-pressed="${on}" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}${on ? ', done' : ''}">${icon('check', 3)}</button>
           </div>`;
       }).join('')}
     </div>`;
@@ -678,6 +678,13 @@ function clearArea() {
   return { top, bottom };
 }
 
+// Not visible at all (above the pinned panel, or below the bottom of the screen)
+function isOffScreen(el) {
+  const { top } = clearArea();
+  const r = el.getBoundingClientRect();
+  return r.bottom <= top || r.top >= window.innerHeight;
+}
+
 // Scroll gently, only as far as needed, so el is fully in the clear area (its top part, if it's tall)
 function reveal(el) {
   if (!el) return;
@@ -802,10 +809,16 @@ function setHintHtml(ex, last, s, suggestion, valW, valR) {
 /* Editing a ticked set: a small sheet; the set stays ticked (and keeps its place) */
 let setEditing = null;
 
+function setEditLabels(warmup) {
+  document.getElementById('set-edit-w').placeholder = warmup ? 'Light' : 'BW';
+  document.getElementById('set-edit-second').textContent = warmup ? 'Edit all warm-ups' : 'Untick set';
+}
+
 function openSetEdit(exIdx, setNum) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   if (!ex) return;
   setEditing = { exIdx, setNum };
+  setEditLabels(false);
   document.getElementById('set-edit-title').textContent = `Set ${setNum}`;
   document.getElementById('set-edit-sub').textContent = ex.name;
   document.getElementById('set-edit-w').value = localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'w')) || '';
@@ -814,8 +827,44 @@ function openSetEdit(exIdx, setNum) {
   openSheet('set-edit-sheet');
 }
 
+// A warm-up row: same sheet; the change is saved as this exercise's own warm-up (used every time, like the Edit sheet)
+function openWarmupRowEdit(exIdx, i) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  if (!ex) return;
+  const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), 1));
+  const ramp = warmupSets(ex, exIdx, suggestion).map(w => (w.kg > 0 ? { kg: w.kg, reps: w.reps } : { reps: w.reps }));
+  if (!ramp[i]) return;
+  setEditing = { warmup: true, exIdx, i, ramp, name: ex.name };
+  setEditLabels(true);
+  document.getElementById('set-edit-title').textContent = `Warm-up ${i + 1}`;
+  document.getElementById('set-edit-sub').textContent = `${ex.name} · kept for next time too`;
+  document.getElementById('set-edit-w').value = ramp[i].kg > 0 ? String(ramp[i].kg) : '';
+  document.getElementById('set-edit-r').value = String(ramp[i].reps);
+  haptic('light');
+  openSheet('set-edit-sheet');
+}
+
+function saveWarmupRowEdit() {
+  const { exIdx, i, ramp, name } = setEditing;
+  const wText = document.getElementById('set-edit-w').value.trim().replace(',', '.');
+  const kg = wText === '' ? 0 : parseFloat(wText);
+  const reps = parseInt(document.getElementById('set-edit-r').value, 10);
+  const fail = message => { haptic('error'); showToast(message, { type: 'error' }); };
+  if (!(reps >= 1 && reps <= 50)) return fail('Warm-up reps: 1 to 50');
+  if (wText !== '' && !(kg >= 0 && kg <= 1000)) return fail('That weight looks like a typo');
+  const list = ramp.slice();
+  list[i] = kg > 0 ? { kg: Math.round(kg * 100) / 100, reps } : { reps };
+  saveWarmup(name, list);
+  closeSheet('set-edit-sheet');
+  haptic('success');
+  anchorOn(`wu_d${currentDayIdx}_e${exIdx}_${i}`, `ex-card-${exIdx}`);
+  renderWorkout();
+  showToast(`Warm-up ${i + 1} updated for ${name}`);
+}
+
 async function saveSetEdit() {
   if (!setEditing) return;
+  if (setEditing.warmup) return saveWarmupRowEdit();
   const { exIdx, setNum } = setEditing;
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const wText = document.getElementById('set-edit-w').value.trim().replace(',', '.');
@@ -846,6 +895,7 @@ async function saveSetEdit() {
 function untickSetFromEdit() {
   if (!setEditing) return;
   closeSheet('set-edit-sheet');
+  if (setEditing.warmup) return openWarmupEditor(setEditing.exIdx);
   editSet(setEditing.exIdx, setEditing.setNum);
 }
 
@@ -966,16 +1016,14 @@ function completeSet(exIdx, setNum, confirmed = false) {
     if (!pr) showToast(`Superset · now ${partner.name}, set ${pairNext.setNum}`, { type: 'info', duration: 2200 });
     setTimeout(() => {
       const block = document.getElementById(`block_d${currentDayIdx}_e${pairNext.exIdx}_s${pairNext.setNum}`);
-      reveal(block && block.closest('.set-swipe'));
+      if (block && isOffScreen(block)) reveal(block.closest('.set-swipe'));
     }, reduceMotion() ? 0 : 380);
     return;
   }
   if (firstCompletion && pref('autoRest')) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
   // The next set to do comes into view (gently, only if it's hidden behind the rest timer or off screen)
-  if (!finished) {
-    const nextBlock = document.querySelector(`#ex-card-${exIdx} .set-block:not(.completed)`);
-    setTimeout(() => reveal(nextBlock && nextBlock.closest('.set-swipe')), reduceMotion() ? 0 : 380);
-  }
+  // Nothing scrolls after logging: the set you tapped stays exactly where it was. (A scroll to show the next set
+  // moved the page by a different amount each time, depending on where the set happened to be.)
 }
 
 // In a superset, the partner's same set when it's still to do (that's where you go next, without rest)

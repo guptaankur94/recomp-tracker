@@ -525,7 +525,7 @@
       </div>
       <div class="sheet-actions">
         <button class="btn btn-primary" onclick="saveSetEdit()">Save changes</button>
-        <button class="btn btn-secondary" onclick="untickSetFromEdit()">Untick set</button>
+        <button class="btn btn-secondary" id="set-edit-second" onclick="untickSetFromEdit()">Untick set</button>
         <button class="btn btn-plain" onclick="closeSheet('set-edit-sheet')">Cancel</button>
       </div>
     </div>
@@ -656,7 +656,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.12g';
+    const APP_VERSION = '2026.11.13';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
