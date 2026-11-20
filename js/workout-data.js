@@ -114,17 +114,78 @@ function saveDrops(exIdx, setNum, drops) {
   localStorage.setItem(dropsKey(currentDayIdx, exIdx, setNum), JSON.stringify(drops));
 }
 
+/* Drop sets, the way a trainer runs them: part of the set they follow, done straight after it, before resting.
+   "+ Drop set" is offered only on the set you just ticked while its rest hasn't ended; a drop is lighter than the
+   set (about 20% off, then 15% for the next), logged in a focused sheet, and then the set's rest starts again,
+   because the rest comes after the whole set. Up to 3 drops. */
+const MAX_DROPS = 3;
+let dropFor = null; // { exIdx, setNum }
+
+function setWeight(exIdx, setNum) {
+  return parseFloat(localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'w'))) || 0;
+}
+
+// Can this set take a drop now? Ticked, rest not over, the exercise not called done, fewer than 3 drops
+function canDrop(exIdx, setNum) {
+  return localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'done')) === 'true'
+    && !isClosed(currentDayIdx, exIdx)
+    && localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'restOver')) !== 'true'
+    && getDrops(currentDayIdx, exIdx, setNum).filter(d => Number(d.r) > 0).length < MAX_DROPS;
+}
+
+// The suggested drop: about 20% off the set (15% off the drop before), to 2.5 kg, same reps
+function dropSuggestion(exIdx, setNum) {
+  const drops = getDrops(currentDayIdx, exIdx, setNum).filter(d => Number(d.r) > 0);
+  const prev = drops.length ? drops[drops.length - 1] : { w: setWeight(exIdx, setNum), r: localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'r')) };
+  const from = Number(prev.w) || 0;
+  const w = from > 0 ? Math.max(0, Math.round(from * (drops.length ? 0.85 : 0.8) / 2.5) * 2.5) : 0;
+  return { w: w < from ? w : Math.max(0, from - 2.5), r: Number(prev.r) || 8, n: drops.length + 1 };
+}
+
 function addDrop(exIdx, setNum) {
-  const drops = getDrops(currentDayIdx, exIdx, setNum);
-  drops.push({ w: '', r: '' });
-  saveDrops(exIdx, setNum, drops);
-  localStorage.setItem(`active_d${currentDayIdx}_e${exIdx}_s${setNum}_done`, 'false');
-  refreshPrs(currentDayIdx, exIdx);
-  // The set opens for the drop (to be ticked again): its exercise is the one you're on, and the set stays put
-  focusChoice[currentDayIdx] = exIdx;
+  if (!canDrop(exIdx, setNum)) {
+    haptic('error');
+    showToast(isClosed(currentDayIdx, exIdx) ? 'This exercise is marked done. Add a set to keep going.' : 'A drop set goes straight after its set, before you rest. This one\'s rest is over.', { type: 'error', duration: 3500 });
+    return;
+  }
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  const sug = dropSuggestion(exIdx, setNum);
+  dropFor = { exIdx, setNum };
+  document.getElementById('drop-title').textContent = `Drop ${sug.n} · Set ${setNum}`;
+  document.getElementById('drop-sub').textContent = `${ex.name} · from ${sug.n === 1 ? `${fmtNum(setWeight(exIdx, setNum))} kg` : 'your last drop'}`;
+  document.getElementById('drop-w').value = sug.w > 0 ? String(sug.w) : '';
+  document.getElementById('drop-r').value = '';
+  document.getElementById('drop-r').placeholder = String(sug.r);
   haptic('light');
+  openSheet('drop-sheet');
+}
+
+function logDrop() {
+  if (!dropFor) return;
+  const { exIdx, setNum } = dropFor;
+  const wText = document.getElementById('drop-w').value.trim().replace(',', '.');
+  const rText = document.getElementById('drop-r').value.trim() || document.getElementById('drop-r').placeholder;
+  const w = wText === '' ? 0 : parseFloat(wText);
+  const r = parseInt(rText, 10);
+  const fail = message => { haptic('error'); showToast(message, { type: 'error' }); };
+  if (!(r >= 1 && r <= 100)) return fail('Reps for the drop: 1 to 100');
+  if (!(w >= 0)) return fail('Weight can\'t be negative');
+  const drops = getDrops(currentDayIdx, exIdx, setNum).filter(d => Number(d.r) > 0);
+  const from = drops.length ? Number(drops[drops.length - 1].w) || 0 : setWeight(exIdx, setNum);
+  if (from > 0 && w >= from) return fail(`A drop is lighter than ${drops.length ? 'the drop before' : 'the set'} (${fmtNum(from)} kg)`);
+  drops.push({ w: wText === '' ? '' : String(w), r: String(r) });
+  saveDrops(exIdx, setNum, drops);
+  touchDraft();
+  closeSheet('drop-sheet');
+  dropFor = null;
+  haptic('success');
+  // The rest is after the whole set: it starts again now
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  if (restIsLive(currentDayIdx, exIdx, setNum)) restTimer.owner = null;
+  if (pref('autoRest')) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum), { d: currentDayIdx, e: exIdx, s: setNum });
   anchorOn(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`, `ex-card-${exIdx}`);
   renderWorkout();
+  showToast(`Drop ${drops.length} logged: ${w > 0 ? `${fmtNum(w)} kg` : 'BW'} × ${r}. Rest starts again.`);
 }
 
 function removeDrop(exIdx, setNum, dropIdx) {

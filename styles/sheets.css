@@ -285,3 +285,5 @@
 #complete-sheet .finish-btn { width: 100%; }
 .effort.ex-effort { margin-top: 6px; }
 .complete-skip { width: 100%; margin-top: 10px; }
+.drop-coach { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--r-md); background: color-mix(in srgb, var(--orange) 10%, var(--surface-2)); font-size: var(--t-footnote); line-height: 1.4; }
+#drop-sheet .finish-btn { margin-top: 14px; background: var(--orange); }

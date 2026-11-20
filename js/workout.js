@@ -608,7 +608,7 @@ function renderWorkout() {
       const showLink = true;
       const setLink = !showLink ? '' : `
         <div class="set-link">
-          <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
+          ${isDone && canDrop(exIdx, s) ? `<button class="link-drop now" onclick="addDrop(${exIdx}, ${s})" aria-label="${drops.some(d => Number(d.r) > 0) ? 'Another drop set' : 'Drop set'} on set ${s}, now">${icon('plus', 2.6)}${drops.some(d => Number(d.r) > 0) ? 'Another drop' : 'Drop set'}</button>` : '<span class="link-drop-slot" aria-hidden="true"></span>'}
           <span class="set-link-line"></span>
           ${restControlHtml(ex, exIdx, s, setRest, restPr)}
         </div>`;
@@ -631,7 +631,7 @@ function renderWorkout() {
                 ${moreBtn}
               </div>
               ${drops.filter(d => d.r).map((drop, i) => `
-                <div class="locked-drop">↳ Drop ${i + 1}: <strong>${parseFloat(drop.w) > 0 ? `${fmtNum(parseFloat(drop.w))} kg` : 'BW'} × ${escapeHtml(drop.r)}</strong></div>
+                <div class="locked-drop">${icon('arrowDown', 2.4)}Drop ${i + 1} <strong>${parseFloat(drop.w) > 0 ? `${fmtNum(parseFloat(drop.w))} kg` : 'BW'} × ${escapeHtml(drop.r)}</strong></div>
               `).join('')}
             </div>
           </div>
@@ -1196,10 +1196,26 @@ async function openSetMenu(exIdx, setNum) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const count = getSetCount(currentDayIdx, exIdx, ex.sets);
   // Drop set and rest are also on the line under every set; the menu has them too, with the warm-up and delete
-  const choices = [{ label: 'Add a drop set', value: 'drop' }, { label: `Rest after this set (${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))})`, value: 'rest' }, { label: 'Edit warm-up', value: 'warmup' }];
+  const dropsNow = getDrops(currentDayIdx, exIdx, setNum).filter(d => Number(d.r) > 0);
+  const choices = [
+    ...(canDrop(exIdx, setNum) ? [{ label: dropsNow.length ? 'Another drop set' : 'Drop set now', value: 'drop' }] : []),
+    ...(dropsNow.length ? [{ label: `Remove drop ${dropsNow.length}`, value: 'undrop', destructive: true }] : []),
+    { label: `Rest after this set (${fmtClock(getSetRest(currentDayIdx, exIdx, setNum, ex))})`, value: 'rest' },
+    { label: 'Edit warm-up', value: 'warmup' }
+  ];
   if (count > 1) choices.push({ label: 'Delete set', value: 'delete', destructive: true });
   const choice = await actionSheet(`Set ${setNum}`, ex.name, choices);
   if (choice === 'drop') addDrop(exIdx, setNum);
+  if (choice === 'undrop') {
+    const all = getDrops(currentDayIdx, exIdx, setNum);
+    const last = all.map(d => Number(d.r) > 0).lastIndexOf(true);
+    all.splice(last, 1);
+    saveDrops(exIdx, setNum, all);
+    touchDraft();
+    anchorOn(`block_d${currentDayIdx}_e${exIdx}_s${setNum}`, `ex-card-${exIdx}`);
+    renderWorkout();
+    showToast(`Drop ${dropsNow.length} removed`);
+  }
   if (choice === 'rest') pickSetRest(exIdx, setNum);
   if (choice === 'warmup') openWarmupEditor(exIdx);
   if (choice === 'delete') deleteSetWithUndo(exIdx, setNum);

@@ -13,6 +13,7 @@ const ICON_PATHS = {
   chevronDown: '<path d="M6 9l6 6 6-6"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   arrowUp: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  arrowDown: '<path d="M12 5v14M6 13l6 6 6-6"/>',
   minus: '<path d="M6 12h12"/>',
   plus: '<path d="M12 6v12M6 12h12"/>',
   more: '<path d="M5.5 12h.01M12 12h.01M18.5 12h.01" stroke-width="3.2"/>'

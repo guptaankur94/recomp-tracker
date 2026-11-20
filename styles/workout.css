@@ -525,3 +525,11 @@ body.in-workout .app-header { display: none; }
 
 /* The label never wraps, so the row is the same height in every stage */
 .rs-label { white-space: nowrap; }
+
+/* Drop sets: offered only on the set just ticked (an encouraging, filled pill), otherwise an empty slot so every
+   row keeps its height; logged drops sit inside the set they belong to */
+.link-drop.now { border-style: solid !important; background: color-mix(in srgb, var(--orange) 14%, transparent) !important; }
+.link-drop-slot { display: inline-block; width: 94px; height: 32px; }
+.locked-drop { display: flex; align-items: center; gap: 6px; margin: 6px 0 0 34px; font-size: var(--t-footnote); color: var(--text-2); }
+.locked-drop svg { width: 13px; height: 13px; color: var(--orange); }
+.locked-drop strong { font-family: var(--font-numbers); color: var(--text); }

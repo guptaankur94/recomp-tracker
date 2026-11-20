@@ -488,6 +488,25 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="drop-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="drop-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="drop-title">Drop set</div>
+        <div class="sheet-sub" id="drop-sub"></div>
+      </div>
+      <div class="drop-coach">Straight on, no rest. Strip the weight and go close to failure; the rest timer starts again after.</div>
+      <div class="set-edit-fields">
+        <label class="cardio-field"><span>Weight, kg</span><input type="text" inputmode="decimal" id="drop-w" autocomplete="off" placeholder="BW" aria-label="Drop weight in kg"></label>
+        <label class="cardio-field"><span>Reps</span><input type="text" inputmode="numeric" id="drop-r" autocomplete="off" aria-label="Drop reps"></label>
+      </div>
+      <div class="sheet-actions">
+        <button class="finish-btn" onclick="logDrop()">Log drop</button>
+        <button class="btn btn-plain" onclick="closeSheet('drop-sheet')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="complete-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="complete-title">
       <div class="sheet-head">
@@ -667,7 +686,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.20b';
+    const APP_VERSION = '2026.11.20c';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
