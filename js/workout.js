@@ -241,6 +241,80 @@ function warmupPanelHtml(ex, exIdx, warmups, suggestion, set1Done) {
     </div>`;
 }
 
+/* Finishing an exercise is your call: ticking the last set shows "Exercise complete" and "+ One more set"; complete
+   asks to confirm, then how hard it was, and only then does the card fold. Effort is reps in reserve (the
+   RIR-based RPE scale): easy = 4+ reps left (RPE 6), moderate = 2–3 (8), hard = 1 (9), all out = 0 (10). */
+const EX_EFFORT = [
+  { value: 6, label: 'Easy', hint: '4+ reps left' },
+  { value: 8, label: 'Moderate', hint: '2–3 left' },
+  { value: 9, label: 'Hard', hint: '1 left' },
+  { value: 10, label: 'All out', hint: 'nothing left' }
+];
+const closedKey = (d, i) => `active_d${d}_e${i}_closed`;
+const exEffortKey = (d, i) => `active_d${d}_e${i}_effort`;
+
+function exEffortLabel(value) {
+  const e = EX_EFFORT.find(x => x.value === Number(value));
+  return e ? e.label : '';
+}
+
+function isClosed(dayIdx, exIdx) {
+  return localStorage.getItem(closedKey(dayIdx, exIdx)) === 'true';
+}
+
+let completing = null; // the exercise the sheet is about
+
+function askCompleteExercise(exIdx) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  if (!ex) return;
+  completing = exIdx;
+  const count = getSetCount(currentDayIdx, exIdx, ex.sets);
+  const best = bestDraftSet(exIdx, count);
+  let prs = 0;
+  for (let s = 1; s <= count; s++) if (localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'pr'))) prs++;
+  document.getElementById('complete-title').textContent = `Mark ${ex.name} as done?`;
+  document.getElementById('complete-sub').textContent = `${count} set${count === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}${prs ? ` · ${prs} PR` : ''}`;
+  document.getElementById('complete-body').innerHTML = `
+    <div class="complete-q">Still got something left? One more set is often where progress comes from.</div>
+    <div class="sheet-actions">
+      <button class="finish-btn" onclick="confirmCompleteExercise()">${icon('check', 3)}Yes, it's done</button>
+      <button class="btn btn-secondary" onclick="closeSheet('complete-sheet'); addSet(${exIdx})">+ Add one more set</button>
+      <button class="btn btn-plain" onclick="closeSheet('complete-sheet')">Not yet</button>
+    </div>`;
+  haptic('light');
+  openSheet('complete-sheet');
+}
+
+// Step 2, in the same sheet: how hard was it
+function confirmCompleteExercise() {
+  const ex = getAllExercisesForDay(currentDayIdx)[completing];
+  if (!ex) return closeSheet('complete-sheet');
+  haptic('success');
+  document.getElementById('complete-title').textContent = `How hard was ${ex.name}?`;
+  document.getElementById('complete-sub').textContent = 'On your last sets: how many more reps could you have done?';
+  document.getElementById('complete-body').innerHTML = `
+    <div class="effort ex-effort" role="group" aria-label="Effort">${EX_EFFORT.map(e => `
+      <button onclick="rateExercise(${e.value})" aria-label="${e.label}, ${e.hint}"><span class="effort-bars">${[6, 8, 9, 10].map(v => `<span class="${v <= e.value ? 'on' : ''}" style="height:${4 + [6, 8, 9, 10].indexOf(v) * 4}px"></span>`).join('')}</span>${e.label}<i>${e.hint}</i></button>`).join('')}
+    </div>
+    <button class="btn btn-plain complete-skip" onclick="rateExercise(null)">Skip</button>`;
+}
+
+function rateExercise(value) {
+  const exIdx = completing;
+  completing = null;
+  if (exIdx === null) return;
+  if (value) localStorage.setItem(exEffortKey(currentDayIdx, exIdx), String(value));
+  else localStorage.removeItem(exEffortKey(currentDayIdx, exIdx));
+  localStorage.setItem(closedKey(currentDayIdx, exIdx), 'true');
+  touchDraft();
+  closeSheet('complete-sheet');
+  haptic('success');
+  openedDone.delete(exStateKey(exIdx));
+  if (focusChoice[currentDayIdx] === exIdx) delete focusChoice[currentDayIdx];
+  // A beat for the sheet to slide away, then the card folds and the next exercise opens
+  finishExerciseSequence(exIdx, 300);
+}
+
 /* Focus mode: one exercise open at a time. It's the one you're finishing, else one you opened, else the first
    with sets still to do; the others show as one-line previews (tap to open). Done ones fold to their Done row. */
 const focusChoice = {}; // dayIdx → the exercise you opened
@@ -254,7 +328,7 @@ function exerciseAllDone(dayIdx, exIdx, ex) {
 function focusedExercise(exs) {
   const finishing = exs.findIndex((_, i) => finishingEx.has(exStateKey(i)));
   if (finishing !== -1) return finishing;
-  const todo = i => exs[i] && !isSkipped(currentDayIdx, i) && !exerciseAllDone(currentDayIdx, i, exs[i]);
+  const todo = i => exs[i] && !isSkipped(currentDayIdx, i) && !(exerciseAllDone(currentDayIdx, i, exs[i]) && isClosed(currentDayIdx, i));
   const chosen = focusChoice[currentDayIdx];
   if (chosen != null && todo(chosen)) return chosen;
   delete focusChoice[currentDayIdx];
@@ -412,9 +486,12 @@ function renderWorkout() {
       if (localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true') doneSets++;
     }
     const allDone = doneSets === totalSets;
+    // Called done but a set was added or unticked since: it's open again (and will ask again)
+    if (!allDone && isClosed(currentDayIdx, exIdx)) localStorage.removeItem(closedKey(currentDayIdx, exIdx));
+    const closed = allDone && isClosed(currentDayIdx, exIdx);
 
     // Finished exercise: one line with a tick, tap to open
-    if (allDone && !openedDone.has(exStateKey(exIdx)) && !finishingEx.has(exStateKey(exIdx))) {
+    if (closed && !openedDone.has(exStateKey(exIdx)) && !finishingEx.has(exStateKey(exIdx))) {
       const best = bestDraftSet(exIdx, totalSets);
       html += `
         <div class="card ex-card collapsed ${justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
@@ -431,7 +508,7 @@ function renderWorkout() {
     }
 
     // Not in focus: a one-line preview (what's coming, and the goal), tap to open
-    if (!openNow.has(exIdx) && !allDone) {
+    if (!openNow.has(exIdx) && !closed) {
       const goal = exerciseGoal(ex);
       const lastTop = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
       html += `
@@ -608,9 +685,19 @@ function renderWorkout() {
       `;
     }
 
+    const exEffort = localStorage.getItem(exEffortKey(currentDayIdx, exIdx));
     html += `
         </div>
-        <button class="btn btn-plain add-set-btn" id="add-set-${exIdx}" onclick="addSet(${exIdx})">+ Add Set</button>
+        ${allDone && !closed ? `
+          <div class="ex-complete" id="complete-${exIdx}">
+            <div class="ex-complete-text"><b>All ${totalSets} sets done</b><span>Call it, or push one more?</span></div>
+            <div class="ex-complete-actions">
+              <button class="btn btn-secondary" id="add-set-${exIdx}" onclick="addSet(${exIdx})">+ 1 more set</button>
+              <button class="ex-complete-btn" onclick="askCompleteExercise(${exIdx})">${icon('check', 3)}Exercise complete</button>
+            </div>
+          </div>`
+        : `${closed && exEffort ? `<div class="ex-felt">Felt ${exEffortLabel(exEffort).toLowerCase()} · <button onclick="askCompleteExercise(${exIdx}); confirmCompleteExercise()">change</button></div>` : ''}
+          <button class="btn btn-plain add-set-btn" id="add-set-${exIdx}" onclick="addSet(${exIdx})">+ Add Set</button>`}
       </div>
     `;
   });
@@ -705,7 +792,7 @@ const finishingEx = new Set();
 const FINISH_BEAT_MS = 650;
 const FOLD_MS = 420;
 
-function finishExerciseSequence(exIdx) {
+function finishExerciseSequence(exIdx, beatMs = FINISH_BEAT_MS) {
   const key = exStateKey(exIdx);
   finishingEx.add(key);
   setTimeout(() => {
@@ -729,7 +816,7 @@ function finishExerciseSequence(exIdx) {
     release();
     foldInPlace(card, oldH, newH);
     celebrate(card);
-  }, FINISH_BEAT_MS);
+  }, beatMs);
 }
 
 // card has just been re-drawn folded (held at oldH, newH when done), its top where the open card's top was. Shrink it while
@@ -804,7 +891,8 @@ function setHintHtml(ex, last, s, suggestion, valW, valR) {
   if (!prev) return `<div class="set-hint">First time: enter ${isBodyweightExercise(ex) ? 'your reps' : 'weight and reps'}, then ✓</div>`;
   const differs = suggestion && (suggestion.w !== Number(prev.weight) || suggestion.r !== Number(prev.reps));
   const empty = !valW && !valR;
-  return `<div class="set-hint">Last time ${fmt(prev)}${differs ? ` · <b>try ${fmt({ weight: suggestion.w, reps: suggestion.r })}</b>` : ''}${empty && suggestion ? ' · ✓ logs it' : ''}</div>`;
+  const felt = prev.effort ? ` · felt ${exEffortLabel(prev.effort).toLowerCase()}` : '';
+  return `<div class="set-hint">Last time ${fmt(prev)}${felt}${differs ? ` · <b>try ${fmt({ weight: suggestion.w, reps: suggestion.r })}</b>` : ''}${empty && suggestion ? ' · ✓ logs it' : ''}</div>`;
 }
 
 /* Editing a ticked set: a small sheet; the set stays ticked (and keeps its place) */
@@ -1002,10 +1090,7 @@ function completeSet(exIdx, setNum, confirmed = false) {
 
   justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
   anchorOn(justCompletedBlock, `ex-card-${exIdx}`);
-  if (finished) {
-    openedDone.delete(exStateKey(exIdx));
-    finishExerciseSequence(exIdx);
-  }
+  // The last set: no fold yet. "Exercise complete" / "+ One more set" appear under the sets; you decide.
   initNav();
   renderWorkout();
   justCompletedBlock = null;

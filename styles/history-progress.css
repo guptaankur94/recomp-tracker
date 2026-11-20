@@ -326,3 +326,4 @@ select { width: 100%; }
 .history-search input { width: 100%; height: 44px; padding: 0 14px; border-radius: var(--r-md); border: 1px solid var(--separator); background: var(--surface); color: var(--text); font: inherit; font-size: var(--t-body); }
 .hs-line { margin-top: 4px; font-size: var(--t-footnote); color: var(--text-2); }
 .hs-line b { color: var(--text); font-weight: 600; }
+.detail-ex-felt { font-size: var(--t-caption); color: var(--text-2); }

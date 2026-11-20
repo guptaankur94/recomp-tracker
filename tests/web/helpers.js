@@ -99,4 +99,9 @@ async function sideScroll(page) {
   return page.evaluate(() => { const y = window.scrollY; window.scrollTo(100, y); const x = window.scrollX; window.scrollTo(0, y); return x; });
 }
 
-module.exports = { serve, counter, openApp, seedHistory, logSet, launch, sideScroll };
+// "Exercise complete" → "Yes, it's done" → an effort (6/8/9/10, or null to skip); the card then folds
+async function completeExercise(page, exIdx, effort = 8) {
+  await page.evaluate(({ exIdx, effort }) => { askCompleteExercise(exIdx); confirmCompleteExercise(); rateExercise(effort); }, { exIdx, effort });
+}
+
+module.exports = { serve, counter, openApp, seedHistory, logSet, launch, sideScroll, completeExercise };

@@ -488,6 +488,17 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="complete-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="complete-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="complete-title">Exercise complete?</div>
+        <div class="sheet-sub" id="complete-sub"></div>
+      </div>
+      <div id="complete-body"></div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="measure-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="measure-title">
       <div class="sheet-head">
@@ -656,7 +667,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.13b';
+    const APP_VERSION = '2026.11.20';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>

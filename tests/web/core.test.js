@@ -1,5 +1,5 @@
 // The core loop: focus mode, number pad, set checks, PR rules, edit sheet, Finish, and every tab in every theme
-const { serve, counter, openApp, seedHistory, logSet, launch } = require('./helpers');
+const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise } = require('./helpers');
 const { sideScroll } = require('./helpers');
 
 (async () => {
@@ -59,6 +59,8 @@ const { sideScroll } = require('./helpers');
 
   // Finish exercise: one smooth fold, the next opens below the Done row
   await logSet(page, 0, 3, 52.5, 8);
+  ok(await page.isVisible('#complete-0'), 'last set: "Exercise complete" appears instead of folding');
+  await completeExercise(page, 0, 9);
   const rec = await page.evaluate(() => new Promise(res => {
     const out = []; const t0 = performance.now();
     const f = () => { const c = document.getElementById('ex-card-0'); out.push({ t: performance.now() - t0, h: c.getBoundingClientRect().height, top: c.getBoundingClientRect().top, folded: c.classList.contains('collapsed') }); if (performance.now() - t0 < 1800) requestAnimationFrame(f); else res(out); };

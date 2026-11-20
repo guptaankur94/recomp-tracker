@@ -352,7 +352,8 @@ function isDumbbellExercise(ex) {
 }
 
 function lastSetFor(last, setNum) {
-  return last ? (last.sets.find(x => x.set === setNum) || last.sets[setNum - 1] || null) : null;
+  const set = last ? (last.sets.find(x => x.set === setNum) || last.sets[setNum - 1] || null) : null;
+  return set && last.effort ? { ...set, effort: last.effort } : set;
 }
 
 // What to aim for in a set, based on the same set last time. Used for the placeholders and
@@ -362,6 +363,10 @@ function suggestSet(ex, lastSet) {
   const range = repRange(ex);
   if (range && lastSet.weight > 0 && lastSet.reps >= range[1] && !isDumbbellExercise(ex)) {
     return { w: lastSet.weight + 2.5, r: range[0] };
+  }
+  // It felt easy last time (4+ reps left): the weight was too light, so a step up at the same reps
+  if (lastSet.effort && lastSet.effort <= 6 && lastSet.weight > 0 && !isDumbbellExercise(ex)) {
+    return { w: lastSet.weight + 2.5, r: lastSet.reps, why: 'felt easy last time' };
   }
   return { w: lastSet.weight, r: lastSet.reps };
 }
@@ -435,7 +440,8 @@ function collectDaySets(dayIdx) {
       }
     }
     // A custom workout stays custom: its exercises never count toward a plan day or the rotation
-    if (performedSets.length) logged.push({ name: ex.name, day: isCustomDay(dayIdx) ? dayData.day : (ex.fromDay || dayData.day), sets: performedSets });
+    const effort = Number(localStorage.getItem(`active_d${dayIdx}_e${exIdx}_effort`)) || 0;
+    if (performedSets.length) logged.push({ name: ex.name, day: isCustomDay(dayIdx) ? dayData.day : (ex.fromDay || dayData.day), sets: performedSets, ...(effort ? { effort } : {}) });
   });
   return logged;
 }
@@ -468,6 +474,7 @@ function saveDayToLog(dayIdx) {
       if (target) {
         const offset = Math.max(0, ...target.sets.map(s => s.set));
         ex.sets.forEach((s, i) => target.sets.push({ ...s, set: offset + i + 1 }));
+        if (ex.effort) target.effort = ex.effort;
       } else {
         session.exercises.push(ex);
       }

@@ -1,5 +1,5 @@
 // Bugs found in use, so they stay fixed
-const { serve, counter, openApp, seedHistory, logSet, launch } = require('./helpers');
+const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise } = require('./helpers');
 
 (async () => {
   const server = await serve();
@@ -13,6 +13,7 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
   // Finish an exercise, open its Done row again, tap + Add Set: it must stay open, on the new set, without moving
   const n = await page.evaluate(() => getSetCount(0, 0, getAllExercisesForDay(0)[0].sets));
   for (let s = 1; s <= n; s++) await logSet(page, 0, s, 50, 8);
+  await completeExercise(page, 0);
   await page.waitForTimeout(1500);
   ok(await page.evaluate(() => document.getElementById('ex-card-0').classList.contains('collapsed')), 'finished exercise folds to its Done row');
   // You've moved on: you tapped the third exercise's preview to open it
@@ -33,8 +34,10 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
   ok(Math.abs(after - before) < 2, `+ Add Set stays under your finger (${Math.round(before)} → ${Math.round(after)})`);
   ok(st.newTop !== null && st.newTop < after && after - st.newTop < 200, `the new set appears just above it (at ${Math.round(st.newTop)})`);
   await logSet(page, 0, n + 1, 50, 8);
+  ok(await page.isVisible('#complete-0'), 'after the extra set: "Exercise complete" again');
+  await completeExercise(page, 0);
   await page.waitForTimeout(1500);
-  ok(await page.evaluate(() => document.getElementById('ex-card-0').classList.contains('collapsed')), 'logging the extra set folds it again');
+  ok(await page.evaluate(() => document.getElementById('ex-card-0').classList.contains('collapsed')), 'confirming folds it again');
 
   // Same again with no other exercise picked: still open, still under your finger
   await page.tap('#ex-card-0'); await page.waitForTimeout(400);
@@ -57,7 +60,9 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
   ok(d1.open && d1.drop, 'drop set on a reopened exercise: it stays open, with the drop row on that set');
   ok(d1.top !== null && Math.abs(d1.top - d0) < 2, `… and the set stays put (${Math.round(d0)} → ${Math.round(d1.top)})`);
   await page.evaluate(() => { const b = document.getElementById('block_d0_e0_s2'); const [w, r] = b.querySelectorAll('.drop-row input'); w.value = '35'; w.dispatchEvent(new Event('change')); r.value = '10'; r.dispatchEvent(new Event('change')); completeSet(0, 2); });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(300);
+  await completeExercise(page, 0);
+  await page.waitForTimeout(1200);
   ok(await page.evaluate(() => getDrops(0, 0, 2).some(d => d.w === '35' && d.r === '10')), '… and the drop is kept when the set is ticked again');
 
   // Fresh exercise: "+ Drop set" is there on the set you're about to do, including the last and an added one

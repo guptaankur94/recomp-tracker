@@ -132,7 +132,7 @@ function showSummary({ session, previous }) {
     <div class="summary-section">Exercises</div>
     <div class="summary-rows">${exercises.map(e => {
       const best = e.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a);
-      return `<div class="summary-row"><span class="summary-row-name">${escapeHtml(e.name)}</span><span class="summary-row-sub">${e.sets.length} × · best ${best.weight > 0 ? fmtSetLine(best) : `BW × ${best.reps}`}${avgRest(e.sets) ? ` · rest ${fmtClock(avgRest(e.sets))}` : ''}</span></div>`;
+      return `<div class="summary-row"><span class="summary-row-name">${escapeHtml(e.name)}</span><span class="summary-row-sub">${e.sets.length} × · best ${best.weight > 0 ? fmtSetLine(best) : `BW × ${best.reps}`}${avgRest(e.sets) ? ` · rest ${fmtClock(avgRest(e.sets))}` : ''}${e.effort ? ` · ${exEffortLabel(e.effort).toLowerCase()}` : ''}</span></div>`;
     }).join('')}
     </div>` : '');
 

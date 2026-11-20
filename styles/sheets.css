@@ -279,3 +279,9 @@
 .measure-field.main .measure-name { color: var(--gold); }
 .measure-input { display: grid; grid-template-columns: 96px 22px; align-items: center; gap: 6px; font-size: var(--t-footnote); color: var(--text-2); }
 .measure-input input { width: 96px; height: 42px; text-align: center; font-family: var(--font-numbers); font-size: var(--t-headline); font-weight: 600; }
+
+/* Exercise complete sheet: confirm, then effort (reps left) */
+.complete-q { margin: 2px 0 14px; font-size: var(--t-body); color: var(--text-2); line-height: 1.4; }
+#complete-sheet .finish-btn { width: 100%; }
+.effort.ex-effort { margin-top: 6px; }
+.complete-skip { width: 100%; margin-top: 10px; }

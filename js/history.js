@@ -267,6 +267,7 @@ function sessionDetailHtml(session) {
           <span class="detail-ex-name">${escapeHtml(ex.name)}</span>
           <span class="detail-ex-vol">${fmtVolume(ex.sets.reduce((v, s) => v + setVolume(s), 0))}</span>
           ${avgRest(ex.sets) ? `<span class="detail-ex-rest">rest ${fmtClock(avgRest(ex.sets))} avg</span>` : ''}
+          ${ex.effort ? `<span class="detail-ex-felt">felt ${exEffortLabel(ex.effort).toLowerCase()}</span>` : ''}
         </div>
         ${ex.sets.map((s, i) => `
           <div class="detail-set">

@@ -74,7 +74,7 @@ function saveSetCount(dayIdx, exIdx, count) {
 function getLastPerformance(exName, history) {
   for (const session of history) {
     const ex = session.exercises.find(e => e.name === exName);
-    if (ex) return { session, sets: ex.sets };
+    if (ex) return { session, sets: ex.sets, ...(ex.effort ? { effort: ex.effort } : {}) };
   }
   return null;
 }
