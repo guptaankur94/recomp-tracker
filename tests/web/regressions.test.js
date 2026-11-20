@@ -1,5 +1,6 @@
 // Bugs found in use, so they stay fixed
 const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise } = require('./helpers');
+const { showDoneSets } = require('./helpers');
 
 (async () => {
   const server = await serve();
@@ -18,7 +19,7 @@ const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise }
   ok(await page.evaluate(() => document.getElementById('ex-card-0').classList.contains('collapsed')), 'finished exercise folds to its Done row');
   // You've moved on: you tapped the third exercise's preview to open it
   await page.tap('#ex-card-2'); await page.waitForTimeout(400);
-  await page.tap('#ex-card-0'); await page.waitForTimeout(400);
+  await showDoneSets(page, 0);
   ok(await page.evaluate(() => !document.getElementById('ex-card-0').classList.contains('collapsed')), 'tapping the Done row opens it');
   await page.evaluate(() => document.querySelector('#ex-card-0 .add-set-btn').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(200);
@@ -40,7 +41,7 @@ const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise }
   ok(await page.evaluate(() => document.getElementById('ex-card-0').classList.contains('collapsed')), 'confirming folds it again');
 
   // Same again with no other exercise picked: still open, still under your finger
-  await page.tap('#ex-card-0'); await page.waitForTimeout(400);
+  await showDoneSets(page, 0);
   await page.evaluate(() => document.querySelector('#ex-card-0 .add-set-btn').scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(200);
   const b2 = await page.evaluate(() => document.querySelector('#ex-card-0 .add-set-btn').getBoundingClientRect().top);
@@ -53,7 +54,7 @@ const { serve, counter, openApp, seedHistory, logSet, launch, completeExercise }
   await completeExercise(page, 0);
   await page.waitForTimeout(1200);
   await page.tap('#ex-card-2'); await page.waitForTimeout(400);
-  await page.tap('#ex-card-0'); await page.waitForTimeout(400);
+  await showDoneSets(page, 0);
   ok(await page.evaluate(() => !document.querySelector('#ex-card-0 .link-drop')) && await page.evaluate(() => { addDrop(0, 2); return !document.getElementById('drop-sheet').classList.contains('open'); }), 'reopened finished exercise: no drop set offered, and a late one is refused');
   await page.evaluate(() => collapseExercise(0)); await page.waitForTimeout(300);
   // …but the last set and an added set each take one straight after they're ticked (the old "never offered" bug)

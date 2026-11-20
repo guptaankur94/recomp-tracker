@@ -533,3 +533,12 @@ body.in-workout .app-header { display: none; }
 .locked-drop { display: flex; align-items: center; gap: 6px; margin: 6px 0 0 34px; font-size: var(--t-footnote); color: var(--text-2); }
 .locked-drop svg { width: 13px; height: 13px; color: var(--orange); }
 .locked-drop strong { font-family: var(--font-numbers); color: var(--text); }
+
+/* Warm-up rows: inline weight × reps fields with the number pad, like sets, just compact */
+.wu-in { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.wu-in input { width: 58px; height: 34px; border-radius: 8px; border: 1px solid transparent; background: color-mix(in srgb, var(--orange) 8%, var(--surface-3)); color: var(--text); text-align: center; font-family: var(--font-numbers); font-size: 15px; font-weight: 600; }
+.wu-in input::placeholder { color: var(--text-2); opacity: 0.85; }
+.wu-in span { font-size: var(--t-caption); color: var(--text-3); }
+.wu-x { color: var(--text-3); font-size: var(--t-footnote); }
+.wu-r .wu-in input.pad-on { border-color: var(--orange); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 22%, transparent); }
+.wu-r:not(.done) { cursor: default; }

@@ -12,10 +12,12 @@ function padTarget() {
 
 function openPad(input) {
   if (!input) return;
-  const m = input.id.match(/^active_d(\d+)_e(\d+)_s(\d+)_(w|r)$/);
+  // A working set (…_s2_w) or a warm-up (…_wu0_w): the same pad, the same flow
+  const m = input.id.match(/^active_d(\d+)_e(\d+)_(s|wu)(\d+)_(w|r)$/);
   if (!m) return;
   document.querySelectorAll('.pad-on').forEach(el => el.classList.remove('pad-on'));
-  pad = { id: input.id, exIdx: Number(m[2]), setNum: Number(m[3]), field: m[4], fresh: true };
+  const warm = m[3] === 'wu';
+  pad = { id: input.id, exIdx: Number(m[2]), setNum: warm ? null : Number(m[4]), wu: warm ? Number(m[4]) : null, field: m[5], fresh: true };
   input.classList.add('pad-on');
   if (document.activeElement !== input) input.focus({ preventScroll: true });
   const el = document.getElementById('numpad');
@@ -30,7 +32,7 @@ function openPad(input) {
   }
   // Keep the set in view above the pad
   requestAnimationFrame(() => {
-    const block = input.closest('.set-block');
+    const block = input.closest('.set-block, .wu-r');
     if (!block) return;
     const padTop = window.innerHeight - el.getBoundingClientRect().height;
     const r = block.getBoundingClientRect();
@@ -68,7 +70,7 @@ function renderPad() {
   const key = (label, action, cls = '', aria = label) => `<button class="pad-key ${cls}" data-act="${action}" aria-label="${aria}">${label}</button>`;
   document.getElementById('numpad').innerHTML = `
     <div class="pad-head">
-      <span class="pad-label">Set ${pad.setNum} · <b>${isW ? 'Weight, kg' : 'Reps'}</b></span>
+      <span class="pad-label">${pad.wu !== null ? `Warm-up ${pad.wu + 1}` : `Set ${pad.setNum}`} · <b>${isW ? 'Weight, kg' : 'Reps'}</b></span>
       <span class="pad-ex">${ex ? escapeHtml(ex.name) : ''}</span>
       <button class="pad-hide" data-act="hide" aria-label="Hide number pad">${icon('chevron', 2.4)}</button>
     </div>
@@ -78,7 +80,7 @@ function renderPad() {
       ${key('4', '4')}${key('5', '5')}${key('6', '6')}${key(`+${fmtNum(step)}`, 'plus', 'pad-fn', `Plus ${fmtNum(step)}`)}
       ${key('7', '7')}${key('8', '8')}${key('9', '9')}${key('⌫', 'back', 'pad-fn', 'Delete')}
       ${isW ? key('.', 'dot', '', 'Decimal point') : key('', 'none', 'pad-blank', '')}${key('0', '0')}
-      ${isW ? key('Next', 'next', 'pad-next', 'Next: reps') : key(`${icon('check', 3)}Log set`, 'log', 'pad-log', `Log set ${pad.setNum}`)}
+      ${isW ? key('Next', 'next', 'pad-next', 'Next: reps') : pad.wu !== null ? key(`${icon('check', 3)}Log warm-up`, 'log', 'pad-log', `Log warm-up ${pad.wu + 1}`) : key(`${icon('check', 3)}Log set`, 'log', 'pad-log', `Log set ${pad.setNum}`)}
     </div>`;
   updatePlates();
 }
@@ -121,13 +123,14 @@ function padPress(act) {
     const n = Math.max(0, Math.round((base + (act === 'plus' ? 1 : -1) * PAD_STEP[pad.field]) * 100) / 100);
     setPadValue(String(n));
   } else if (act === 'next') {
-    const reps = document.getElementById(setKey(currentDayIdx, pad.exIdx, pad.setNum, 'r'));
+    const reps = document.getElementById(pad.wu !== null ? `active_d${currentDayIdx}_e${pad.exIdx}_wu${pad.wu}_r` : setKey(currentDayIdx, pad.exIdx, pad.setNum, 'r'));
     if (reps) openPad(reps);
     else closePad();
   } else if (act === 'log') {
-    const { exIdx, setNum } = pad;
+    const { exIdx, setNum, wu } = pad;
     closePad();
-    completeSet(exIdx, setNum);
+    if (wu !== null) toggleWarmup(exIdx, wu);
+    else completeSet(exIdx, setNum);
     return;
   } else if (act === 'hide') {
     closePad();
@@ -140,7 +143,7 @@ function padPress(act) {
 function padKeydown(e) {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  const m = e.target.id.match(/_(w|r)$/);
+  const m = e.target.id.match(/_(w|r)$/); // works for sets and warm-ups alike
   if (!pad || pad.id !== e.target.id) openPad(e.target);
   padPress(m && m[1] === 'w' ? 'next' : 'log');
 }

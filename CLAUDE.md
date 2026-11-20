@@ -13,6 +13,29 @@ A single-page workout tracker installed on an iPhone home screen. Plain HTML, CS
 - `sw.js`: offline support (it leaves `preview/` alone). `manifest.json`: home-screen name and icons. `images/`: icons and launch screens. `plans/`: saved plan files (not loaded by the app).
 - `preview/`: the new app's browser build (generated, don't edit; see below). `404.html` sends reloaded `preview/…` addresses back into the preview. `.nojekyll` makes GitHub Pages serve its `_expo/` folder.
 
+## What the owner wants (product principles)
+
+The goal of every change: **log as seamlessly as possible, push for more work, keep rests strict.** Judge each change by it.
+
+- **The screen never moves on its own when logging.** No automatic scrolling after a tick or when rest ends; what you tapped stays exactly where it was (re-draws are anchored on it). The only motion is the fold after the user calls an exercise done (fold and scroll as one eased motion).
+- **One way to do a thing, everywhere.** Warm-ups log like working sets (inline fields, the same number pad, ✓); a done row taps open its menu. Consistency beats clever minimalism: hiding controls on some rows ("quieter rows") read as broken and was reverted.
+- **Decisions are the user's.** Nothing ends or folds by itself: the last set shows "Exercise complete / + 1 more set"; complete asks to confirm, then effort. A finished exercise asks what to change (effort, a set, add a set, show, reopen).
+- **Logic like a trainer.** Rest belongs to the set it follows: planned → live (its − / + are the timer) → taken (recorded, locked). Drop sets only straight after their set, lighter (≈20 % off, then 15 %), then the rest starts again; up to 3; not after the exercise is marked done. Effort is reps in reserve (easy 4+ = RPE 6, moderate 8, hard 9, all out 10); felt easy → next time a step heavier.
+- **Slips never become records.** Values save on every keystroke; impossible values are refused; unusual jumps (e.g. 525 for 52.5) ask first; a weighted exercise needs a weight. PRs are re-judged whenever a set changes.
+- **Explain, don't impose.** Every Coach tip says why; smart suggestions are one tap and undoable; nothing is uploaded.
+- The owner writes in plain language and often from the gym: answer in short plain words, list what changed and what was found, say what couldn't be checked (real iPhone keyboard, Live Activities).
+
+## Lessons from building it (how to work here)
+
+- **Reproduce first.** Write the failing check in `tests/web/` (use the user's exact scenario: e.g. another exercise already open), see it fail, then fix; it stays as a regression check (`regressions.test.js`).
+- **Check motion frame by frame**, not just the end state: `stillness.test.js` records every frame after each kind of logging tap; a "fold" once snapped in one frame and passed end-state checks. Measure scroll too, and row heights when an element changes state (every state the same height).
+- **Global class names clash**: `.live` is the workout panel; a `rest-stepper live` inherited its padding. Name new state classes uniquely (`rest-live`).
+- **Load order**: scripts share one scope; code running at load can only use earlier files (`currentView` lives in `navigation.js`, loaded after `workout.js`). Check the DOM instead, or call at runtime.
+- **Number formatting**: `fmtNum` rounds to one decimal (1.25 → 1.3); use exact values where precision matters (plates).
+- **Fresh sessions**: the container can start on an old branch with `CLAUDE.md` "missing": `git fetch origin main && git checkout -B main origin/main`. The scratchpad is wiped on restarts; keep tests in `tests/web/`.
+- **Test-writing pitfalls**: seed history after the plan has loaded (names must match `getAllExercisesForDay`); don't `await` a function that waits on a dialog; stop an earlier frame-recording loop before starting the next; jump the fake clock with `setSystemTime` (not `runFor` over hours); `scrollWidth` counts clipped overflow, so test real sideways movement (`sideScroll`).
+- Only one exercise is open at a time (focus mode): to type into another exercise in a test, `focusExercise(i)` first; `logSet()` and `completeExercise()` in `helpers.js` do the usual steps.
+
 ## How changes go live
 
 The owner wants every change in the app immediately:

@@ -231,12 +231,22 @@ function warmupPanelHtml(ex, exIdx, warmups, suggestion, set1Done) {
         const on = isDone(i);
         const hint = [w.label.startsWith('Bar') ? `${fmtNum(w.kg)} kg` : '', w.kg && work > 0 ? `~${Math.round(w.kg / work * 100)}%` : ''].filter(Boolean).join(' · ');
         return `
-          <div class="wu-r ${on ? 'done' : ''}" id="wu_d${currentDayIdx}_e${exIdx}_${i}" onclick="openWarmupRowEdit(${exIdx}, ${i})" role="button" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}. Edit">
+          ${on ? `
+          <div class="wu-r done" id="wu_d${currentDayIdx}_e${exIdx}_${i}" onclick="toggleWarmup(${exIdx}, ${i})" role="button" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}, done. Tap to undo">
             <span class="wu-badge">W${i + 1}</span>
             <span class="wu-val">${escapeHtml(w.label)}</span>
             ${hint ? `<span class="wu-hint">${hint}</span>` : ''}
-            <button class="wu-chk" onclick="event.stopPropagation(); toggleWarmup(${exIdx}, ${i})" aria-pressed="${on}" aria-label="Warm-up ${i + 1}: ${escapeHtml(w.label)}${on ? ', done' : ''}">${icon('check', 3)}</button>
-          </div>`;
+            <span class="wu-chk" aria-hidden="true">${icon('check', 3)}</span>
+          </div>` : `
+          <div class="wu-r" id="wu_d${currentDayIdx}_e${exIdx}_${i}">
+            <span class="wu-badge">W${i + 1}</span>
+            ${['w', 'r'].map(f => {
+              const id = `${warmupKey(currentDayIdx, exIdx, i)}_${f}`;
+              const ph = f === 'w' ? (w.kg > 0 ? fmtNum(w.kg) : 'Light') : w.reps;
+              return `<label class="wu-in"><input type="text" id="${id}" inputmode="none" autocomplete="off" data-pad="${f}" placeholder="${ph}" value="${escapeHtml(localStorage.getItem(id) || '')}" onclick="openPad(this)" onkeydown="padKeydown(event)" oninput="saveVal('${id}', this.value)" aria-label="Warm-up ${i + 1} ${f === 'w' ? 'weight in kg' : 'reps'}"><span>${f === 'w' ? 'kg' : 'reps'}</span></label>${f === 'w' ? '<span class="wu-x">×</span>' : ''}`;
+            }).join('')}
+            <button class="wu-chk" onclick="toggleWarmup(${exIdx}, ${i})" aria-label="Log warm-up ${i + 1}: ${escapeHtml(w.label)}">${icon('check', 3)}</button>
+          </div>`}`;
       }).join('')}
     </div>`;
 }
@@ -285,6 +295,48 @@ function askCompleteExercise(exIdx) {
   openSheet('complete-sheet');
 }
 
+// Straight to the rating (changing it for a finished exercise)
+function openEffortPicker(exIdx) {
+  completing = exIdx;
+  confirmCompleteExercise();
+  openSheet('complete-sheet');
+}
+
+/* A finished exercise: one tap asks what you'd like to change, in plain words */
+async function openDoneMenu(exIdx) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  if (!ex) return;
+  const count = getSetCount(currentDayIdx, exIdx, ex.sets);
+  const best = bestDraftSet(exIdx, count);
+  const effort = localStorage.getItem(exEffortKey(currentDayIdx, exIdx));
+  haptic('light');
+  const choice = await actionSheet(`${ex.name} · done`,
+    `${count} set${count === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}${effort ? ` · felt ${exEffortLabel(effort).toLowerCase()}` : ''}. What would you like to change?`, [
+      { label: effort ? `How hard it felt (${exEffortLabel(effort).toLowerCase()})` : 'Rate how hard it was', value: 'effort' },
+      { label: 'Edit a set', value: 'set' },
+      { label: 'Add another set', value: 'add' },
+      { label: 'Show the sets', value: 'show' },
+      { label: 'Not done yet: reopen it', value: 'reopen' }
+    ]);
+  if (choice === 'effort') openEffortPicker(exIdx);
+  if (choice === 'add') addSet(exIdx);
+  if (choice === 'show') expandExercise(exIdx);
+  if (choice === 'reopen') {
+    localStorage.removeItem(closedKey(currentDayIdx, exIdx));
+    focusExercise(exIdx);
+    showToast(`${ex.name} is open again`);
+  }
+  if (choice === 'set') {
+    const sets = [];
+    for (let s = 1; s <= count; s++) {
+      const w = parseFloat(localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'w'))) || 0;
+      sets.push({ label: `Set ${s} · ${w > 0 ? `${fmtNum(w)} kg` : 'BW'} × ${localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'r')) || '–'}`, value: s });
+    }
+    const s = count === 1 ? 1 : await actionSheet('Which set?', ex.name, sets);
+    if (s) openSetEdit(exIdx, s);
+  }
+}
+
 // Step 2, in the same sheet: how hard was it
 function confirmCompleteExercise() {
   const ex = getAllExercisesForDay(currentDayIdx)[completing];
@@ -303,6 +355,18 @@ function rateExercise(value) {
   const exIdx = completing;
   completing = null;
   if (exIdx === null) return;
+  // Already done: only the rating changes
+  if (isClosed(currentDayIdx, exIdx)) {
+    if (value) localStorage.setItem(exEffortKey(currentDayIdx, exIdx), String(value));
+    else localStorage.removeItem(exEffortKey(currentDayIdx, exIdx));
+    touchDraft();
+    closeSheet('complete-sheet');
+    haptic('success');
+    anchorOn(`ex-card-${exIdx}`);
+    renderWorkout();
+    showToast(value ? `Effort: ${exEffortLabel(value).toLowerCase()}` : 'Effort cleared');
+    return;
+  }
   if (value) localStorage.setItem(exEffortKey(currentDayIdx, exIdx), String(value));
   else localStorage.removeItem(exEffortKey(currentDayIdx, exIdx));
   localStorage.setItem(closedKey(currentDayIdx, exIdx), 'true');
@@ -494,11 +558,11 @@ function renderWorkout() {
     if (closed && !openedDone.has(exStateKey(exIdx)) && !finishingEx.has(exStateKey(exIdx))) {
       const best = bestDraftSet(exIdx, totalSets);
       html += `
-        <div class="card ex-card collapsed ${justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="expandExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Show sets">
+        <div class="card ex-card collapsed ${justCollapsedEx === exIdx ? 'just-collapsed' : ''}" id="ex-card-${exIdx}" onclick="openDoneMenu(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, done. Change something">
           <span class="locked-num">${icon('check', 3)}</span>
           <div class="collapsed-text">
             <div class="ex-name">${escapeHtml(ex.name)}</div>
-            <div class="ex-meta">${totalSets} set${totalSets === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}</div>
+            <div class="ex-meta">${totalSets} set${totalSets === 1 ? '' : 's'}${best ? ` · best ${best.w > 0 ? `${fmtNum(best.w)} kg` : 'BW'} × ${best.r}` : ''}${localStorage.getItem(exEffortKey(currentDayIdx, exIdx)) ? ` · felt ${exEffortLabel(localStorage.getItem(exEffortKey(currentDayIdx, exIdx))).toLowerCase()}` : ''}</div>
           </div>
           <span class="done-tag">Done</span>
           <span class="chevron">${icon('chevron')}</span>
@@ -691,7 +755,7 @@ function renderWorkout() {
               <button class="ex-complete-btn" onclick="askCompleteExercise(${exIdx})">${icon('check', 3)}Exercise complete</button>
             </div>
           </div>`
-        : `${closed && exEffort ? `<div class="ex-felt">Felt ${exEffortLabel(exEffort).toLowerCase()} · <button onclick="askCompleteExercise(${exIdx}); confirmCompleteExercise()">change</button></div>` : ''}
+        : `${closed && exEffort ? `<div class="ex-felt">Felt ${exEffortLabel(exEffort).toLowerCase()} · <button onclick="openEffortPicker(${exIdx})">change</button></div>` : ''}
           <button class="btn btn-plain add-set-btn" id="add-set-${exIdx}" onclick="addSet(${exIdx})">+ Add Set</button>`}
       </div>
     `;

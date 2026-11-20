@@ -104,4 +104,10 @@ async function completeExercise(page, exIdx, effort = 8) {
   await page.evaluate(({ exIdx, effort }) => { askCompleteExercise(exIdx); confirmCompleteExercise(); rateExercise(effort); }, { exIdx, effort });
 }
 
-module.exports = { serve, counter, openApp, seedHistory, logSet, launch, sideScroll, completeExercise };
+// Tap a finished exercise's Done row and pick "Show the sets" from its menu
+async function showDoneSets(page, exIdx) {
+  await page.tap(`#ex-card-${exIdx}`); await page.waitForTimeout(350);
+  await page.click('#dialog-sheet >> text=Show the sets'); await page.waitForTimeout(400);
+}
+
+module.exports = { serve, counter, openApp, seedHistory, logSet, launch, sideScroll, completeExercise, showDoneSets };

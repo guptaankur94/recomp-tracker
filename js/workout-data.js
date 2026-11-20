@@ -276,13 +276,40 @@ function warmupSets(ex, exIdx, suggestion) {
   });
 }
 
+// Typed into a warm-up row and ticked: that's this exercise's warm-up from now on (like the Edit sheet)
+function keepTypedWarmup(exIdx, i) {
+  const wKey = `${warmupKey(currentDayIdx, exIdx, i)}_w`;
+  const rKey = `${warmupKey(currentDayIdx, exIdx, i)}_r`;
+  const wText = (localStorage.getItem(wKey) || '').trim().replace(',', '.');
+  const rText = (localStorage.getItem(rKey) || '').trim();
+  localStorage.removeItem(wKey);
+  localStorage.removeItem(rKey);
+  if (!wText && !rText) return;
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  const suggestion = suggestSet(ex, lastSetFor(getLastPerformance(ex.name, getHistory()), 1));
+  const list = warmupSets(ex, exIdx, suggestion).map(w => (w.kg > 0 ? { kg: w.kg, reps: w.reps } : { reps: w.reps }));
+  if (!list[i]) return;
+  const kg = wText ? parseFloat(wText) : list[i].kg || 0;
+  const reps = rText ? parseInt(rText, 10) : list[i].reps;
+  if (!(reps >= 1 && reps <= 50) || !(kg >= 0 && kg <= 1000)) return;
+  if (kg === (list[i].kg || 0) && reps === list[i].reps) return;
+  list[i] = kg > 0 ? { kg: Math.round(kg * 100) / 100, reps } : { reps };
+  saveWarmup(ex.name, list);
+  showToast(`Warm-up ${i + 1} is now ${kg > 0 ? `${fmtNum(kg)} kg` : 'light'} × ${reps}, next time too`);
+}
+
 // Tick a warm-up set; the next one (or set 1) is suggested after a short rest.
 function toggleWarmup(exIdx, i) {
   const key = warmupKey(currentDayIdx, exIdx, i);
   const done = localStorage.getItem(key) === 'true';
   if (done) localStorage.removeItem(key);
-  else localStorage.setItem(key, 'true');
+  else {
+    localStorage.setItem(key, 'true');
+    keepTypedWarmup(exIdx, i);
+  }
+  touchDraft();
   haptic(done ? 'light' : 'success');
+  anchorOn(`wu_d${currentDayIdx}_e${exIdx}_${i}`, `ex-card-${exIdx}`);
   renderWorkout();
   if (done) return;
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];

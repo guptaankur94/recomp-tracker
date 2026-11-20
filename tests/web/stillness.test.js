@@ -41,16 +41,15 @@ const { serve, counter, openApp, seedHistory, launch } = require('./helpers');
     await page.waitForTimeout(300);
     let fr = await watch(page, 'wu_d0_e0_0', () => page.tap('#ex-card-0 .wu-chk'));
     ok(drift(fr) < 2, `${theme} 0 tick warm-up 1: it moves ${drift(fr).toFixed(1)} px`);
-    const wuTop = await page.evaluate(() => document.getElementById('wu_d0_e0_1').getBoundingClientRect().top);
-    await page.tap('#wu_d0_e0_1 .wu-val'); await page.waitForTimeout(400);
-    ok(await page.isVisible('#set-edit-sheet .sheet') && (await page.textContent('#set-edit-title')) === 'Warm-up 2', `${theme} 0 tapping warm-up 2 opens its editor`);
-    await page.fill('#set-edit-w', '35'); await page.fill('#set-edit-r', '5');
-    await page.click('#set-edit-sheet .btn-primary'); await page.waitForTimeout(500);
-    const wuNow = await page.evaluate(() => ({ top: document.getElementById('wu_d0_e0_1').getBoundingClientRect().top, text: document.getElementById('wu_d0_e0_1').textContent, own: customWarmup(getAllExercisesForDay(0)[0].name) }));
-    ok(/35 kg × 5/.test(wuNow.text) && wuNow.own && wuNow.own[1].kg === 35 && wuNow.own[1].reps === 5 && wuNow.own.length === 2, `${theme} 0 saved as this exercise's warm-up: ${JSON.stringify(wuNow.own)}`);
-    ok(Math.abs(wuNow.top - wuTop) < 2, `${theme} 0 and the row stays put (${Math.round(wuTop)} → ${Math.round(wuNow.top)})`);
-    await page.tap('#ex-card-0 .wu-chk >> nth=1'); await page.waitForTimeout(300);
-    ok(await page.evaluate(() => !document.getElementById('set-edit-sheet').classList.contains('open')), `${theme} 0 the ✓ on a warm-up still just ticks it`);
+    const wuTop = await page.evaluate(() => document.getElementById('ex-card-0').getBoundingClientRect().top);
+    await page.tap('#active_d0_e0_wu1_w'); await page.waitForTimeout(400);
+    ok(await page.isVisible('#numpad.open') && /Warm-up 2/.test(await page.textContent('#numpad .pad-label')), `${theme} 0 tapping warm-up 2's weight opens the number pad`);
+    for (const k of ['3', '5', 'next', '5']) await page.dispatchEvent(`#numpad [data-act="${k}"]`, 'pointerdown');
+    ok(/Log warm-up/.test(await page.textContent('#numpad')), `${theme} 0 the pad says "Log warm-up"`);
+    await page.dispatchEvent('#numpad [data-act="log"]', 'pointerdown'); await page.waitForTimeout(500);
+    const wuNow = await page.evaluate(() => ({ top: document.getElementById('ex-card-0').getBoundingClientRect().top, line: (document.querySelector('#ex-card-0 .wu-line') || {}).textContent || '', own: customWarmup(getAllExercisesForDay(0)[0].name), done: localStorage.getItem(warmupKey(0, 0, 1)) }));
+    ok(wuNow.done === 'true' && /35kg×5|35×5/.test(wuNow.line.replace(/\s/g, '')) && wuNow.own && wuNow.own[1].kg === 35 && wuNow.own[1].reps === 5 && wuNow.own.length === 2, `${theme} 0 logged 35 × 5 and kept for next time: ${JSON.stringify(wuNow.own)}`);
+    ok(/Warm-up done/.test(wuNow.line) && Math.abs(wuNow.top - wuTop) < 2, `${theme} 0 both warm-ups done: it folds, the card stays put (${Math.round(wuTop)} → ${Math.round(wuNow.top)})`);
 
     // 1. Tick ✓ with the set in the middle of the screen (set 1: the warm-up panel above folds)
     await fill(page, 0, 1, 50, 8); await place(page, 'block_d0_e0_s1', 420);
