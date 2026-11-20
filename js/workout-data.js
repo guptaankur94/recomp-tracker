@@ -304,24 +304,39 @@ async function pickRest(exIdx) {
     restChoices(ex, current, lastRest), { grid: true });
   if (!choice) return;
   localStorage.setItem(exRestKey(currentDayIdx, exIdx), String(choice));
-  removeKeysMatching(new RegExp(`^active_d${currentDayIdx}_e${exIdx}_s\\d+_rest$`));
+  const count = getSetCount(currentDayIdx, exIdx, ex.sets);
+  for (let s = 1; s <= count; s++) {
+    const over = localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'restOver')) === 'true';
+    if (!over && !restIsLive(currentDayIdx, exIdx, s)) localStorage.removeItem(setKey(currentDayIdx, exIdx, s, 'rest'));
+  }
   haptic('light');
   renderWorkout();
 }
 
 async function pickSetRest(exIdx, setNum) {
+  if (localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'restOver')) === 'true') return restTakenInfo(exIdx, setNum);
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const current = getSetRest(currentDayIdx, exIdx, setNum, ex);
   const lastSet = lastSetFor(getLastPerformance(ex.name, getHistory()), setNum);
   const lastRest = lastSet && lastSet.restSec > 0 ? Number(lastSet.restSec) : 0;
-  const choice = await actionSheet(`Rest after set ${setNum}`, ex.name, restChoices(ex, current, lastRest), { grid: true });
-  if (choice) setSetRest(exIdx, setNum, choice);
+  const live = restIsLive(currentDayIdx, exIdx, setNum);
+  const choice = await actionSheet(`Rest after set ${setNum}`, live ? `${ex.name} · running now: the timer changes too` : ex.name, restChoices(ex, live ? restLengthSec() : current, lastRest), { grid: true });
+  if (!choice) return;
+  if (live && restIsLive(currentDayIdx, exIdx, setNum)) setRestLength(choice);
+  else setSetRest(exIdx, setNum, choice);
 }
 
 // − / + on the rest stepper under a set: 15 s at a time
 let restBump = null;
 
 function nudgeSetRest(exIdx, setNum, delta) {
+  if (restIsLive(currentDayIdx, exIdx, setNum)) {
+    restBump = `${exIdx}:${setNum}`;
+    adjustRestTimer(delta);
+    restBump = null;
+    return;
+  }
+  if (localStorage.getItem(setKey(currentDayIdx, exIdx, setNum, 'restOver')) === 'true') return restTakenInfo(exIdx, setNum);
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
   const next = Math.min(600, Math.max(15, getSetRest(currentDayIdx, exIdx, setNum, ex) + delta));
   restBump = `${exIdx}:${setNum}`;

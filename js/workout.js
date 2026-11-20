@@ -577,7 +577,7 @@ function renderWorkout() {
     let tipHtml = '';
     if (!tipShown && doneSets && !tipSeen('rest')) {
       tipAfterSet = [...Array(totalSets).keys()].map(i => i + 1).find(s => localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true');
-      tipHtml = coachTip('rest', 'Logged. Rest timer started.', 'Tap − or + to change the rest after this set. The same weight on less rest is progress too.');
+      tipHtml = coachTip('rest', 'Logged. Rest timer started.', 'While it runs, − and + under the set change the timer itself; when the rest is over it\'s recorded on the set. The same weight on less rest is progress too.');
     } else if (!tipShown && allDone && !tipSeen('drop')) {
       tipAfterSet = totalSets;
       tipHtml = coachTip('drop', 'One more push?', '+ Drop set adds a lighter set straight after any set, to squeeze out the last reps.', true);
@@ -610,12 +610,7 @@ function renderWorkout() {
         <div class="set-link">
           <button class="link-drop" onclick="addDrop(${exIdx}, ${s})" aria-label="Add drop set to set ${s}">${icon('plus', 2.6)}Drop set</button>
           <span class="set-link-line"></span>
-          <span class="rs-label" aria-hidden="true">Rest</span>
-          <div class="rest-stepper ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" role="group" aria-label="Rest after set ${s}">
-            <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, -15)" ${setRest <= 15 ? 'disabled' : ''} aria-label="15 seconds less rest after set ${s}">${icon('minus', 2.6)}</button>
-            <button class="rs-val ${restBump === `${exIdx}:${s}` ? 'bump' : ''}" onclick="pickSetRest(${exIdx}, ${s})" aria-label="Rest after set ${s}: ${fmtClock(setRest)}. Choose a time">${icon('clock', 2)}<span>${fmtClock(setRest)}</span></button>
-            <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, 15)" ${setRest >= 600 ? 'disabled' : ''} aria-label="15 seconds more rest after set ${s}">${icon('plus', 2.6)}</button>
-          </div>
+          ${restControlHtml(ex, exIdx, s, setRest, restPr)}
         </div>`;
 
       if (isDone) {
@@ -884,6 +879,35 @@ function refreshDraftIndicators() {
   initNav();
 }
 
+/* The rest after a set, by stage: planned (before the set is ticked: sets the timer), live (its timer is running:
+   − / + change the timer itself, and it counts down here too), done (the rest you actually took, locked) */
+function restStage(exIdx, s) {
+  if (restIsLive(currentDayIdx, exIdx, s)) return 'live';
+  return localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'restOver')) === 'true' ? 'done' : 'planned';
+}
+
+function restControlHtml(ex, exIdx, s, setRest, restPr) {
+  const stage = restStage(exIdx, s);
+  if (stage === 'done') {
+    return `<span class="rs-label" aria-hidden="true">Rest</span>
+      <button class="rest-taken ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" onclick="restTakenInfo(${exIdx}, ${s})" aria-label="Rested ${fmtClock(setRest)} after set ${s}${restPr ? ', a rest record' : ''}">${icon('check', 2.6)}<span>${fmtClock(setRest)}</span></button>`;
+  }
+  const live = stage === 'live';
+  const remaining = live ? Math.ceil(restRemainingMs() / 1000) : setRest;
+  return `<span class="rs-label ${live ? 'rest-live' : ''}" aria-hidden="true">Rest</span>
+    <div class="rest-stepper ${live ? 'rest-live' : restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" role="group" aria-label="${live ? 'Rest running' : 'Rest'} after set ${s}">
+      <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, -15)" ${!live && setRest <= 15 ? 'disabled' : ''} aria-label="15 seconds less rest after set ${s}">${icon('minus', 2.6)}</button>
+      <button class="rs-val ${restBump === `${exIdx}:${s}` ? 'bump' : ''}" onclick="pickSetRest(${exIdx}, ${s})" aria-label="${live ? `${fmtClock(remaining)} left of ${fmtClock(setRest)}` : `Rest after set ${s}: ${fmtClock(setRest)}`}. Choose a time">${icon('clock', 2)}<span ${live ? 'id="rest-live"' : ''}>${fmtClock(remaining)}</span></button>
+      <button class="rs-btn" onclick="nudgeSetRest(${exIdx}, ${s}, 15)" ${!live && setRest >= 600 ? 'disabled' : ''} aria-label="15 seconds more rest after set ${s}">${icon('plus', 2.6)}</button>
+    </div>`;
+}
+
+function restTakenInfo(exIdx, s) {
+  const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  haptic('light');
+  showToast(`You rested ${fmtClock(getSetRest(currentDayIdx, exIdx, s, ex))} after set ${s}. That rest is over; change the next one before or while it runs.`, { type: 'info', duration: 3500 });
+}
+
 /* The line under the next set: what you did last time, what to try, and that ✓ logs it as shown */
 function setHintHtml(ex, last, s, suggestion, valW, valR) {
   const prev = lastSetFor(last, s);
@@ -1071,6 +1095,10 @@ function completeSet(exIdx, setNum, confirmed = false) {
   localStorage.setItem(key('w'), w);
   localStorage.setItem(key('r'), r);
   localStorage.setItem(key('done'), 'true');
+  // The rest before this set is over now (e.g. with the timer off): it stays as it was, locked
+  if (setNum > 1 && localStorage.getItem(setKey(currentDayIdx, exIdx, setNum - 1, 'done')) === 'true' && !restIsLive(currentDayIdx, exIdx, setNum - 1)) {
+    localStorage.setItem(setKey(currentDayIdx, exIdx, setNum - 1, 'restOver'), 'true');
+  }
   const pr = refreshPrs(currentDayIdx, exIdx)[setNum] || null;
   const firstCompletion = localStorage.getItem(key('rested')) !== 'true';
   localStorage.setItem(key('rested'), 'true');
@@ -1091,12 +1119,14 @@ function completeSet(exIdx, setNum, confirmed = false) {
   justCompletedBlock = `block_d${currentDayIdx}_e${exIdx}_s${setNum}`;
   anchorOn(justCompletedBlock, `ex-card-${exIdx}`);
   // The last set: no fold yet. "Exercise complete" / "+ One more set" appear under the sets; you decide.
+  // Superset: straight on to the partner's same set, no rest; the rest comes after the pair. Otherwise this set's
+  // rest timer starts now, before the screen is drawn, so its rest shows live straight away.
+  const pairNext = supersetNextSet(exIdx, setNum);
+  if (!pairNext && firstCompletion && pref('autoRest')) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum), { d: currentDayIdx, e: exIdx, s: setNum });
   initNav();
   renderWorkout();
   justCompletedBlock = null;
 
-  // Superset: straight on to the partner's same set, no rest; the rest comes after the pair
-  const pairNext = supersetNextSet(exIdx, setNum);
   if (pairNext) {
     const partner = getAllExercisesForDay(currentDayIdx)[pairNext.exIdx];
     if (!pr) showToast(`Superset · now ${partner.name}, set ${pairNext.setNum}`, { type: 'info', duration: 2200 });
@@ -1106,8 +1136,6 @@ function completeSet(exIdx, setNum, confirmed = false) {
     }, reduceMotion() ? 0 : 380);
     return;
   }
-  if (firstCompletion && pref('autoRest')) startRestTimer(getSetRest(currentDayIdx, exIdx, setNum, ex), nextSetLabel(exIdx, setNum));
-  // The next set to do comes into view (gently, only if it's hidden behind the rest timer or off screen)
   // Nothing scrolls after logging: the set you tapped stays exactly where it was. (A scroll to show the next set
   // moved the page by a different amount each time, depending on where the set happened to be.)
 }
@@ -1226,7 +1254,7 @@ function removeSet(exIdx, setNum) {
   const currentCount = getSetCount(currentDayIdx, exIdx, allExercises[exIdx].sets);
   if (currentCount <= 1) return;
 
-  const fields = ['w', 'r', 'rest', 'done', 'drops', 'rested', 'pr'];
+  const fields = ['w', 'r', 'rest', 'restOver', 'done', 'drops', 'rested', 'pr'];
   const key = (s, f) => setKey(currentDayIdx, exIdx, s, f);
 
   // Shift later sets up one slot

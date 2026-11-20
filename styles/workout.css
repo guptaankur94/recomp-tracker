@@ -507,3 +507,21 @@ body.in-workout .app-header { display: none; }
 .ex-complete-btn svg { width: 18px; height: 18px; }
 .ex-felt { margin: 10px 2px 0; font-size: var(--t-footnote); color: var(--text-2); }
 .ex-felt button { padding: 0; border: 0; background: none; color: var(--blue); font: inherit; font-weight: 600; }
+
+/* The rest's stages. Live: its timer is running, the control counts down in the to-do colour with a soft pulse.
+   Done: the rest taken, a quiet locked pill with a tick (gold when it was a rest record). Same height as the
+   stepper, so switching stages never moves anything. */
+.rs-label.rest-live { color: var(--todo); }
+.rest-stepper.rest-live { border-color: color-mix(in srgb, var(--todo) 60%, transparent); background: color-mix(in srgb, var(--todo) 10%, var(--surface-2)); color: var(--todo); animation: restLive 2s ease-in-out infinite; }
+.rest-stepper.rest-live .rs-btn { color: var(--todo); }
+.rest-stepper.rest-live .rs-val svg { color: var(--todo); }
+@keyframes restLive { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--todo) 18%, transparent); } }
+.rest-taken { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 34px; min-width: 102px; padding: 0 12px; border-radius: 999px; border: 1px solid transparent; background: color-mix(in srgb, var(--done) 10%, var(--surface-2)); color: var(--text-2); font: inherit; font-family: var(--font-numbers); font-size: var(--t-subhead, 15px); font-weight: 700; }
+.rest-taken svg { width: 14px; height: 14px; color: var(--done); }
+.rest-taken.faster { color: var(--accent); }
+.rest-taken.record { border-color: color-mix(in srgb, var(--gold) 55%, transparent); color: var(--gold); }
+.rest-taken.record svg { color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .rest-stepper.rest-live { animation: none; } }
+
+/* The label never wraps, so the row is the same height in every stage */
+.rs-label { white-space: nowrap; }
