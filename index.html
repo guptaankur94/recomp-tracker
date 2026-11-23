@@ -488,6 +488,21 @@
     </div>
   </div>
 
+  <div class="sheet-overlay" id="reorder-sheet">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="reorder-title">
+      <div class="sheet-head">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title" id="reorder-title">Today's order</div>
+        <div class="sheet-sub">Move exercises up or down for today. Your plan keeps its order.</div>
+      </div>
+      <div id="reorder-list"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" onclick="closeSheet('reorder-sheet')">Done</button>
+        <button class="btn btn-plain" onclick="resetTodayOrder()">Back to the plan's order</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sheet-overlay" id="drop-sheet">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="drop-title">
       <div class="sheet-head">
@@ -686,7 +701,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.20d';
+    const APP_VERSION = '2026.11.23';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>

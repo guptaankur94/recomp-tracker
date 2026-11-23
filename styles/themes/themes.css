@@ -37,6 +37,7 @@
   --gold: #D9B45A;
   --todo: #5EE7F0;
   --done: #7DD68E;
+  --progress: #F2D45C;
   --on-fill: #0B0C0E;
   --bar: rgba(19, 21, 25, 0.84);
   --glass: rgba(27, 30, 35, 0.96);
@@ -74,6 +75,7 @@
   --gold: #FF2E88;
   --todo: #19F0FF;
   --done: #B4FF4A;
+  --progress: #FFF35C;
   --on-fill: #07060D;
   --bar: rgba(17, 15, 28, 0.84);
   --glass: rgba(26, 23, 41, 0.96);
@@ -113,6 +115,7 @@
   --gold: #D4AD52;
   --todo: #DB7552;
   --done: #A3C46C;
+  --progress: #E8C35A;
   --on-fill: #1A140D;
   --bar: rgba(36, 27, 18, 0.86);
   --glass: rgba(46, 36, 24, 0.97);

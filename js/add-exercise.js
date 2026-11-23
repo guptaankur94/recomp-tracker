@@ -197,12 +197,14 @@ function addExerciseToDay({ template, fromDay = null }) {
 
 async function openDayMenu() {
   const actions = [{ label: 'Add exercise for today', value: 'add' }];
+  if (getAllExercisesForDay(currentDayIdx).length > 1) actions.push({ label: 'Reorder exercises', value: 'reorder' });
   if (!isCustomDay()) actions.push({ label: 'Edit this day in the plan', value: 'edit' });
   if (dayHasDraft(currentDayIdx)) {
     actions.push({ label: 'Clear unsaved sets', value: 'clear', destructive: true });
   }
   const choice = await actionSheet(dayAt(currentDayIdx).day, dayAt(currentDayIdx).title, actions);
   if (choice === 'add') addCustomExercise();
+  else if (choice === 'reorder') openReorderSheet();
   else if (choice === 'edit') openPlanEditor({ dayIdx: currentDayIdx });
   else if (choice === 'clear') discardDraft();
 }

@@ -287,3 +287,13 @@
 .complete-skip { width: 100%; margin-top: 10px; }
 .drop-coach { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--r-md); background: color-mix(in srgb, var(--orange) 10%, var(--surface-2)); font-size: var(--t-footnote); line-height: 1.4; }
 #drop-sheet .finish-btn { margin-top: 14px; background: var(--orange); }
+
+/* Today's order: one row per exercise (a superset pair is one row), state colour on the left, ↑ / ↓ */
+.ro-row { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 4px 6px 12px; border-bottom: 0.5px solid var(--separator); border-left: 3px solid color-mix(in srgb, var(--text-3) 70%, transparent); }
+.ro-row.ro-progress { border-left-color: var(--progress); }
+.ro-row.ro-done { border-left-color: var(--done); }
+.ro-num { width: 18px; font-family: var(--font-numbers); font-size: var(--t-footnote); color: var(--text-2); }
+.ro-name { flex: 1; min-width: 0; font-size: var(--t-body); font-weight: 600; }
+.ro-btn { flex: none; width: 40px; height: 40px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--text); display: grid; place-items: center; }
+.ro-btn svg { width: 18px; height: 18px; }
+.ro-btn:disabled { opacity: 0.3; }

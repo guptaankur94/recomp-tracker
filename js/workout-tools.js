@@ -140,6 +140,102 @@ function unskip(exIdx) {
   renderWorkout();
 }
 
+/* Moving exercises today (e.g. an added chest exercise up next to the plan's chest work). A superset pair moves
+   as one block. Today only, like "do later": the plan keeps its order. */
+function todayBlocks() {
+  const count = getAllExercisesForDay(currentDayIdx).length;
+  const used = new Set();
+  const blocks = [];
+  exerciseOrder(currentDayIdx, count).forEach(i => {
+    if (used.has(i)) return;
+    const pair = supersetPartner(currentDayIdx, i);
+    const block = pair && !used.has(pair.partner) ? [Math.min(i, pair.partner), Math.max(i, pair.partner)] : [i];
+    block.forEach(b => used.add(b));
+    blocks.push(block);
+  });
+  return blocks;
+}
+
+function saveTodayBlocks(blocks) {
+  localStorage.setItem(todayOrderKey(currentDayIdx), JSON.stringify({ date: localDateStr(new Date()), order: blocks.flat() }));
+}
+
+const blockName = block => block.map(i => getAllExercisesForDay(currentDayIdx)[i].name).join(' + ');
+
+// Move the block holding exIdx so it lands at position `to` (in blocks)
+function moveExerciseTo(exIdx, to) {
+  const blocks = todayBlocks();
+  const from = blocks.findIndex(b => b.includes(exIdx));
+  if (from === -1 || to === from) return;
+  const [block] = blocks.splice(from, 1);
+  blocks.splice(Math.max(0, Math.min(blocks.length, to)), 0, block);
+  saveTodayBlocks(blocks);
+  haptic('light');
+  anchorOn(`ex-card-${exIdx}`);
+  renderWorkout();
+}
+
+async function pickMoveTarget(exIdx) {
+  const blocks = todayBlocks();
+  const from = blocks.findIndex(b => b.includes(exIdx));
+  const others = blocks.map((b, k) => ({ b, k })).filter(x => x.k !== from);
+  const choices = [
+    ...(from > 0 ? [{ label: 'To the top', value: 'top' }] : []),
+    ...others.filter(x => x.k !== from - 1).map(x => ({ label: `After ${blockName(x.b)}`, value: `after:${x.k}` }))
+  ];
+  if (!choices.length) return;
+  const pick = await actionSheet(`Move ${blockName(blocks[from])}`, 'For today; your plan keeps its order.', choices);
+  if (!pick) return;
+  if (pick === 'top') moveExerciseTo(exIdx, 0);
+  else {
+    const k = Number(pick.split(':')[1]);
+    moveExerciseTo(exIdx, k < from ? k + 1 : k);
+  }
+  showToast(`${blockName(blocks[from])} moved`, { actionLabel: 'Undo', onAction: () => { saveTodayBlocks(blocks); renderWorkout(); } });
+}
+
+/* The whole day's order at once: a sheet with ↑ / ↓ on each exercise */
+function openReorderSheet() {
+  renderReorderSheet();
+  openSheet('reorder-sheet');
+}
+
+function renderReorderSheet() {
+  const blocks = todayBlocks();
+  const exs = getAllExercisesForDay(currentDayIdx);
+  const state = i => {
+    const count = getSetCount(currentDayIdx, i, exs[i].sets);
+    let done = 0;
+    for (let s = 1; s <= count; s++) if (localStorage.getItem(setKey(currentDayIdx, i, s, 'done')) === 'true') done++;
+    return isClosed(currentDayIdx, i) && done === count ? 'done' : done ? 'progress' : 'new';
+  };
+  document.getElementById('reorder-list').innerHTML = blocks.map((b, k) => `
+    <div class="ro-row ro-${state(b[0])}">
+      <span class="ro-num">${k + 1}</span>
+      <span class="ro-name">${escapeHtml(blockName(b))}${b[0] >= dayAt(currentDayIdx).exercises.length ? '<span class="ex-tag">Added</span>' : ''}${b.length > 1 ? '<span class="ex-tag">Superset</span>' : ''}</span>
+      <button class="ro-btn" onclick="reorderStep(${k}, -1)" ${k === 0 ? 'disabled' : ''} aria-label="Move ${escapeHtml(blockName(b))} up">${icon('chevronUp', 2.4)}</button>
+      <button class="ro-btn" onclick="reorderStep(${k}, 1)" ${k === blocks.length - 1 ? 'disabled' : ''} aria-label="Move ${escapeHtml(blockName(b))} down">${icon('chevronDown', 2.4)}</button>
+    </div>`).join('');
+}
+
+function reorderStep(k, dir) {
+  const blocks = todayBlocks();
+  const to = k + dir;
+  if (to < 0 || to >= blocks.length) return;
+  [blocks[k], blocks[to]] = [blocks[to], blocks[k]];
+  saveTodayBlocks(blocks);
+  haptic('light');
+  renderReorderSheet();
+  renderWorkout();
+}
+
+function resetTodayOrder() {
+  localStorage.removeItem(todayOrderKey(currentDayIdx));
+  haptic('light');
+  renderReorderSheet();
+  renderWorkout();
+}
+
 /* The exercise menu (⋯ in the card's header) */
 async function openExerciseMenu(exIdx) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
@@ -150,6 +246,7 @@ async function openExerciseMenu(exIdx) {
   const choices = [
     { label: exerciseNote(ex.name) ? 'Edit note' : 'Add a note', value: 'note' },
     ...(pair ? [{ label: 'Remove superset', value: 'superset' }] : canPair ? [{ label: `Superset with ${exs[exIdx + 1].name}`, value: 'superset' }] : []),
+    { label: 'Move…', value: 'move' },
     { label: 'Do it later today', value: 'later' },
     { label: 'Skip today', value: 'skip' },
     { label: 'Edit warm-up', value: 'warmup' }
@@ -157,6 +254,7 @@ async function openExerciseMenu(exIdx) {
   const choice = await actionSheet(ex.name, 'Changes here are for today, except notes and supersets, which stay.', choices);
   if (choice === 'note') editNote(exIdx);
   if (choice === 'superset') toggleSuperset(exIdx);
+  if (choice === 'move') pickMoveTarget(exIdx);
   if (choice === 'later') doLater(exIdx);
   if (choice === 'skip') skipToday(exIdx);
   if (choice === 'warmup') openWarmupEditor(exIdx);

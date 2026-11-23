@@ -542,3 +542,13 @@ body.in-workout .app-header { display: none; }
 .wu-x { color: var(--text-3); font-size: var(--t-footnote); }
 .wu-r .wu-in input.pad-on { border-color: var(--orange); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 22%, transparent); }
 .wu-r:not(.done) { cursor: default; }
+
+/* Exercise state, the same everywhere: untouched = grey, in progress = yellow, done = green (the Done row).
+   Not by colour alone: untouched shows its number, in progress its count (1/3), done a tick. */
+.ex-card.st-new { border-left-color: color-mix(in srgb, var(--text-3) 70%, transparent); }
+.ex-card.st-progress { border-left-color: var(--progress); }
+.ex-card.st-new .ex-progress { color: var(--text-2); background: color-mix(in srgb, var(--text-3) 18%, transparent); }
+.ex-card.st-progress .ex-progress:not(.all-done) { color: var(--progress); background: color-mix(in srgb, var(--progress) 15%, transparent); }
+.ex-card.preview.st-new .preview-num { color: var(--text-2); background: color-mix(in srgb, var(--text-3) 18%, transparent); }
+.ex-card.preview.st-new .ex-name { color: var(--text-2); }
+.ex-card.preview.st-progress .preview-num { color: var(--on-fill); background: var(--progress); }

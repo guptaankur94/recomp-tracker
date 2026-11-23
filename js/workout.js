@@ -550,6 +550,10 @@ function renderWorkout() {
       if (localStorage.getItem(setKey(currentDayIdx, exIdx, s, 'done')) === 'true') doneSets++;
     }
     const allDone = doneSets === totalSets;
+    // State colour: untouched (grey), started (yellow, in progress), done (green, the Done row)
+    let warmDone = 0;
+    for (let i = 0; i < 5; i++) if (localStorage.getItem(warmupKey(currentDayIdx, exIdx, i)) === 'true') warmDone++;
+    const stateCls = doneSets || warmDone ? 'st-progress' : 'st-new';
     // Called done but a set was added or unticked since: it's open again (and will ask again)
     if (!allDone && isClosed(currentDayIdx, exIdx)) localStorage.removeItem(closedKey(currentDayIdx, exIdx));
     const closed = allDone && isClosed(currentDayIdx, exIdx);
@@ -576,7 +580,7 @@ function renderWorkout() {
       const goal = exerciseGoal(ex);
       const lastTop = last ? last.sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps)) ? b : a) : null;
       html += `
-        <div class="card ex-card preview" id="ex-card-${exIdx}" onclick="focusExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, ${doneSets} of ${totalSets} sets done. Open">
+        <div class="card ex-card preview ${stateCls}" id="ex-card-${exIdx}" onclick="focusExercise(${exIdx})" role="button" aria-label="${escapeHtml(ex.name)}, ${doneSets ? `in progress, ${doneSets} of ${totalSets} sets done` : 'not started'}. Open">
           <span class="preview-num ${doneSets ? 'started' : ''}">${doneSets ? `${doneSets}/${totalSets}` : exIdx + 1}</span>
           <div class="collapsed-text">
             <div class="ex-name">${ssTag}${escapeHtml(ex.name)}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
@@ -603,7 +607,7 @@ function renderWorkout() {
     }
 
     html += `
-      <div class="card ex-card ${allDone ? 'done' : ''} ${finishingEx.has(exStateKey(exIdx)) ? 'finishing' : ''} ${pair ? `ss ss-${pair.role}` : ''}" id="ex-card-${exIdx}">
+      <div class="card ex-card ${stateCls} ${allDone ? 'done' : ''} ${finishingEx.has(exStateKey(exIdx)) ? 'finishing' : ''} ${pair ? `ss ss-${pair.role}` : ''}" id="ex-card-${exIdx}">
         ${pair && pair.role === 1 ? `<div class="ss-banner">${icon('swap', 2.2)}Superset ${supersetLetter(currentDayIdx, exIdx)}: one set of each, then rest</div>` : ''}
         <div class="ex-header">
           <div class="ex-name">${ssTag}${escapeHtml(ex.name)}${ex.isCustom ? `<span class="ex-tag">${ex.fromDay && ex.fromDay !== data.day ? `From ${escapeHtml(ex.fromDay.replace('Day ', 'D'))}` : 'Extra'}</span>` : ''}${ex.swapped ? '<span class="ex-tag">Alt</span>' : ''}</div>
