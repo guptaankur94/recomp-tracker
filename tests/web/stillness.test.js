@@ -42,6 +42,7 @@ const { serve, counter, openApp, seedHistory, launch } = require('./helpers');
     let fr = await watch(page, 'wu_d0_e0_0', () => page.tap('#ex-card-0 .wu-chk'));
     ok(drift(fr) < 2, `${theme} 0 tick warm-up 1: it moves ${drift(fr).toFixed(1)} px`);
     const wuTop = await page.evaluate(() => document.getElementById('ex-card-0').getBoundingClientRect().top);
+    if (verbose) await page.evaluate(() => { window.__sl = []; const t0 = performance.now(); window.addEventListener('scroll', () => window.__sl.push(`${Math.round(performance.now() - t0)}:${Math.round(scrollY)}`)); const st = window.scrollTo, sb = window.scrollBy; window.scrollTo = function (...a) { window.__sl.push('scrollTo ' + JSON.stringify(a) + ' ' + new Error().stack.split('\n')[2].trim()); return st.apply(this, a); }; window.scrollBy = function (...a) { window.__sl.push('scrollBy ' + JSON.stringify(a) + ' ' + new Error().stack.split('\n')[2].trim()); return sb.apply(this, a); }; });
     await page.tap('#active_d0_e0_wu1_w'); await page.waitForTimeout(400);
     ok(await page.isVisible('#numpad.open') && /Warm-up 2/.test(await page.textContent('#numpad .pad-label')), `${theme} 0 tapping warm-up 2's weight opens the number pad`);
     for (const k of ['3', '5', 'next', '5']) await page.dispatchEvent(`#numpad [data-act="${k}"]`, 'pointerdown');
@@ -49,6 +50,7 @@ const { serve, counter, openApp, seedHistory, launch } = require('./helpers');
     await page.dispatchEvent('#numpad [data-act="log"]', 'pointerdown'); await page.waitForTimeout(500);
     const wuNow = await page.evaluate(() => ({ top: document.getElementById('ex-card-0').getBoundingClientRect().top, line: (document.querySelector('#ex-card-0 .wu-line') || {}).textContent || '', own: customWarmup(getAllExercisesForDay(0)[0].name), done: localStorage.getItem(warmupKey(0, 0, 1)) }));
     ok(wuNow.done === 'true' && /35kg×5|35×5/.test(wuNow.line.replace(/\s/g, '')) && wuNow.own && wuNow.own[1].kg === 35 && wuNow.own[1].reps === 5 && wuNow.own.length === 2, `${theme} 0 logged 35 × 5 and kept for next time: ${JSON.stringify(wuNow.own)}`);
+    if (verbose) console.log('scrolls:', (await page.evaluate(() => window.__sl || [])).join(' | '));
     ok(/Warm-up done/.test(wuNow.line) && Math.abs(wuNow.top - wuTop) < 2, `${theme} 0 both warm-ups done: it folds, the card stays put (${Math.round(wuTop)} → ${Math.round(wuNow.top)})`);
 
     // 1. Tick ✓ with the set in the middle of the screen (set 1: the warm-up panel above folds)

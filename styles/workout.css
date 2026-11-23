@@ -552,3 +552,11 @@ body.in-workout .app-header { display: none; }
 .ex-card.preview.st-new .preview-num { color: var(--text-2); background: color-mix(in srgb, var(--text-3) 18%, transparent); }
 .ex-card.preview.st-new .ex-name { color: var(--text-2); }
 .ex-card.preview.st-progress .preview-num { color: var(--on-fill); background: var(--progress); }
+
+/* Long-press to move: no text selection or callout on what you can hold; the held card lifts above the others,
+   which slide aside smoothly */
+.ex-card.preview, .ex-card.collapsed, .ex-card.skipped, .ex-header { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.ex-card.dragging { position: relative; z-index: 45; transition: none !important; box-shadow: 0 16px 34px color-mix(in srgb, var(--bg) 70%, transparent), 0 0 0 2px color-mix(in srgb, var(--progress) 55%, transparent); }
+body.drag-active #workout-content .ex-card:not(.dragging) { transition: transform 0.18s var(--ease-out); }
+body.drag-active { -webkit-user-select: none; user-select: none; }
+@media (prefers-reduced-motion: reduce) { body.drag-active #workout-content .ex-card:not(.dragging) { transition: none; } }

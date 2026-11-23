@@ -22,7 +22,7 @@ The goal of every change: **log as seamlessly as possible, push for more work, k
 - **Decisions are the user's.** Nothing ends or folds by itself: the last set shows "Exercise complete / + 1 more set"; complete asks to confirm, then effort. A finished exercise asks what to change (effort, a set, add a set, show, reopen).
 - **Logic like a trainer.** Rest belongs to the set it follows: planned → live (its − / + are the timer) → taken (recorded, locked). Drop sets only straight after their set, lighter (≈20 % off, then 15 %), then the rest starts again; up to 3; not after the exercise is marked done. Effort is reps in reserve (easy 4+ = RPE 6, moderate 8, hard 9, all out 10); felt easy → next time a step heavier.
 - **State colours mean one thing everywhere**: untouched = grey, in progress (a warm-up or set ticked) = yellow (`--progress`), done (called done) = green (`--done`); always with a non-colour cue too (number, count, tick).
-- **Today's changes stay today**: move / reorder / do later / skip change only today's order (dated `active_d{n}_order`), never the plan; a superset pair moves as one.
+- **Today's changes stay today**: move / reorder / long-press drag / do later / skip change only today's order (dated `active_d{n}_order`), never the plan; a superset pair moves as one.
 - **Slips never become records.** Values save on every keystroke; impossible values are refused; unusual jumps (e.g. 525 for 52.5) ask first; a weighted exercise needs a weight. PRs are re-judged whenever a set changes.
 - **Explain, don't impose.** Every Coach tip says why; smart suggestions are one tap and undoable; nothing is uploaded.
 - The owner writes in plain language and often from the gym: answer in short plain words, list what changed and what was found, say what couldn't be checked (real iPhone keyboard, Live Activities).
@@ -31,11 +31,14 @@ The goal of every change: **log as seamlessly as possible, push for more work, k
 
 - **Reproduce first.** Write the failing check in `tests/web/` (use the user's exact scenario: e.g. another exercise already open), see it fail, then fix; it stays as a regression check (`regressions.test.js`).
 - **Check motion frame by frame**, not just the end state: `stillness.test.js` records every frame after each kind of logging tap; a "fold" once snapped in one frame and passed end-state checks. Measure scroll too, and row heights when an element changes state (every state the same height).
+- **The app anchors scroll itself**: `overflow-anchor: none` turns off the browser's own scroll anchoring, which fought it and moved the page by ~117 px about one run in three; a `#scroll-room` spacer under the workout keeps a short page from being pulled when something below shrinks. Run motion checks several times: some movement is intermittent.
+- **Re-query elements after a frame**: a re-draw detaches old nodes, and a detached node measures as 0 (the pad once scrolled the page 117 px to "reveal" a field that had been replaced). In `requestAnimationFrame`/timeouts, look elements up again by id and check `isConnected`.
 - **Global class names clash**: `.live` is the workout panel; a `rest-stepper live` inherited its padding. Name new state classes uniquely (`rest-live`).
 - **Load order**: scripts share one scope; code running at load can only use earlier files (`currentView` lives in `navigation.js`, loaded after `workout.js`). Check the DOM instead, or call at runtime.
 - **Number formatting**: `fmtNum` rounds to one decimal (1.25 → 1.3); use exact values where precision matters (plates).
 - **Fresh sessions**: the container can start on an old branch with `CLAUDE.md` "missing": `git fetch origin main && git checkout -B main origin/main`. The scratchpad is wiped on restarts; keep tests in `tests/web/`.
 - **Test-writing pitfalls**: seed history after the plan has loaded (names must match `getAllExercisesForDay`); don't `await` a function that waits on a dialog; stop an earlier frame-recording loop before starting the next; jump the fake clock with `setSystemTime` (not `runFor` over hours); `scrollWidth` counts clipped overflow, so test real sideways movement (`sideScroll`).
+- Touch behaves differently from a mouse (the browser scrolls, iOS long-press shows a callout): test touch gestures with CDP `Input.dispatchTouchEvent` (see `drag.test.js`), not only `page.mouse`.
 - Only one exercise is open at a time (focus mode): to type into another exercise in a test, `focusExercise(i)` first; `logSet()` and `completeExercise()` in `helpers.js` do the usual steps.
 
 ## How changes go live

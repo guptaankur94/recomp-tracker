@@ -32,8 +32,11 @@ function openPad(input) {
   }
   // Keep the set in view above the pad
   requestAnimationFrame(() => {
-    const block = input.closest('.set-block, .wu-r');
-    if (!block) return;
+    // Look the field up again: if the screen was re-drawn meanwhile, the old one is detached (it would read as
+    // sitting at the top and scroll the page for nothing)
+    const live = pad && document.getElementById(pad.id);
+    const block = live && live.isConnected ? live.closest('.set-block, .wu-r') : null;
+    if (!block || !block.getBoundingClientRect().height) return;
     const padTop = window.innerHeight - el.getBoundingClientRect().height;
     const r = block.getBoundingClientRect();
     const hint = block.querySelector('.set-hint');
@@ -57,7 +60,9 @@ function closePad() {
   pad = null;
   const el = document.getElementById('numpad');
   el.classList.remove('open');
+  roomBefore();
   document.body.classList.remove('pad-open');
+  roomTrim();
   setTimeout(() => { if (!pad) el.hidden = true; }, reduceMotion() ? 0 : 220);
 }
 

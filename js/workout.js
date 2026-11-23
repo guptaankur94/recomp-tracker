@@ -469,7 +469,31 @@ function bestDraftSet(exIdx, totalSets) {
 }
 
 
+/* Scroll room: an empty spacer under the workout. When something below what you're looking at shrinks (a warm-up
+   panel folding, the number pad closing), a page near its bottom would make the browser pull the scroll and move
+   everything. The spacer is made tall before a change and trimmed after to just what holds your place; scrolling
+   up trims it away. */
+function roomBefore() {
+  const room = document.getElementById('scroll-room');
+  if (room && !document.getElementById('view-workout').hidden) room.style.height = `${window.innerHeight}px`;
+}
+
+function roomTrim() {
+  const room = document.getElementById('scroll-room');
+  if (!room) return;
+  const cur = room.offsetHeight;
+  if (document.getElementById('view-workout').hidden) {
+    if (cur) room.style.height = '';
+    return;
+  }
+  const need = Math.max(0, Math.ceil(window.scrollY + window.innerHeight - (document.documentElement.scrollHeight - cur)));
+  if (need !== cur) room.style.height = need ? `${need}px` : '';
+}
+
+window.addEventListener('scroll', () => { const room = document.getElementById('scroll-room'); if (room && room.offsetHeight) roomTrim(); }, { passive: true });
+
 function renderWorkout() {
+  roomBefore();
   const anchor = findAnchor();
   updateStats();
   const main = document.getElementById('workout-content');
@@ -775,6 +799,7 @@ function renderWorkout() {
   `;
   main.innerHTML = html;
   restoreAnchor(anchor);
+  roomTrim();
   syncPad();
   syncWakeLock();
 }
