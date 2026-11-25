@@ -5,7 +5,7 @@ const REST_TIMER_KEY = 'recomp_rest_timer';
 
 /* The rest belongs to the set it follows. Before the set is ticked its rest is a plan; while its timer runs the set's
    rest control IS the timer (− / + and the timer's own +15 / −15 change the same thing); once the rest is over
-   (ran out, skipped, or the next set was ticked) the rest actually taken is recorded on the set and locked.
+   (ran out, skipped, or the next set was ticked) the rest actually taken is recorded on the set: tap it to correct it (never restarts the timer).
    owner: { d, e, s } of that set (none for warm-up rests). */
 let restTimer = null; // { startAt, endAt, total, next, owner }
 

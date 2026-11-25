@@ -983,7 +983,7 @@ function restControlHtml(ex, exIdx, s, setRest, restPr) {
   const stage = restStage(exIdx, s);
   if (stage === 'done') {
     return `<span class="rs-label" aria-hidden="true">Rest</span>
-      <button class="rest-taken ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" onclick="restTakenInfo(${exIdx}, ${s})" aria-label="Rested ${fmtClock(setRest)} after set ${s}${restPr ? ', a rest record' : ''}">${icon('check', 2.6)}<span>${fmtClock(setRest)}</span></button>`;
+      <button class="rest-taken ${restPr ? 'record' : setRest < ex.rest ? 'faster' : ''}" onclick="restTakenInfo(${exIdx}, ${s})" aria-label="Rested ${fmtClock(setRest)} after set ${s}${restPr ? ', a rest record' : ''}. Change">${icon('check', 2.6)}<span>${fmtClock(setRest)}</span></button>`;
   }
   const live = stage === 'live';
   const remaining = live ? Math.ceil(restRemainingMs() / 1000) : setRest;
@@ -995,10 +995,24 @@ function restControlHtml(ex, exIdx, s, setRest, restPr) {
     </div>`;
 }
 
-function restTakenInfo(exIdx, s) {
+/* A rest that's over taps open to correct it, like a ticked set: the same time picker, and it stays recorded
+   (it never restarts the timer). The next set's rest record is judged again. */
+async function restTakenInfo(exIdx, s) {
   const ex = getAllExercisesForDay(currentDayIdx)[exIdx];
+  const taken = getSetRest(currentDayIdx, exIdx, s, ex);
+  const lastSet = lastSetFor(getLastPerformance(ex.name, getHistory()), s);
+  const lastRest = lastSet && lastSet.restSec > 0 ? Number(lastSet.restSec) : 0;
   haptic('light');
-  showToast(`You rested ${fmtClock(getSetRest(currentDayIdx, exIdx, s, ex))} after set ${s}. That rest is over; change the next one before or while it runs.`, { type: 'info', duration: 3500 });
+  const choice = await actionSheet(`Rest after set ${s}`, `${ex.name} · you rested ${fmtClock(taken)}. Pick what you actually took.`, restChoices(ex, taken, lastRest), { grid: true });
+  if (!choice || choice === taken) return;
+  // Kept as its own value (not "same as the plan"), so changing the plan's rest later doesn't rewrite it
+  anchorOn(`block_d${currentDayIdx}_e${exIdx}_s${s}`);
+  localStorage.setItem(setKey(currentDayIdx, exIdx, s, 'rest'), String(choice));
+  refreshPrs(currentDayIdx, exIdx);
+  touchDraft();
+  haptic('success');
+  renderWorkout();
+  showToast(`Rest after set ${s} changed to ${fmtClock(choice)}`);
 }
 
 /* The line under the next set: what you did last time, what to try, and that ✓ logs it as shown */

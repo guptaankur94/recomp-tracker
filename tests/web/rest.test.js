@@ -38,8 +38,17 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
   ok(taken >= 59 && taken <= 62, `3 skipped after about a minute: ${taken} s recorded (the plan was ${plan + 15})`);
   ok(await stage(1) === 'done' && /Rested/.test(await page.evaluate(() => document.getElementById('block_d0_e0_s1').closest('.set-swipe').nextElementSibling.querySelector('.rest-taken').getAttribute('aria-label'))), '3 shown as the rest taken (✓ 1:00), locked');
   ok(await page.evaluate(() => new Set([...document.querySelectorAll('#ex-card-0 .set-link')].map(l => Math.round(l.getBoundingClientRect().height))).size === 1), '3 every stage has the same row height');
-  await page.evaluate(() => nudgeSetRest(0, 1, 15)); await page.waitForTimeout(200);
-  ok(await rest(1) === taken && /That rest is over/.test(await page.evaluate(() => document.getElementById('toast').textContent)), '3 − / + on a finished rest change nothing and say why');
+  // 3b. A finished rest taps open to correct it, like a ticked set: picked value saved, still recorded, no timer, no jump
+  const takenBtn = () => page.evaluate(() => document.getElementById('block_d0_e0_s1').closest('.set-swipe').nextElementSibling.querySelector('.rest-taken').getBoundingClientRect().top);
+  const top0 = await takenBtn();
+  const y0 = await page.evaluate(() => scrollY);
+  await page.evaluate(() => document.getElementById('block_d0_e0_s1').closest('.set-swipe').nextElementSibling.querySelector('.rest-taken').click());
+  await page.waitForTimeout(400);
+  ok(/Rest after set 1/.test(await page.textContent('#dialog-sheet')) && /you rested/.test(await page.textContent('#dialog-sheet')), '3b tapping the rest taken opens the time picker');
+  await page.click('#dialog-sheet >> text=1:30'); await page.waitForTimeout(500);
+  ok(await rest(1) === 90 && await stage(1) === 'done', `3b corrected to 1:30 and still recorded (${await rest(1)} s)`);
+  ok(await page.evaluate(() => !restTimer), '3b correcting it doesn\'t restart a timer');
+  ok(Math.abs(await takenBtn() - top0) <= 1 && await page.evaluate(() => scrollY) === y0, '3b the screen doesn\'t move');
 
   // 4. Runs out: the full length is recorded
   await logSet(page, 0, 2, 50, 8);
@@ -56,13 +65,13 @@ const { serve, counter, openApp, seedHistory, logSet, launch } = require('./help
 
   // 6. The exercise's Rest chip changes plans only, never a rest taken
   await page.evaluate(() => { localStorage.setItem(exRestKey(0, 0), '75'); for (let s = 1; s <= 5; s++) { const over = localStorage.getItem(setKey(0, 0, s, 'restOver')) === 'true'; if (!over && !restIsLive(0, 0, s)) localStorage.removeItem(setKey(0, 0, s, 'rest')); } renderWorkout(); });
-  ok(await rest(1) === taken && await rest(3) >= 44, '6 changing the exercise rest keeps the rests already taken');
+  ok(await rest(1) === 90 && await rest(3) >= 44, '6 changing the exercise rest keeps the rests already taken');
 
   // 7. Saved: the rests taken; a rest PR is judged on them
   await page.evaluate(() => { stopRestTimer(); openFinishSheet(); }); await page.waitForTimeout(300);
   await page.evaluate(() => confirmFinish()); await page.waitForTimeout(500);
   const saved = await page.evaluate(() => getHistory()[0].exercises[0].sets.map(s => s.restSec));
-  ok(saved[0] === taken && saved[1] === len2, '7 saved with the workout: ' + saved.join(', '));
+  ok(saved[0] === 90 && saved[1] === len2, '7 saved with the workout (set 1 as corrected): ' + saved.join(', '));
 
   ok(page.errors.length === 0, 'no errors or native pop-ups ' + page.errors.join(' | '));
   await browser.close();
