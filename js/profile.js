@@ -68,14 +68,38 @@ function fillProfileForm() {
   document.getElementById('pf-goal').value = p.goalKg || '';
   document.getElementById('pf-activity').value = p.activity || 'desk';
   document.getElementById('pf-goaltype').value = p.goalType || 'recomp';
+  const strength = p.strength || {};
+  BENCHMARKS.forEach(b => {
+    document.getElementById(`pf-s-${b.key}-w`).value = strength[b.key] ? strength[b.key].w : '';
+    document.getElementById(`pf-s-${b.key}-r`).value = strength[b.key] ? strength[b.key].r : '';
+  });
 }
+
+// The strength fields: one row per reference lift
+document.getElementById('pf-strength').innerHTML = BENCHMARKS.map(b => `
+  <label>${b.label}, kg<input type="number" id="pf-s-${b.key}-w" step="0.5" inputmode="decimal" placeholder="${b.example}"></label>
+  <label>Reps<input type="number" id="pf-s-${b.key}-r" inputmode="numeric" placeholder="e.g. 10"></label>`).join('');
 
 function saveProfileForm(silent = false) {
   const num = id => {
     const v = parseFloat(document.getElementById(id).value);
     return isNaN(v) ? null : Math.round(v * 10) / 10;
   };
+  // Strength now: a weight × reps per reference lift (blank = not given)
+  const strength = {};
+  for (const b of BENCHMARKS) {
+    const w = num(`pf-s-${b.key}-w`);
+    const r = num(`pf-s-${b.key}-r`);
+    if (!w && !r) continue;
+    if (!(w > 0 && w <= 500) || !(r >= 1 && r <= 30)) {
+      fieldError(document.getElementById(`pf-s-${b.key}-${w > 0 && w <= 500 ? 'r' : 'w'}`), 'Give both the weight (kg) and the reps (1–30).');
+      return false;
+    }
+    strength[b.key] = { w, r: Math.round(r) };
+  }
   const profile = {
+    ...(getProfile() || {}),
+    strength,
     name: document.getElementById('pf-name').value.trim(),
     sex: document.getElementById('pf-sex').value,
     birthDate: document.getElementById('pf-birth').value,

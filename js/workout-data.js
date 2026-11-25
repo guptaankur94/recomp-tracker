@@ -462,7 +462,11 @@ function lastSetFor(last, setNum) {
 // What to aim for in a set, based on the same set last time. Used for the placeholders and
 // as the values a set takes when ✓ is tapped with empty fields.
 function suggestSet(ex, lastSet) {
-  if (!lastSet) return null;
+  // Never done (or a set you didn't do last time): a starting weight worked out from your other lifts
+  if (!lastSet) {
+    const rec = recommendSet(ex);
+    return rec ? { w: rec.w, r: rec.r, rec } : null;
+  }
   const range = repRange(ex);
   if (range && lastSet.weight > 0 && lastSet.reps >= range[1] && !isDumbbellExercise(ex)) {
     return { w: lastSet.weight + 2.5, r: range[0] };

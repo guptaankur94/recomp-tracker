@@ -81,7 +81,7 @@ const PLATES_KG = [25, 20, 15, 10, 5, 2.5, 1.25];
 
 function isBarbellExercise(ex) {
   const lib = LIBRARY.get(ex.name);
-  return (lib && lib.equipment === 'Barbell') || /\bbarbell\b/i.test(ex.name);
+  return !/\bEZ\b/i.test(ex.name) && ((lib && lib.equipment === 'Barbell') || /\bbarbell\b/i.test(ex.name));
 }
 
 function platesPerSide(kg) {

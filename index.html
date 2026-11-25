@@ -200,6 +200,9 @@
         </label>
       </div>
       <div id="pf-targets"></div>
+      <div class="section-title pf-strength-head">Your strength now</div>
+      <div class="section-meta">A set you can do today with about 2 reps left. Used for the starting weight of exercises you haven't logged; your log takes over once you have. Leave blank to skip.</div>
+      <div class="form-grid pf-strength" id="pf-strength"></div>
       <div class="sheet-actions">
         <button class="btn btn-primary" onclick="closeSheet('profile-sheet')">Done</button>
       </div>
@@ -702,7 +705,7 @@
 
   <script>
     // Shown in Settings and compared by the update check; bump with every change
-    const APP_VERSION = '2026.11.23c';
+    const APP_VERSION = '2026.11.25';
   </script>
   <script src="js/data/default-plan.js"></script>
   <script src="js/data/exercises.js"></script>
@@ -712,6 +715,7 @@
   <script src="js/preferences.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/strength.js"></script>
   <script src="js/workout-data.js"></script>
   <script src="js/goals.js"></script>
   <script src="js/add-exercise.js"></script>

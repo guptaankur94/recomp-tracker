@@ -297,3 +297,10 @@
 .ro-btn { flex: none; width: 40px; height: 40px; border: 0; border-radius: 12px; background: var(--surface-2); color: var(--text); display: grid; place-items: center; }
 .ro-btn svg { width: 18px; height: 18px; }
 .ro-btn:disabled { opacity: 0.3; }
+
+/* Add Exercise: the starting weight worked out for you */
+.choice-rec { color: var(--text); }
+.choice-rec b { color: var(--accent); font-weight: 700; }
+/* Profile: strength now */
+.pf-strength-head { margin-top: 18px; }
+.pf-strength { margin-top: 4px; }

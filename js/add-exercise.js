@@ -38,7 +38,10 @@ function renderAddExerciseList() {
   const picks = [];
   const row = (pick, main, sub, alt) => {
     picks.push(pick);
-    return `<button class="choice" data-idx="${picks.length - 1}"><span><span class="choice-main">${escapeHtml(main)}</span>${sub ? `<span class="choice-sub">${escapeHtml(sub)}</span>` : ''}${alt ? `<span class="choice-sub">Alt: ${escapeHtml(alt)}</span>` : ''}</span></button>`;
+    // A weight to start with, worked out from your other lifts (or your own last session)
+    const rec = recommendSet(pick.template);
+    const recHtml = rec ? `<span class="choice-sub choice-rec">For you: <b>${recLabel(rec)}</b> · ${escapeHtml(rec.own ? 'from your last time' : rec.why)}</span>` : '';
+    return `<button class="choice" data-idx="${picks.length - 1}"><span><span class="choice-main">${escapeHtml(main)}</span>${sub ? `<span class="choice-sub">${escapeHtml(sub)}</span>` : ''}${recHtml}${alt ? `<span class="choice-sub">Alt: ${escapeHtml(alt)}</span>` : ''}</span></button>`;
   };
 
   document.getElementById('add-ex-muscles').innerHTML = MUSCLES.map(m =>

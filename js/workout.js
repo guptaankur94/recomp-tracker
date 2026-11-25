@@ -1005,6 +1005,10 @@ function restTakenInfo(exIdx, s) {
 function setHintHtml(ex, last, s, suggestion, valW, valR) {
   const prev = lastSetFor(last, s);
   const fmt = x => `${Number(x.weight) > 0 ? `${fmtNum(Number(x.weight))} kg` : 'BW'} × ${x.reps}`;
+  if (!prev && suggestion && suggestion.rec) {
+    // A starting weight from your other lifts, and why
+    return `<div class="set-hint">${last ? 'New set' : 'First time'}: <b>try ${recLabel(suggestion.rec)}</b> · ${escapeHtml(suggestion.rec.why)}</div>`;
+  }
   if (!prev) return `<div class="set-hint">First time: enter ${isBodyweightExercise(ex) ? 'your reps' : 'weight and reps'}, then ✓</div>`;
   const differs = suggestion && (suggestion.w !== Number(prev.weight) || suggestion.r !== Number(prev.reps));
   const empty = !valW && !valR;
